@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../../utils/jwt');
 const emailService = require('../../services/email.service');
+const notificationService = require('../notifications/notification.service');
 
 class AuthService {
   async register({ fullName, email, password, hometownGroup, currentLocation, bio }) {
@@ -48,7 +49,15 @@ class AuthService {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // Gửi email cảnh báo thành viên mới đăng ký tới Admin (tronglong195@gmail.com)
+    // 1. Tạo thông báo trong ứng dụng (In-App) cho Admin và Moderator
+    notificationService.notifyAdminsAndMods({
+      title: '👤 Có thành viên mới đăng ký',
+      message: `${user.fullName || user.email} vừa đăng ký tài khoản trên hệ thống Làng Giao Tác.`,
+      type: 'member_registered',
+      link: '/quan-tri',
+    }).catch(err => console.error('Lỗi tạo notification thành viên mới:', err.message));
+
+    // 2. Gửi email cảnh báo thành viên mới đăng ký tới Admin (tronglong195@gmail.com)
     emailService.sendRegisterAlert({
       user,
       registrationMethod: 'Form Đăng ký thành viên',
@@ -193,7 +202,15 @@ class AuthService {
     const refreshToken = generateRefreshToken(safeUser);
 
     if (isNewUser) {
-      // Gửi email thành viên mới qua Google
+      // 1. Tạo thông báo in-app cho Admin
+      notificationService.notifyAdminsAndMods({
+        title: '👤 Thành viên mới từ Google',
+        message: `${safeUser.fullName || safeUser.email} vừa gia nhập cộng đồng Làng Giao Tác qua Google.`,
+        type: 'member_registered',
+        link: '/quan-tri',
+      }).catch(err => console.error('Lỗi tạo notification thành viên mới Google:', err.message));
+
+      // 2. Gửi email thành viên mới qua Google
       emailService.sendRegisterAlert({
         user: safeUser,
         registrationMethod: 'Google Sign-In (Tài khoản mới)',

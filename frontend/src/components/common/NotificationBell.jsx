@@ -8,6 +8,7 @@ import {
   Sparkles,
   AlertCircle,
   ExternalLink,
+  UserPlus,
 } from 'lucide-react';
 import { notificationService } from '../../services/notification.service';
 import { useAuth } from '../../context/AuthContext';
@@ -109,6 +110,8 @@ export const NotificationBell = () => {
 
   const getNotificationIcon = (type) => {
     switch (type) {
+      case 'member_registered':
+        return <UserPlus className="w-4 h-4 text-emerald-600" />;
       case 'post_pending':
         return <FileText className="w-4 h-4 text-amber-600" />;
       case 'photo_pending':

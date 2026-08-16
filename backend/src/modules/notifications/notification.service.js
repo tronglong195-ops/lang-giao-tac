@@ -56,14 +56,16 @@ class NotificationService {
    * Lấy danh sách thông báo của user hiện tại (phân trang + unread ưu tiên)
    */
   async getUserNotifications(userId, { page = 1, limit = 20 } = {}) {
-    const skip = (page - 1) * limit;
+    const pageNum = parseInt(page, 10) > 0 ? parseInt(page, 10) : 1;
+    const limitNum = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 20;
+    const skip = (pageNum - 1) * limitNum;
 
     const [notifications, total, unreadCount] = await Promise.all([
       prisma.notification.findMany({
         where: { userId },
         orderBy: [{ isRead: 'asc' }, { createdAt: 'desc' }],
         skip,
-        take: limit,
+        take: limitNum,
       }),
       prisma.notification.count({ where: { userId } }),
       prisma.notification.count({ where: { userId, isRead: false } }),
@@ -73,10 +75,10 @@ class NotificationService {
       notifications,
       unreadCount,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limitNum) || 1,
       },
     };
   }
