@@ -11,20 +11,12 @@ Website **Làng Giao Tác — TDP 9 Thuận Lộc** gồm 2 phần (`backend` v�
 
 ---
 
-## 📌 BƯỚC 1: ĐƯA MÃ NGUỒN LÊN GITHUB
+## 📌 BƯỚC 1: MÃ NGUỒN ĐÃ ĐƯỢC ĐẨY LÊN GITHUB THÀNH CÔNG
 
-1. Mở trang **[GitHub.com](https://github.com)**, đăng nhập và nhấn **New Repository**.
-2. Đặt tên repository: `lang-giao-tac` (để chế độ **Public** hoặc **Private** đều được).
-3. Mở terminal tại thư mục `Lang giao`:
-```bash
-cd "C:\Users\MTC\OneDrive\Desktop\Lang giao"
-git init
-git add .
-git commit -m "Khoi tao website Lang Giao Tac TDP 9 Thuan Loc"
-git branch -M main
-git remote add origin https://github.com/<tai-khoan-cua-ban>/lang-giao-tac.git
-git push -u origin main
-```
+Repository chính thức:
+👉 **[https://github.com/tronglong195-ops/lang-giao-tac.git](https://github.com/tronglong195-ops/lang-giao-tac.git)**
+
+Mã nguồn trên nhánh `main` đã được đẩy lên đầy đủ gồm cả Backend, Frontend, 40 ảnh làng, video tư liệu và cấu hình deploy.
 
 ---
 
