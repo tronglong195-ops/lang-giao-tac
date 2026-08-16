@@ -2,41 +2,35 @@ const bcrypt = require('bcryptjs');
 
 async function runAutoSeed(prisma) {
   try {
-    console.log('🌾 Đang kiểm tra và đồng bộ dữ liệu mẫu Làng Giao Tác (TDP 9 Thuận Lộc)...');
+    console.log('🌾 Đang đồng bộ toàn diện dữ liệu mẫu Làng Giao Tác (TDP 9 Thuận Lộc)...');
 
     const passwordHash = await bcrypt.hash('123456', 10);
 
     // 1. Đảm bảo tài khoản Admin (Nguyễn Trọng Long) luôn tồn tại
-    let adminUser = await prisma.user.findUnique({
+    const adminUser = await prisma.user.upsert({
       where: { email: 'admin@langgiaotac.vn' },
+      update: {
+        fullName: 'Nguyễn Trọng Long',
+        passwordHash,
+        role: 'admin',
+        hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
+        currentLocation: 'TDP 9 Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh',
+        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, TX Hồng Lĩnh. SĐT: 0832991002',
+        avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+        isVerified: true,
+      },
+      create: {
+        fullName: 'Nguyễn Trọng Long',
+        email: 'admin@langgiaotac.vn',
+        passwordHash,
+        role: 'admin',
+        hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
+        currentLocation: 'TDP 9 Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh',
+        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, TX Hồng Lĩnh. SĐT: 0832991002',
+        avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+        isVerified: true,
+      },
     });
-
-    if (!adminUser) {
-      adminUser = await prisma.user.create({
-        data: {
-          fullName: 'Nguyễn Trọng Long',
-          email: 'admin@langgiaotac.vn',
-          passwordHash,
-          role: 'admin',
-          hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
-          currentLocation: 'TDP 9 Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh',
-          bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, TX Hồng Lĩnh. SĐT: 0832991002',
-          avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
-          isVerified: true,
-        },
-      });
-      console.log('✅ Đã tạo tài khoản Admin: admin@langgiaotac.vn / 123456');
-    } else {
-      // Đảm bảo mật khẩu và quyền admin luôn đúng
-      await prisma.user.update({
-        where: { id: adminUser.id },
-        data: {
-          passwordHash,
-          role: 'admin',
-          fullName: 'Nguyễn Trọng Long',
-        },
-      });
-    }
 
     // 2. Mốc Lịch sử (HistoryTimeline)
     const historyCount = await prisma.historyTimeline.count();
@@ -89,111 +83,112 @@ async function runAutoSeed(prisma) {
       for (const item of historyData) {
         await prisma.historyTimeline.create({ data: item });
       }
-      console.log('✅ Đã nạp 6 mốc Lịch sử làng.');
     }
 
     // 3. Tin tức chính quyền (News)
-    const newsCount = await prisma.news.count();
-    if (newsCount === 0) {
-      await prisma.news.create({
-        data: {
-          authorId: adminUser.id,
-          title: 'Kế hoạch tổ chức Lễ hội Đình Làng & Gặp mặt bà con TDP 9 Thuận Lộc xuân 2026',
-          slug: 'ke-hoach-to-chuc-le-hoi-dinh-lang-gap-mat-ba-con-tdp9-thuan-loc-2026',
-          contentHtml: `<p>Ban Cán sự TDP 9 trân trọng thông báo chương trình Lễ hội truyền thống và Ngày hội Đại đoàn kết năm 2026.</p>
-          <p>Mọi thông tin chi tiết xin liên hệ Trưởng ban: <strong>Nguyễn Trọng Long</strong> — SĐT: <strong>0832991002</strong>.</p>`,
-          source: 'Ban Cán sự TDP 9 Thuận Lộc',
-          isOfficial: true,
-          publishedAt: new Date(),
-        },
-      });
+    await prisma.news.upsert({
+      where: { slug: 'ke-hoach-to-chuc-le-hoi-dinh-lang-gap-mat-ba-con-tdp9-thuan-loc-2026' },
+      update: {},
+      create: {
+        authorId: adminUser.id,
+        title: 'Kế hoạch tổ chức Lễ hội Đình Làng & Gặp mặt bà con TDP 9 Thuận Lộc xuân 2026',
+        slug: 'ke-hoach-to-chuc-le-hoi-dinh-lang-gap-mat-ba-con-tdp9-thuan-loc-2026',
+        contentHtml: `<p>Ban Cán sự TDP 9 trân trọng thông báo chương trình Lễ hội truyền thống và Ngày hội Đại đoàn kết năm 2026.</p>
+        <p>Mọi thông tin chi tiết xin liên hệ Trưởng ban: <strong>Nguyễn Trọng Long</strong> — SĐT: <strong>0832991002</strong>.</p>`,
+        source: 'Ban Cán sự TDP 9 Thuận Lộc',
+        isOfficial: true,
+        publishedAt: new Date(),
+      },
+    });
 
-      await prisma.news.create({
-        data: {
-          authorId: adminUser.id,
-          title: 'Phát động phong trào xây dựng tuyến đường hoa kiểu mẫu sáng - xanh - sạch - đẹp',
-          slug: 'phat-dong-phong-trao-xay-dung-tuyen-duong-hoa-kieu-mau-tdp9',
-          contentHtml: `<p>Nhằm duy trì và nâng cao tiêu chí đô thị văn minh tại TDP 9 Thuận Lộc, phát động phong trào giữ gìn ngõ xóm và cảnh quan quanh giếng cổ.</p>`,
-          source: 'Chi hội Phụ nữ & Đoàn Thanh niên TDP 9',
-          isOfficial: true,
-          publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        },
-      });
-      console.log('✅ Đã nạp Tin tức chính quyền.');
-    }
+    await prisma.news.upsert({
+      where: { slug: 'phat-dong-phong-trao-xay-dung-tuyen-duong-hoa-kieu-mau-tdp9' },
+      update: {},
+      create: {
+        authorId: adminUser.id,
+        title: 'Phát động phong trào xây dựng tuyến đường hoa kiểu mẫu sáng - xanh - sạch - đẹp',
+        slug: 'phat-dong-phong-trao-xay-dung-tuyen-duong-hoa-kieu-mau-tdp9',
+        contentHtml: `<p>Nhằm duy trì và nâng cao tiêu chí đô thị văn minh tại TDP 9 Thuận Lộc, phát động phong trào giữ gìn ngõ xóm và cảnh quan quanh giếng cổ.</p>`,
+        source: 'Chi hội Phụ nữ & Đoàn Thanh niên TDP 9',
+        isOfficial: true,
+        publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      },
+    });
 
-    // 4. Bài viết cộng đồng (Posts)
-    const postCount = await prisma.post.count();
-    if (postCount === 0) {
-      await prisma.post.create({
-        data: {
-          authorId: adminUser.id,
-          title: 'Video Giới Thiệu Đình Làng Giao Tác — Di Tích Lịch Sử Văn Hóa Cấp Tỉnh Tại Thôn Thuận Giang, Xã Thuận Lộc',
-          slug: 'video-gioi-thieu-dinh-lang-giao-tac-di-tich-lich-su-van-hoa',
-          category: 'Dòng họ - Gia phả',
-          coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
-          contentHtml: `<p class="lead font-medium text-base sm:text-lg text-primary-dark">
-            Video tư liệu đặc sắc giới thiệu về <strong>Đình làng Giao Tác</strong> — một di tích lịch sử văn hóa quan trọng tọa lạc tại thôn Thuận Giang (nay thuộc Tổ dân phố 9), xã Thuận Lộc, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh.
-          </p>
-          <div class="my-6 aspect-video rounded-2xl overflow-hidden shadow-warm border border-warmBorder">
-            <iframe 
-              src="https://www.youtube.com/embed/bTtaKwLR59w" 
-              title="Video giới thiệu về Đình làng Giao Tác" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowfullscreen
-              class="w-full h-full"
-            ></iframe>
-          </div>
-          <p>1. Lịch sử hình thành: Đình dựng năm 1875 đời vua Tự Đức 28 nhờ cụ Chánh Do và dân làng.</p>
-          <p>2. Ngày 20/2/1930: Thành lập Chi bộ Đảng làng Giao Tác.</p>
-          <p>3. Năm 2018: Công nhận Di tích Lịch sử - Văn hóa cấp tỉnh.</p>`,
-          status: 'published',
-          viewCount: 1250,
-          publishedAt: new Date(),
-        },
-      });
+    // 4. Bài viết cộng đồng (Posts) — Dùng UPSERT đảm bảo luôn xuất bản
+    await prisma.post.upsert({
+      where: { slug: 'video-gioi-thieu-dinh-lang-giao-tac-di-tich-lich-su-van-hoa' },
+      update: { status: 'published' },
+      create: {
+        authorId: adminUser.id,
+        title: 'Video Giới Thiệu Đình Làng Giao Tác — Di Tích Lịch Sử Văn Hóa Cấp Tỉnh Tại Thôn Thuận Giang, Xã Thuận Lộc',
+        slug: 'video-gioi-thieu-dinh-lang-giao-tac-di-tich-lich-su-van-hoa',
+        category: 'Dòng họ - Gia phả',
+        coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+        contentHtml: `<p class="lead font-medium text-base sm:text-lg text-primary-dark">
+          Video tư liệu đặc sắc giới thiệu về <strong>Đình làng Giao Tác</strong> — một di tích lịch sử văn hóa quan trọng tọa lạc tại thôn Thuận Giang (nay thuộc Tổ dân phố 9), xã Thuận Lộc, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh.
+        </p>
+        <div class="my-6 aspect-video rounded-2xl overflow-hidden shadow-warm border border-warmBorder">
+          <iframe 
+            src="https://www.youtube.com/embed/bTtaKwLR59w" 
+            title="Video giới thiệu về Đình làng Giao Tác" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen
+            class="w-full h-full"
+          ></iframe>
+        </div>
+        <p>1. Lịch sử hình thành: Đình dựng năm 1875 đời vua Tự Đức 28 nhờ cụ Chánh Do và dân làng.</p>
+        <p>2. Ngày 20/2/1930: Thành lập Chi bộ Đảng làng Giao Tác.</p>
+        <p>3. Năm 2018: Công nhận Di tích Lịch sử - Văn hóa cấp tỉnh.</p>`,
+        status: 'published',
+        viewCount: 1250,
+        publishedAt: new Date(),
+      },
+    });
 
-      await prisma.post.create({
-        data: {
-          authorId: adminUser.id,
-          title: 'Ca Khúc: Hà Tĩnh Nhớ Về — Giai Điệu Quê Hương Dưới Chân Núi Hồng Lĩnh',
-          slug: 'ca-khuc-ha-tinh-nho-ve-giai-dieu-que-huong',
-          category: 'Ký ức tuổi thơ',
-          coverImageUrl: '/images/village/476776564_1020712773424430_8938770403532008026_n.jpg',
-          contentHtml: `<p class="lead font-medium text-base sm:text-lg text-primary-dark">
-            Mỗi lần giai điệu bài hát <strong>"Hà Tĩnh Nhớ Về"</strong> vang lên, trong lòng mỗi người con quê hương Làng Giao Tác — TDP 9 Thuận Lộc lại rưng rưng niềm xúc động và nỗi nhớ quê nhà da diết.
-          </p>
-          <div class="my-6 aspect-video rounded-2xl overflow-hidden shadow-warm border border-warmBorder">
-            <iframe 
-              src="https://www.youtube.com/embed/pcKfUACFd_o" 
-              title="Ca khúc Hà Tĩnh Nhớ Về" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowfullscreen
-              class="w-full h-full"
-            ></iframe>
-          </div>`,
-          status: 'published',
-          viewCount: 980,
-          publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
-        },
-      });
+    await prisma.post.upsert({
+      where: { slug: 'ca-khuc-ha-tinh-nho-ve-giai-dieu-que-huong' },
+      update: { status: 'published' },
+      create: {
+        authorId: adminUser.id,
+        title: 'Ca Khúc: Hà Tĩnh Nhớ Về — Giai Điệu Quê Hương Dưới Chân Núi Hồng Lĩnh',
+        slug: 'ca-khuc-ha-tinh-nho-ve-giai-dieu-que-huong',
+        category: 'Ký ức tuổi thơ',
+        coverImageUrl: '/images/village/476776564_1020712773424430_8938770403532008026_n.jpg',
+        contentHtml: `<p class="lead font-medium text-base sm:text-lg text-primary-dark">
+          Mỗi lần giai điệu bài hát <strong>"Hà Tĩnh Nhớ Về"</strong> vang lên, trong lòng mỗi người con quê hương Làng Giao Tác — TDP 9 Thuận Lộc lại rưng rưng niềm xúc động và nỗi nhớ quê nhà da diết.
+        </p>
+        <div class="my-6 aspect-video rounded-2xl overflow-hidden shadow-warm border border-warmBorder">
+          <iframe 
+            src="https://www.youtube.com/embed/pcKfUACFd_o" 
+            title="Ca khúc Hà Tĩnh Nhớ Về" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen
+            class="w-full h-full"
+          ></iframe>
+        </div>`,
+        status: 'published',
+        viewCount: 980,
+        publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
+      },
+    });
 
-      await prisma.post.create({
-        data: {
-          authorId: adminUser.id,
-          title: 'Từ Làng Giao Tác xưa đến Tổ dân phố 9 Thuận Lộc ngày nay: Dòng chảy ký ức và tự hào',
-          slug: 'tu-lang-giao-tac-xua-den-to-dan-pho-9-thuan-loc-ngay-nay',
-          category: 'Đổi thay của làng',
-          coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
-          contentHtml: `<h3>Làng Giao Tác — Nơi cội nguồn máu thịt của bao thế hệ</h3>
-          <p>Dù theo thời gian, tên gọi hành chính nay là <strong>Tổ dân phố 9, xã Thuận Lộc, thị xã Hồng Lĩnh (Hà Tĩnh)</strong>, nhưng trong tâm thức của mỗi người con sinh ra và lớn lên nơi đây, cái tên <em>Làng Giao Tác</em> vẫn luôn là niềm tự hào sâu lắng.</p>`,
-          status: 'published',
-          viewCount: 680,
-          publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        },
-      });
-      console.log('✅ Đã nạp Bài viết & Video.');
-    }
+    await prisma.post.upsert({
+      where: { slug: 'tu-lang-giao-tac-xua-den-to-dan-pho-9-thuan-loc-ngay-nay' },
+      update: { status: 'published' },
+      create: {
+        authorId: adminUser.id,
+        title: 'Từ Làng Giao Tác xưa đến Tổ dân phố 9 Thuận Lộc ngày nay: Dòng chảy ký ức và tự hào',
+        slug: 'tu-lang-giao-tac-xua-den-to-dan-pho-9-thuan-loc-ngay-nay',
+        category: 'Đổi thay của làng',
+        coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+        contentHtml: `<h3>Làng Giao Tác — Nơi cội nguồn máu thịt của bao thế hệ</h3>
+        <p>Dù theo thời gian, tên gọi hành chính nay là <strong>Tổ dân phố 9, xã Thuận Lộc, thị xã Hồng Lĩnh (Hà Tĩnh)</strong>, nhưng trong tâm thức của mỗi người con sinh ra và lớn lên nơi đây, cái tên <em>Làng Giao Tác</em> vẫn luôn là niềm tự hào sâu lắng.</p>`,
+        status: 'published',
+        viewCount: 680,
+        publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+    });
 
     // 5. Albums & Photos
     const albumCount = await prisma.album.count();
@@ -240,7 +235,6 @@ async function runAutoSeed(prisma) {
         if (!firstPhotoId) firstPhotoId = p.id;
       }
       if (firstPhotoId) await prisma.album.update({ where: { id: album1.id }, data: { coverPhotoId: firstPhotoId } });
-      console.log('✅ Đã nạp Album và Ảnh làng.');
     }
 
     // 6. Danh bạ Đồng hương
@@ -256,7 +250,6 @@ async function runAutoSeed(prisma) {
           userId: adminUser.id,
         },
       });
-      console.log('✅ Đã nạp Danh bạ đồng hương.');
     }
 
     console.log('🎉 Hoàn tất đồng bộ toàn bộ dữ liệu mẫu!');
