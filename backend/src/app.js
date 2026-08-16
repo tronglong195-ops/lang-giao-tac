@@ -20,20 +20,38 @@ const adminRoutes = require('./modules/admin/admin.routes');
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 // Cấu hình CORS hỗ trợ cookie thông tin phiên làm việc
+const rawFrontendUrls = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((u) => u.trim().replace(/\/$/, ''))
+  : [];
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
+  ...rawFrontendUrls,
+  'https://lang-giao-tac-1.onrender.com',
+  'https://lang-giao-tac.onrender.com',
+  'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
-];
+].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Cho phép request không có origin (ví dụ mobile app hoặc curl) hoặc trong whitelist
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Cho phép request không có origin (mobile app, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      if (
+        allowedOrigins.includes(normalizedOrigin) ||
+        normalizedOrigin.endsWith('.onrender.com') ||
+        normalizedOrigin.endsWith('.vercel.app')
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
