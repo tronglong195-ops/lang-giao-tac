@@ -80,16 +80,15 @@ export const NotificationBell = () => {
   };
 
   const handleNotificationClick = async (item) => {
+    // Tự động xóa ngay thông báo khỏi danh sách khi Admin/Thành viên nhấp vào xử lý
+    setNotifications((prev) => prev.filter((n) => n.id !== item.id));
+    if (!item.isRead) {
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
     try {
-      if (!item.isRead) {
-        await notificationService.markAsRead(item.id);
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
-      );
+      await notificationService.deleteNotification(item.id);
     } catch (err) {
-      console.error('Lỗi xử lý thông báo:', err);
+      console.error('Lỗi tự động xóa thông báo khi click:', err);
     }
 
     setIsOpen(false);
@@ -98,16 +97,20 @@ export const NotificationBell = () => {
     }
   };
 
-  // Xóa 1 thông báo đơn lẻ
+  // Xóa 1 thông báo đơn lẻ khi bấm nút X
   const handleDeleteNotification = async (e, id) => {
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const target = notifications.find((n) => n.id === id);
+    // Cập nhật giao diện tức thì (0ms)
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (target && !target.isRead) {
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
     try {
-      const target = notifications.find((n) => n.id === id);
       await notificationService.deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      if (target && !target.isRead) {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
     } catch (err) {
       console.error('Lỗi xóa thông báo:', err);
     }
@@ -274,11 +277,11 @@ export const NotificationBell = () => {
                     </p>
                   </div>
 
-                  {/* Nút Xóa Đơn Lẻ (Hiện khi hover trên Desktop hoặc hiển thị góc trên) */}
+                  {/* Nút Xóa Đơn Lẻ (Hiển thị rõ ràng và tiện bấm) */}
                   <button
                     type="button"
                     onClick={(e) => handleDeleteNotification(e, item.id)}
-                    className="absolute right-2 top-2 p-1 rounded-md text-ink-muted/50 hover:text-red-600 hover:bg-red-50 transition-colors opacity-70 sm:opacity-0 sm:group-hover:opacity-100"
+                    className="absolute right-2 top-2 p-1.5 rounded-lg text-ink-muted/60 hover:text-red-600 hover:bg-red-50 transition-all z-10"
                     title="Xóa thông báo này"
                   >
                     <X className="w-3.5 h-3.5" />
