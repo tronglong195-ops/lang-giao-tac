@@ -123,43 +123,43 @@ export const Navbar = () => {
       {/* Top Banner Accent Line */}
       <div className="h-1 bg-gradient-to-r from-primary via-secondary to-accent"></div>
 
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-1.5 sm:gap-4 h-16 sm:h-20">
+      <div className="max-w-[1600px] mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-3 lg:gap-4 h-16 sm:h-20">
           {/* Logo & Village Identity */}
           <Link
             to="/"
-            className="flex items-center space-x-2 sm:space-x-2.5 group transition-transform duration-300 hover:scale-[1.01] min-w-0"
+            className="flex items-center space-x-2 sm:space-x-3 group transition-transform duration-300 hover:scale-[1.01] shrink-0 select-none"
           >
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-primary flex items-center justify-center text-secondary-light shadow-md border border-primary-dark/20 group-hover:bg-primary-dark transition-colors shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl bg-primary flex items-center justify-center text-secondary-light shadow-md border border-primary-dark/20 group-hover:bg-primary-dark transition-colors shrink-0">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 fill-current" viewBox="0 0 24 24">
                 <path d="M12 3L2 9h3v12h4v-7h6v7h4V9h3L12 3zm0 3.84L16.45 9H7.55L12 6.84zM13 14h-2v-3h2v3z" />
               </svg>
             </div>
-            <div className="min-w-0">
-              <span className="block font-bold text-sm sm:text-lg xl:text-xl text-primary-dark tracking-tight leading-none group-hover:text-primary transition-colors truncate">
+            <div className="shrink-0 flex flex-col justify-center">
+              <span className="block font-bold text-sm sm:text-base lg:text-lg xl:text-xl text-primary-dark tracking-tight leading-none group-hover:text-primary transition-colors whitespace-nowrap">
                 LÀNG GIAO TÁC
               </span>
-              <span className="block text-[9px] sm:text-[11px] text-accent font-medium mt-0.5 sm:mt-1 truncate max-w-[150px] xs:max-w-[210px] sm:max-w-none">
-                <span className="hidden sm:inline">TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh</span>
-                <span className="sm:hidden">TDP 9 Thuận Lộc, TX Hồng Lĩnh</span>
+              <span className="block text-[9px] sm:text-[10px] lg:text-[11px] text-accent font-medium mt-0.5 sm:mt-1 whitespace-nowrap">
+                <span className="hidden xl:inline">TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh</span>
+                <span className="xl:hidden">TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh</span>
               </span>
             </div>
           </Link>
 
           {/* Desktop Compact Dropdown Menu Bar */}
-          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2 shrink-0">
+          <nav className="hidden lg:flex items-center space-x-0.5 xl:space-x-1.5 shrink-0">
             {/* 1. Trang Chủ */}
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                `flex items-center space-x-1 xl:space-x-1.5 px-2 xl:px-3 py-1.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isActive
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20 shadow-xs'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`
               }
             >
-              <Home className="w-4 h-4 text-primary shrink-0" />
+              <Home className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-primary shrink-0" />
               <span className="whitespace-nowrap">Trang chủ</span>
             </NavLink>
 
@@ -170,13 +170,13 @@ export const Navbar = () => {
                 onClick={() =>
                   setActiveDropdown(activeDropdown === 'heritage' ? null : 'heritage')
                 }
-                className={`flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center space-x-1 xl:space-x-1.5 px-2 xl:px-3 py-1.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isHeritageActive || activeDropdown === 'heritage'
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`}
               >
-                <Landmark className="w-4 h-4 text-accent shrink-0" />
+                <Landmark className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-accent shrink-0" />
                 <span className="whitespace-nowrap">Di Tích & Ký Ức</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-ink-muted transition-transform duration-200 shrink-0 ${
@@ -233,13 +233,13 @@ export const Navbar = () => {
                 onClick={() =>
                   setActiveDropdown(activeDropdown === 'community' ? null : 'community')
                 }
-                className={`flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center space-x-1 xl:space-x-1.5 px-2 xl:px-3 py-1.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isCommunityActive || activeDropdown === 'community'
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`}
               >
-                <Newspaper className="w-4 h-4 text-secondary-dark shrink-0" />
+                <Newspaper className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-secondary-dark shrink-0" />
                 <span className="whitespace-nowrap">Bản Tin & Sinh Hoạt</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-ink-muted transition-transform duration-200 shrink-0 ${
@@ -293,28 +293,28 @@ export const Navbar = () => {
             <NavLink
               to="/dong-huong"
               className={({ isActive }) =>
-                `flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                `flex items-center space-x-1 xl:space-x-1.5 px-2 xl:px-3 py-1.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isActive
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20 shadow-xs'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`
               }
             >
-              <Users className="w-4 h-4 text-teal-600 shrink-0" />
+              <Users className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-teal-600 shrink-0" />
               <span className="whitespace-nowrap">Đồng hương</span>
             </NavLink>
           </nav>
 
           {/* User & Action Buttons (Desktop) */}
-          <div className="hidden lg:flex items-center space-x-2 xl:space-x-3 shrink-0">
+          <div className="hidden lg:flex items-center space-x-1.5 xl:space-x-2.5 shrink-0">
             {user ? (
-              <div className="flex items-center space-x-2 xl:space-x-3 shrink-0">
+              <div className="flex items-center space-x-1.5 xl:space-x-2.5 shrink-0">
                 {/* Nút Viết bài */}
                 <Link
                   to="/bai-viet/viet-bai"
-                  className="flex items-center space-x-1.5 px-3 xl:px-4 py-2 rounded-xl bg-primary text-surface text-xs xl:text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap shrink-0"
+                  className="flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-xl bg-primary text-surface text-xs xl:text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap shrink-0"
                 >
-                  <PenSquare className="w-4 h-4 shrink-0" />
+                  <PenSquare className="w-3.5 h-3.5 xl:w-4 xl:h-4 shrink-0" />
                   <span className="whitespace-nowrap">Viết bài</span>
                 </Link>
 
@@ -325,23 +325,23 @@ export const Navbar = () => {
                 <div className="relative shrink-0">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center space-x-2 p-1.5 pr-2.5 rounded-xl border border-warmBorder hover:bg-paper transition-colors focus:outline-none bg-surface shadow-xs shrink-0"
+                    className="flex items-center space-x-1.5 p-1 pr-2 xl:p-1.5 xl:pr-2.5 rounded-xl border border-warmBorder hover:bg-paper transition-colors focus:outline-none bg-surface shadow-xs shrink-0"
                   >
                     {user.avatarUrl ? (
                       <img
                         src={user.avatarUrl}
                         alt={user.fullName}
-                        className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg object-cover border border-primary/20 shrink-0"
+                        className="w-6 h-6 xl:w-8 xl:h-8 rounded-lg object-cover border border-primary/20 shrink-0"
                       />
                     ) : (
-                      <div className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg bg-primary-subtle text-primary flex items-center justify-center font-bold text-xs xl:text-sm shrink-0">
+                      <div className="w-6 h-6 xl:w-8 xl:h-8 rounded-lg bg-primary-subtle text-primary flex items-center justify-center font-bold text-xs xl:text-sm shrink-0">
                         {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                       </div>
                     )}
-                    <span className="text-xs xl:text-sm font-semibold text-ink max-w-[100px] xl:max-w-[130px] truncate whitespace-nowrap">
+                    <span className="text-xs xl:text-sm font-semibold text-ink max-w-[80px] xl:max-w-[120px] truncate whitespace-nowrap">
                       {user.fullName}
                     </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-ink-muted shrink-0" />
+                    <ChevronDown className="w-3 h-3 xl:w-3.5 xl:h-3.5 text-ink-muted shrink-0" />
                   </button>
 
                   {/* Dropdown Menu */}
