@@ -124,10 +124,10 @@ export const AdminDashboardPage = () => {
       loadEventList();
     } else if (activeTab === 'history') {
       loadHistoryList();
-    } else if (activeTab === 'users' && isAdmin) {
+    } else if (activeTab === 'users') {
       loadUsersList();
     }
-  }, [activeTab]);
+  }, [activeTab, isAdmin]);
 
   const setTab = (tab) => {
     searchParams.set('tab', tab);
@@ -354,11 +354,16 @@ export const AdminDashboardPage = () => {
     setLoadingUsers(true);
     try {
       const data = await adminService.getUsers({
+        limit: 100,
         search: customParams.search !== undefined ? customParams.search : (searchUser || undefined),
         role: customParams.role !== undefined ? customParams.role : (filterRole !== 'all' ? filterRole : undefined),
         status: customParams.status !== undefined ? customParams.status : (filterStatus !== 'all' ? filterStatus : undefined),
       });
-      if (data?.users) setUsersList(data.users);
+      if (data?.users) {
+        setUsersList(data.users);
+      } else if (Array.isArray(data)) {
+        setUsersList(data);
+      }
     } catch (error) {
       console.error('Lỗi tải người dùng:', error);
     } finally {

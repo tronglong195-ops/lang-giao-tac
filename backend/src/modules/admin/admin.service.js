@@ -211,9 +211,11 @@ class AdminService {
     return updated;
   }
 
-  async getUsers({ page = 1, limit = 15, search, role }) {
-    const skip = (Number(page) - 1) * Number(limit);
-    const take = Number(limit);
+  async getUsers({ page = 1, limit = 100, search, role, status } = {}) {
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 100;
+    const skip = (pageNum - 1) * limitNum;
+    const take = limitNum;
 
     const where = {};
     if (role && role !== 'all') {
@@ -268,8 +270,8 @@ class AdminService {
     return {
       users,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
         totalPages: Math.ceil(total / take) || 1,
       },
