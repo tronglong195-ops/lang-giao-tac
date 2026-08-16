@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   User,
@@ -11,6 +11,10 @@ import {
   Calendar,
   Eye,
   PlusCircle,
+  Camera,
+  Upload,
+  X,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { postService } from '../services/postService';
@@ -20,6 +24,7 @@ import { StatusBadge } from '../components/common/StatusBadge';
 
 export const ProfilePage = () => {
   const { user, updateProfile } = useAuth();
+  const avatarInputRef = useRef(null);
 
   const [activeTab, setActiveTab] = useState('posts'); // 'posts' | 'photos' | 'profile' | 'password'
 
@@ -46,6 +51,37 @@ export const ProfilePage = () => {
   const [changingPass, setChangingPass] = useState(false);
   const [passMsg, setPassMsg] = useState('');
   const [passError, setPassError] = useState('');
+
+  // Xử lý tải ảnh avatar từ thiết bị
+  const handleAvatarFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file hình ảnh (JPG, PNG, WEBP).');
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      alert('Dung lượng ảnh tối đa 8MB. Vui lòng chọn ảnh nhỏ hơn.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Url = event.target.result;
+      setAvatarUrl(base64Url);
+      // Tự động lưu avatar mới vào hồ sơ
+      try {
+        await updateProfile({ avatarUrl: base64Url });
+        setProfileMsg('Đã cập nhật ảnh đại diện mới thành công!');
+        setTimeout(() => setProfileMsg(''), 3000);
+      } catch (err) {
+        console.error('Lỗi khi lưu avatar:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (activeTab === 'posts') {
@@ -100,13 +136,23 @@ export const ProfilePage = () => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword) return;
+    if (!currentPassword || !newPassword) {
+      setPassError('Vui lòng nhập cả mật khẩu cũ và mới.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPassError('Mật khẩu mới phải có tối thiểu 6 ký tự.');
+      return;
+    }
 
     setChangingPass(true);
-    setPassMsg('');
     setPassError('');
+    setPassMsg('');
     try {
-      const res = await authService.changePassword({ currentPassword, newPassword });
+      const res = await authService.changePassword({
+        currentPassword,
+        newPassword,
+      });
       setPassMsg(res.message || 'Đổi mật khẩu thành công!');
       setCurrentPassword('');
       setNewPassword('');
@@ -121,17 +167,36 @@ export const ProfilePage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Profile Overview Card */}
       <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-8 shadow-warm flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 text-center md:text-left">
-        {user?.avatarUrl ? (
-          <img
-            src={user.avatarUrl}
-            alt={user.fullName}
-            className="w-24 h-24 rounded-2xl object-cover border-2 border-primary/20 shadow-md shrink-0"
+        {/* Avatar with Camera Upload Overlay */}
+        <div className="relative group shrink-0">
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarFileSelect}
+            className="hidden"
+            id="avatar-quick-upload"
           />
-        ) : (
-          <div className="w-24 h-24 rounded-2xl bg-primary text-surface flex items-center justify-center font-bold text-3xl shrink-0 shadow-md">
-            {user?.fullName?.charAt(0) || 'U'}
+          <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-md relative bg-primary text-surface flex items-center justify-center font-bold text-3xl">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.fullName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{user?.fullName?.charAt(0) || 'U'}</span>
+            )}
           </div>
-        )}
+          {/* Camera Button */}
+          <label
+            htmlFor="avatar-quick-upload"
+            className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-primary text-white hover:bg-primary-dark cursor-pointer shadow-md transition-transform hover:scale-110 flex items-center justify-center"
+            title="Tải ảnh đại diện từ máy tính/điện thoại"
+          >
+            <Camera className="w-4 h-4" />
+          </label>
+        </div>
 
         <div className="space-y-2 flex-1">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
@@ -166,6 +231,13 @@ export const ProfilePage = () => {
           )}
         </div>
       </div>
+
+      {profileMsg && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center space-x-2 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{profileMsg}</span>
+        </div>
+      )}
 
       {/* Tabs Navigation */}
       <div className="flex flex-wrap items-center gap-2 border-b border-warmBorder pb-4">
@@ -220,15 +292,15 @@ export const ProfilePage = () => {
 
       {/* Tab 1: My Posts */}
       {activeTab === 'posts' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-lg text-ink">Danh sách bài viết đã gửi</h2>
+            <h2 className="font-bold text-lg text-ink">Danh Sách Bài Viết Đã Gửi</h2>
             <Link
               to="/bai-viet/viet-bai"
               className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-primary text-surface text-xs font-semibold hover:bg-primary-dark shadow-sm"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>Viết bài mới</span>
+              <span>Gửi bài viết mới</span>
             </Link>
           </div>
 
@@ -236,54 +308,47 @@ export const ProfilePage = () => {
             <div className="text-center py-12 text-ink-muted">Đang tải bài viết...</div>
           ) : myPosts.length === 0 ? (
             <div className="text-center py-16 bg-surface rounded-2xl border border-warmBorder text-ink-muted text-sm space-y-3">
-              <p>Bạn chưa gửi bài viết nào.</p>
+              <p>Bạn chưa có bài viết nào.</p>
               <Link
                 to="/bai-viet/viet-bai"
                 className="inline-block px-4 py-2 rounded-xl bg-primary text-surface text-xs font-semibold"
               >
-                Gửi bài viết đầu tiên ngay
+                Viết bài đầu tiên của bạn
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {myPosts.map((post) => (
                 <div
                   key={post.id}
-                  className="p-5 rounded-2xl bg-surface border border-warmBorder shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="bg-surface rounded-2xl border border-warmBorder p-5 shadow-sm space-y-3 flex flex-col justify-between"
                 >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
-                      <StatusBadge status={post.status} />
-                      <span className="text-xs text-primary font-medium">{post.category}</span>
-                      <span className="text-xs text-ink-light">•</span>
-                      <span className="text-xs text-ink-light">
-                        {new Date(post.createdAt).toLocaleDateString('vi-VN')}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-subtle text-primary">
+                        {post.category}
                       </span>
+                      <StatusBadge status={post.status} />
                     </div>
-                    <h3 className="font-bold text-base text-ink">
+
+                    <h3 className="font-bold text-ink hover:text-primary transition-colors line-clamp-2">
                       {post.status === 'published' ? (
-                        <Link to={`/bai-viet/${post.slug}`} className="hover:text-primary">
-                          {post.title}
-                        </Link>
+                        <Link to={`/bai-viet/${post.slug}`}>{post.title}</Link>
                       ) : (
-                        post.title
+                        <span>{post.title}</span>
                       )}
                     </h3>
                   </div>
 
-                  <div className="flex items-center space-x-4 self-end sm:self-center text-xs text-ink-muted">
+                  <div className="flex items-center justify-between pt-3 border-t border-warmBorder text-xs text-ink-muted">
+                    <span className="flex items-center space-x-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{new Date(post.createdAt).toLocaleDateString('vi-VN')}</span>
+                    </span>
                     <span className="flex items-center space-x-1">
                       <Eye className="w-3.5 h-3.5" />
                       <span>{post.viewCount} lượt xem</span>
                     </span>
-                    {post.status === 'published' && (
-                      <Link
-                        to={`/bai-viet/${post.slug}`}
-                        className="px-3 py-1.5 rounded-lg bg-paper border border-warmBorder text-primary font-semibold hover:bg-primary-subtle"
-                      >
-                        Xem bài
-                      </Link>
-                    )}
                   </div>
                 </div>
               ))}
@@ -294,9 +359,9 @@ export const ProfilePage = () => {
 
       {/* Tab 2: My Photos */}
       {activeTab === 'photos' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-lg text-ink">Ảnh bạn đã tải lên</h2>
+            <h2 className="font-bold text-lg text-ink">Ảnh Bạn Đã Đóng Góp</h2>
             <Link
               to="/thu-vien-anh"
               className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-primary text-surface text-xs font-semibold hover:bg-primary-dark shadow-sm"
@@ -354,12 +419,30 @@ export const ProfilePage = () => {
         >
           <h2 className="font-bold text-lg text-ink">Chỉnh Sửa Thông Tin Cá Nhân</h2>
 
-          {profileMsg && (
-            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{profileMsg}</span>
+          {/* Avatar Upload in Edit Form */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+              Ảnh đại diện
+            </label>
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden border border-warmBorder bg-paper shrink-0">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center font-bold text-primary">
+                    {fullName.charAt(0) || 'U'}
+                  </div>
+                )}
+              </div>
+              <label
+                htmlFor="avatar-quick-upload"
+                className="px-4 py-2 rounded-xl bg-paper border border-warmBorder hover:bg-surface text-xs font-semibold text-ink cursor-pointer inline-flex items-center space-x-1.5 transition-colors"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Tải ảnh từ máy tính/điện thoại</span>
+              </label>
             </div>
-          )}
+          </div>
 
           <div className="space-y-1">
             <label className="block text-xs font-bold text-ink uppercase tracking-wider">
@@ -371,19 +454,6 @@ export const ProfilePage = () => {
               onChange={(e) => setFullName(e.target.value)}
               className="w-full input-warm text-sm"
               required
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-bold text-ink uppercase tracking-wider">
-              Ảnh đại diện (URL Cloudinary / Link ảnh)
-            </label>
-            <input
-              type="url"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://res.cloudinary.com/..."
-              className="w-full input-warm text-sm"
             />
           </div>
 
@@ -493,7 +563,7 @@ export const ProfilePage = () => {
               disabled={changingPass}
               className="px-6 py-2.5 rounded-xl bg-primary text-surface font-semibold text-sm hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
             >
-              {changingPass ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
+              {changingPass ? 'Đang đổi mật khẩu...' : 'Cập nhật mật khẩu'}
             </button>
           </div>
         </form>
