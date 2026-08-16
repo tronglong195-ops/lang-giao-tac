@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const notificationController = require('./notification.controller');
-const { requireAuth } = require('../../middlewares/authGuard');
+const { authGuard } = require('../../middlewares/authGuard');
 
-router.use(requireAuth);
+router.use(authGuard);
 
 router.get('/', notificationController.getNotifications);
 router.get('/unread-count', notificationController.getUnreadCount);
