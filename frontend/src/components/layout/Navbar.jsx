@@ -17,7 +17,6 @@ import {
   BookOpen,
   Users,
   Calendar,
-  Compass,
   Sparkles,
 } from 'lucide-react';
 
@@ -123,43 +122,43 @@ export const Navbar = () => {
       {/* Top Banner Accent Line */}
       <div className="h-1 bg-gradient-to-r from-primary via-secondary to-accent"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-2 xl:gap-4 h-20">
           {/* Logo & Village Identity */}
           <Link
             to="/"
-            className="flex items-center space-x-3 group transition-transform duration-300 hover:scale-[1.01]"
+            className="flex items-center space-x-2.5 group transition-transform duration-300 hover:scale-[1.01] shrink-0"
           >
-            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center text-secondary-light shadow-md border border-primary-dark/20 group-hover:bg-primary-dark transition-colors shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary flex items-center justify-center text-secondary-light shadow-md border border-primary-dark/20 group-hover:bg-primary-dark transition-colors shrink-0">
               <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
                 <path d="M12 3L2 9h3v12h4v-7h6v7h4V9h3L12 3zm0 3.84L16.45 9H7.55L12 6.84zM13 14h-2v-3h2v3z" />
               </svg>
             </div>
-            <div>
-              <span className="block font-bold text-lg sm:text-xl text-primary-dark tracking-tight leading-none group-hover:text-primary transition-colors">
+            <div className="whitespace-nowrap">
+              <span className="block font-bold text-base sm:text-lg xl:text-xl text-primary-dark tracking-tight leading-none group-hover:text-primary transition-colors">
                 LÀNG GIAO TÁC
               </span>
-              <span className="block text-[11px] text-accent font-medium mt-1">
-                TDP 9 Thuận Lộc, TX Hồng Lĩnh (Hà Tĩnh)
+              <span className="block text-[10px] sm:text-[11px] text-accent font-medium mt-1">
+                TDP 9 Thuận Lộc, TX Hồng Lĩnh
               </span>
             </div>
           </Link>
 
           {/* Desktop Compact Dropdown Menu Bar */}
-          <nav className="hidden lg:flex items-center space-x-1.5 xl:space-x-2">
+          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2 shrink-0">
             {/* 1. Trang Chủ */}
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                `flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isActive
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20 shadow-xs'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`
               }
             >
-              <Home className="w-4 h-4 text-primary" />
-              <span>Trang chủ</span>
+              <Home className="w-4 h-4 text-primary shrink-0" />
+              <span className="whitespace-nowrap">Trang chủ</span>
             </NavLink>
 
             {/* 2. Menu Thả: Di Tích & Ký Ức */}
@@ -169,16 +168,16 @@ export const Navbar = () => {
                 onClick={() =>
                   setActiveDropdown(activeDropdown === 'heritage' ? null : 'heritage')
                 }
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isHeritageActive || activeDropdown === 'heritage'
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`}
               >
-                <Landmark className="w-4 h-4 text-accent" />
-                <span>Di Tích & Ký Ức</span>
+                <Landmark className="w-4 h-4 text-accent shrink-0" />
+                <span className="whitespace-nowrap">Di Tích & Ký Ức</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-ink-muted transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 text-ink-muted transition-transform duration-200 shrink-0 ${
                     activeDropdown === 'heritage' ? 'rotate-180 text-primary' : ''
                   }`}
                 />
@@ -232,16 +231,16 @@ export const Navbar = () => {
                 onClick={() =>
                   setActiveDropdown(activeDropdown === 'community' ? null : 'community')
                 }
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isCommunityActive || activeDropdown === 'community'
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`}
               >
-                <Newspaper className="w-4 h-4 text-secondary-dark" />
-                <span>Bản Tin & Sinh Hoạt</span>
+                <Newspaper className="w-4 h-4 text-secondary-dark shrink-0" />
+                <span className="whitespace-nowrap">Bản Tin & Sinh Hoạt</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-ink-muted transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 text-ink-muted transition-transform duration-200 shrink-0 ${
                     activeDropdown === 'community' ? 'rotate-180 text-primary' : ''
                   }`}
                 />
@@ -288,56 +287,56 @@ export const Navbar = () => {
               )}
             </div>
 
-            {/* 4. Hội Đồng Hương (Nhanh) */}
+            {/* 4. Hội Đồng Hương */}
             <NavLink
               to="/dong-huong"
               className={({ isActive }) =>
-                `flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                `flex items-center space-x-1.5 px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isActive
                     ? 'text-primary-dark bg-primary-subtle font-bold border border-primary/20 shadow-xs'
                     : 'text-ink/85 hover:text-primary hover:bg-paper'
                 }`
               }
             >
-              <Users className="w-4 h-4 text-teal-600" />
-              <span>Đồng hương</span>
+              <Users className="w-4 h-4 text-teal-600 shrink-0" />
+              <span className="whitespace-nowrap">Đồng hương</span>
             </NavLink>
           </nav>
 
           {/* User & Action Buttons (Desktop) */}
-          <div className="hidden lg:flex items-center space-x-3">
+          <div className="hidden lg:flex items-center space-x-2 xl:space-x-3 shrink-0">
             {user ? (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 xl:space-x-3 shrink-0">
                 {/* Nút Viết bài */}
                 <Link
                   to="/bai-viet/viet-bai"
-                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-primary text-surface text-xs sm:text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm"
+                  className="flex items-center space-x-1.5 px-3 xl:px-4 py-2 rounded-xl bg-primary text-surface text-xs xl:text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap shrink-0"
                 >
-                  <PenSquare className="w-4 h-4" />
-                  <span>Viết bài</span>
+                  <PenSquare className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap">Viết bài</span>
                 </Link>
 
                 {/* User Dropdown */}
-                <div className="relative">
+                <div className="relative shrink-0">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center space-x-2.5 p-1.5 pr-3 rounded-xl border border-warmBorder hover:bg-paper transition-colors focus:outline-none bg-surface shadow-xs"
+                    className="flex items-center space-x-2 p-1.5 pr-2.5 rounded-xl border border-warmBorder hover:bg-paper transition-colors focus:outline-none bg-surface shadow-xs shrink-0"
                   >
                     {user.avatarUrl ? (
                       <img
                         src={user.avatarUrl}
                         alt={user.fullName}
-                        className="w-8 h-8 rounded-lg object-cover border border-primary/20"
+                        className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg object-cover border border-primary/20 shrink-0"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-lg bg-primary-subtle text-primary flex items-center justify-center font-bold text-sm">
+                      <div className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg bg-primary-subtle text-primary flex items-center justify-center font-bold text-xs xl:text-sm shrink-0">
                         {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                       </div>
                     )}
-                    <span className="text-xs sm:text-sm font-semibold text-ink max-w-[120px] truncate">
+                    <span className="text-xs xl:text-sm font-semibold text-ink max-w-[100px] xl:max-w-[130px] truncate whitespace-nowrap">
                       {user.fullName}
                     </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-ink-muted" />
+                    <ChevronDown className="w-3.5 h-3.5 text-ink-muted shrink-0" />
                   </button>
 
                   {/* Dropdown Menu */}
@@ -387,16 +386,16 @@ export const Navbar = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 shrink-0">
                 <Link
                   to="/dang-nhap"
-                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-ink hover:text-primary hover:bg-paper transition-colors"
+                  className="px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold text-ink hover:text-primary hover:bg-paper transition-colors whitespace-nowrap"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/dang-ky"
-                  className="px-4 py-2 rounded-xl bg-primary text-surface text-xs sm:text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm"
+                  className="px-3.5 py-2 rounded-xl bg-primary text-surface text-xs xl:text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap"
                 >
                   Đăng ký
                 </Link>
@@ -405,7 +404,7 @@ export const Navbar = () => {
           </div>
 
           {/* Mobile Hamburger Button */}
-          <div className="flex items-center lg:hidden space-x-2">
+          <div className="flex items-center lg:hidden space-x-2 shrink-0">
             {user && (
               <Link
                 to="/bai-viet/viet-bai"
