@@ -6,7 +6,13 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌾 Bắt đầu quá trình nạp dữ liệu mẫu (Seed) cho Làng Giao Tác (TDP 9 Thuận Lộc, TX Hồng Lĩnh)...');
 
-  // Xóa dữ liệu cũ theo thứ tự ràng buộc khóa ngoại
+  const existingUsers = await prisma.user.count();
+  if (existingUsers > 0) {
+    console.log('🌾 Database đã có dữ liệu, bỏ qua bước khởi tạo để bảo toàn dữ liệu.');
+    return;
+  }
+
+  // Xóa dữ liệu cũ theo thứ tự ràng buộc khóa ngoại (nếu chạy lại thủ công)
   await prisma.comment.deleteMany();
   await prisma.photo.deleteMany();
   await prisma.album.deleteMany();
