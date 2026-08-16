@@ -34,9 +34,9 @@ class EmailService {
           tls: {
             rejectUnauthorized: false,
           },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 10000,
+          connectionTimeout: 4000,
+          greetingTimeout: 4000,
+          socketTimeout: 4000,
         });
         console.log(`📧 [EmailService] Đã cấu hình SMTP Server qua cổng ${smtpPort} (SSL, IPv4) cho ${smtpUser} ➔ ${ADMIN_EMAIL}`);
       } else {
