@@ -55,6 +55,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Endpoint tự động nạp dữ liệu Admin và nội dung mẫu nếu Database trống
+app.get('/api/health/init-data', async (req, res) => {
+  try {
+    const prisma = require('./config/db');
+    const { runAutoSeed } = require('./config/autoSeed');
+    const result = await runAutoSeed(prisma);
+    res.status(200).json({ status: 'ok', result });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // Đăng ký các modules API theo đúng đặc tả
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
