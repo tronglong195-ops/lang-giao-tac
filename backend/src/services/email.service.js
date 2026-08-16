@@ -12,20 +12,31 @@ class EmailService {
     try {
       const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
       const smtpPort = parseInt(process.env.SMTP_PORT, 10) || 587;
-      const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-      const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+      const smtpUser = (process.env.SMTP_USER || process.env.EMAIL_USER || '').trim();
+      const smtpPass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
 
       if (smtpUser && smtpPass) {
-        this.transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465,
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
-        console.log(`📧 [EmailService] Đã cấu hình SMTP Server (${smtpHost}:${smtpPort}) gửi thư tới ${ADMIN_EMAIL}`);
+        const isGmail = smtpHost.includes('gmail') || smtpUser.includes('@gmail.com');
+        const transportConfig = isGmail
+          ? {
+              service: 'gmail',
+              auth: {
+                user: smtpUser,
+                pass: smtpPass,
+              },
+            }
+          : {
+              host: smtpHost,
+              port: smtpPort,
+              secure: smtpPort === 465,
+              auth: {
+                user: smtpUser,
+                pass: smtpPass,
+              },
+            };
+
+        this.transporter = nodemailer.createTransport(transportConfig);
+        console.log(`📧 [EmailService] Đã kích hoạt kết nối gửi email qua ${isGmail ? 'Gmail Service' : smtpHost} (Tài khoản: ${smtpUser}) ➔ Gửi tới: ${ADMIN_EMAIL}`);
       } else {
         // Fallback logger transporter nếu chưa cấu hình mật khẩu ứng dụng SMTP
         this.transporter = null;
@@ -39,14 +50,15 @@ class EmailService {
 
   async sendMail({ to, subject, html, text }) {
     const recipient = to || ADMIN_EMAIL;
-    const fromAddress = process.env.SMTP_FROM || `"Làng Giao Tác Thông Báo" <${process.env.SMTP_USER || 'no-reply@langgiaotac.vn'}>`;
+    const smtpUser = (process.env.SMTP_USER || process.env.EMAIL_USER || '').trim();
+    const fromAddress = process.env.SMTP_FROM || `"Làng Giao Tác" <${smtpUser || 'tronglong195@gmail.com'}>`;
 
     console.log(`\n📬 [EMAIL NOTIFICATION] ➔ Gửi tới: ${recipient}`);
     console.log(`📌 Tiêu đề: ${subject}`);
     if (text) console.log(`📝 Nội dung: ${text}`);
 
     if (!this.transporter) {
-      return { success: true, loggedOnly: true };
+      return { success: false, reason: 'Chưa cấu hình SMTP_USER và SMTP_PASS trên server' };
     }
 
     try {

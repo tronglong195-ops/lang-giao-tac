@@ -77,13 +77,25 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Endpoint tự động nạp dữ liệu Admin và nội dung mẫu nếu Database trống
-app.get('/api/health/init-data', async (req, res) => {
+// Endpoint kiểm tra và test gửi email thông báo tới tronglong195@gmail.com
+app.get('/api/health/test-email', async (req, res) => {
   try {
-    const prisma = require('./config/db');
-    const { runAutoSeed } = require('./config/autoSeed');
-    const result = await runAutoSeed(prisma);
-    res.status(200).json({ status: 'ok', result });
+    const emailService = require('./services/email.service');
+    const result = await emailService.sendMail({
+      to: 'tronglong195@gmail.com',
+      subject: '🧪 [Test Kết Nối] Kiểm tra hệ thống gửi Email Làng Giao Tác',
+      text: 'Xin chào Admin! Nếu bạn đọc được email này, tính năng gửi email tự động của Làng Giao Tác đã hoạt động 100% hoàn hảo.',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #FAF8F5; border-radius: 12px; border: 1px solid #2D5A27;">
+          <h2 style="color: #2D5A27;">🌾 KẾT NỐI EMAIL THÀNH CÔNG!</h2>
+          <p>Xin chào Admin <b>tronglong195@gmail.com</b>,</p>
+          <p>Hệ thống máy chủ Làng Giao Tác đã kết nối thành công tới dịch vụ Gmail SMTP.</p>
+          <p>Từ bây giờ, mọi hoạt động <b>Đăng ký mới</b>, <b>Đăng nhập</b>, <b>Gửi bài viết</b> và <b>Tải ảnh</b> sẽ tự động gửi thư báo cáo về hòm thư này.</p>
+          <p style="color: #888; font-size: 12px;">Thời gian test: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
+        </div>
+      `,
+    });
+    res.status(200).json({ status: 'ok', emailResult: result });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
