@@ -89,13 +89,71 @@ app.get('/api/health/test-email', async (req, res) => {
         <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #FAF8F5; border-radius: 12px; border: 1px solid #2D5A27;">
           <h2 style="color: #2D5A27;">🌾 KẾT NỐI EMAIL THÀNH CÔNG!</h2>
           <p>Xin chào Admin <b>tronglong195@gmail.com</b>,</p>
-          <p>Hệ thống máy chủ Làng Giao Tác đã kết nối thành công tới dịch vụ Gmail SMTP.</p>
-          <p>Từ bây giờ, mọi hoạt động <b>Đăng ký mới</b>, <b>Đăng nhập</b>, <b>Gửi bài viết</b> và <b>Tải ảnh</b> sẽ tự động gửi thư báo cáo về hòm thư này.</p>
+          <p>Hệ thống máy chủ Làng Giao Tác đã kết nối thành công tới dịch vụ Gmail / Resend API.</p>
+          <p>Từ bây giờ, mọi hoạt động <b>Đăng ký mới</b>, <b>Đăng nhập</b>, <b>Gửi bài viết chờ duyệt</b> và <b>Tải ảnh chờ duyệt</b> sẽ tự động gửi thư báo cáo về hòm thư này.</p>
           <p style="color: #888; font-size: 12px;">Thời gian test: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
         </div>
       `,
     });
     res.status(200).json({ status: 'ok', emailResult: result });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// Test gửi email cảnh báo Đăng Ký Mới
+app.get('/api/health/test-register-email', async (req, res) => {
+  try {
+    const emailService = require('./services/email.service');
+    const result = await emailService.sendRegisterAlert({
+      user: {
+        fullName: 'Nguyễn Văn An (Bà con thử nghiệm)',
+        email: 'nguyenvanan.test@gmail.com',
+        hometownGroup: 'Xóm 9 Thuận Lộc',
+        currentLocation: 'Hà Nội',
+      },
+      registrationMethod: 'Trang Đăng Ký Thành Viên',
+    });
+    res.status(200).json({ status: 'ok', message: 'Đã kích hoạt gửi mail thành viên đăng ký mới', emailResult: result });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// Test gửi email cảnh báo Bài Viết Chờ Duyệt
+app.get('/api/health/test-post-email', async (req, res) => {
+  try {
+    const emailService = require('./services/email.service');
+    const result = await emailService.sendNewPostAlert({
+      post: {
+        title: 'Ký ức giếng làng và những mùa gặt tháng Năm ở Giao Tác',
+        category: 'Ký ức tuổi thơ',
+        contentHtml: '<p>Nhớ về tuổi thơ bên giếng làng Giao Tác, nơi bà con tụ họp sau những buổi trưa hè oi ả...</p>',
+      },
+      author: {
+        fullName: 'Trần Thị Mai',
+        email: 'tranmai.giaotac@gmail.com',
+      },
+    });
+    res.status(200).json({ status: 'ok', message: 'Đã kích hoạt gửi mail bài viết mới chờ duyệt', emailResult: result });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// Test gửi email cảnh báo Ảnh Mới Chờ Duyệt
+app.get('/api/health/test-photo-email', async (req, res) => {
+  try {
+    const emailService = require('./services/email.service');
+    const result = await emailService.sendNewPhotoAlert({
+      photoCount: 3,
+      uploader: {
+        fullName: 'Lê Hoàng Long',
+        email: 'lelong.hatinh@gmail.com',
+      },
+      albumTitle: 'Cảnh Sắc Đường Làng Ngõ Xóm Thuận Lộc',
+    });
+    res.status(200).json({ status: 'ok', message: 'Đã kích hoạt gửi mail ảnh mới chờ duyệt', emailResult: result });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
