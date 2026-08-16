@@ -11,34 +11,29 @@ class EmailService {
   initTransporter() {
     try {
       const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-      const smtpPort = parseInt(process.env.SMTP_PORT, 10) || 587;
+      const smtpPort = parseInt(process.env.SMTP_PORT, 10) || 465;
       const smtpUser = (process.env.SMTP_USER || process.env.EMAIL_USER || '').trim();
       const smtpPass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
 
       if (smtpUser && smtpPass) {
-        const isGmail = smtpHost.includes('gmail') || smtpUser.includes('@gmail.com');
-        const transportConfig = isGmail
-          ? {
-              service: 'gmail',
-              auth: {
-                user: smtpUser,
-                pass: smtpPass,
-              },
-            }
-          : {
-              host: smtpHost,
-              port: smtpPort,
-              secure: smtpPort === 465,
-              auth: {
-                user: smtpUser,
-                pass: smtpPass,
-              },
-            };
-
-        this.transporter = nodemailer.createTransport(transportConfig);
-        console.log(`📧 [EmailService] Đã kích hoạt kết nối gửi email qua ${isGmail ? 'Gmail Service' : smtpHost} (Tài khoản: ${smtpUser}) ➔ Gửi tới: ${ADMIN_EMAIL}`);
+        // Cấu hình kết nối trực tiếp qua cổng 465 (SSL) để tránh bị chặn cổng 587 trên Cloud Render
+        this.transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465, // True cho cổng 465 SSL
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+          tls: {
+            rejectUnauthorized: false,
+          },
+          connectionTimeout: 8000, // 8 giây timeout
+          greetingTimeout: 8000,
+          socketTimeout: 8000,
+        });
+        console.log(`📧 [EmailService] Đã cấu hình SMTP Server qua cổng ${smtpPort} (SSL: ${smtpPort === 465}) cho ${smtpUser} ➔ ${ADMIN_EMAIL}`);
       } else {
-        // Fallback logger transporter nếu chưa cấu hình mật khẩu ứng dụng SMTP
         this.transporter = null;
         console.log(`⚠️ [EmailService] Chưa thiết lập SMTP_USER/SMTP_PASS trong .env. Email thông báo sẽ được ghi log chi tiết tới ${ADMIN_EMAIL}.`);
       }
@@ -57,6 +52,37 @@ class EmailService {
     console.log(`📌 Tiêu đề: ${subject}`);
     if (text) console.log(`📝 Nội dung: ${text}`);
 
+    // Cách 1: Gửi qua Resend HTTP API nếu có RESEND_API_KEY (Không bao giờ bị chặn cổng SMTP trên Cloud)
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${resendApiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'Làng Giao Tác <onboarding@resend.dev>',
+            to: [recipient],
+            subject,
+            text,
+            html,
+          }),
+        });
+        const resData = await response.json();
+        if (response.ok) {
+          console.log(`✅ [EmailService] Gửi email thành công qua Resend HTTP API:`, resData.id);
+          return { success: true, messageId: resData.id, via: 'Resend API' };
+        } else {
+          console.error(`⚠️ [EmailService] Resend API error:`, resData);
+        }
+      } catch (httpErr) {
+        console.error(`⚠️ [EmailService] Lỗi gọi Resend HTTP API:`, httpErr.message);
+      }
+    }
+
+    // Cách 2: Gửi qua SMTP Transporter (Port 465 SSL)
     if (!this.transporter) {
       return { success: false, reason: 'Chưa cấu hình SMTP_USER và SMTP_PASS trên server' };
     }
@@ -69,8 +95,8 @@ class EmailService {
         text,
         html,
       });
-      console.log(`✅ [EmailService] Gửi email thành công: ${info.messageId}`);
-      return { success: true, messageId: info.messageId };
+      console.log(`✅ [EmailService] Gửi email thành công qua SMTP: ${info.messageId}`);
+      return { success: true, messageId: info.messageId, via: 'SMTP' };
     } catch (error) {
       console.error(`❌ [EmailService] Gặp lỗi khi gửi email qua SMTP:`, error.message);
       return { success: false, error: error.message };
