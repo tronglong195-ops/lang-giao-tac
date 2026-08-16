@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { NotificationBell } from '../common/NotificationBell';
 import {
   Menu,
   X,
@@ -316,6 +317,9 @@ export const Navbar = () => {
                   <span className="whitespace-nowrap">Viết bài</span>
                 </Link>
 
+                {/* Chuông Thông Báo In-App */}
+                <NotificationBell />
+
                 {/* User Dropdown */}
                 <div className="relative shrink-0">
                   <button
@@ -405,6 +409,7 @@ export const Navbar = () => {
 
           {/* Mobile Hamburger Button */}
           <div className="flex items-center lg:hidden space-x-2 shrink-0">
+            {user && <NotificationBell />}
             {user && (
               <Link
                 to="/bai-viet/viet-bai"

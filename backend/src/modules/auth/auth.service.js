@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../../utils/jwt');
+const emailService = require('../../services/email.service');
 
 class AuthService {
   async register({ fullName, email, password, hometownGroup, currentLocation, bio }) {
@@ -83,6 +84,12 @@ class AuthService {
 
     const accessToken = generateAccessToken(safeUser);
     const refreshToken = generateRefreshToken(safeUser);
+
+    // Gửi email cảnh báo đăng nhập tới Admin (tronglong195@gmail.com)
+    emailService.sendLoginAlert({
+      user: safeUser,
+      loginMethod: 'Email & Mật khẩu',
+    }).catch(err => console.error('Lỗi gửi email cảnh báo đăng nhập:', err.message));
 
     return { user: safeUser, accessToken, refreshToken };
   }
@@ -176,6 +183,12 @@ class AuthService {
 
     const accessToken = generateAccessToken(safeUser);
     const refreshToken = generateRefreshToken(safeUser);
+
+    // Gửi email cảnh báo đăng nhập Google tới Admin
+    emailService.sendLoginAlert({
+      user: safeUser,
+      loginMethod: 'Google Sign-In',
+    }).catch(err => console.error('Lỗi gửi email cảnh báo đăng nhập Google:', err.message));
 
     return { user: safeUser, accessToken, refreshToken };
   }

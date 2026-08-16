@@ -1,4 +1,6 @@
 const prisma = require('../../config/db');
+const emailService = require('../../services/email.service');
+const notificationService = require('../notifications/notification.service');
 
 class PhotoService {
   async addPhoto(user, { albumId, imageUrl, thumbnailUrl, caption, takenYear }) {
@@ -53,6 +55,21 @@ class PhotoService {
       });
     }
 
+    if (status === 'pending') {
+      notificationService.notifyAdminsAndMods({
+        title: '📸 Có ảnh mới chờ duyệt',
+        message: `${user.fullName || 'Thành viên'} vừa tải 1 bức ảnh lên album "${album.title}".`,
+        type: 'photo_pending',
+        link: '/quan-tri',
+      }).catch(err => console.error('Lỗi tạo notification ảnh mới:', err.message));
+
+      emailService.sendNewPhotoAlert({
+        photoCount: 1,
+        uploader: user,
+        albumTitle: album.title,
+      }).catch(err => console.error('Lỗi gửi email ảnh mới:', err.message));
+    }
+
     return photo;
   }
 
@@ -101,6 +118,21 @@ class PhotoService {
         });
         album.coverPhotoId = photo.id;
       }
+    }
+
+    if (status === 'pending' && createdPhotos.length > 0) {
+      notificationService.notifyAdminsAndMods({
+        title: '📸 Có loạt ảnh mới chờ duyệt',
+        message: `${user.fullName || 'Thành viên'} vừa tải ${createdPhotos.length} bức ảnh lên album "${album.title}".`,
+        type: 'photo_pending',
+        link: '/quan-tri',
+      }).catch(err => console.error('Lỗi tạo notification loạt ảnh:', err.message));
+
+      emailService.sendNewPhotoAlert({
+        photoCount: createdPhotos.length,
+        uploader: user,
+        albumTitle: album.title,
+      }).catch(err => console.error('Lỗi gửi email loạt ảnh mới:', err.message));
     }
 
     return { photos: createdPhotos, status };

@@ -30,6 +30,7 @@ model User {
   photos          Photo[]            @relation("UserPhotos")
   events          Event[]            @relation("UserEvents")
   comments        Comment[]
+  notifications   Notification[]
   villagerProfile VillagerDirectory?
 
   @@map("users")
@@ -177,4 +178,22 @@ model HistoryTimeline {
 
   @@index([orderIndex])
   @@map("history_timelines")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // post_pending | photo_pending | post_approved | photo_approved | system_alert
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }

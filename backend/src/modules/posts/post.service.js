@@ -1,5 +1,7 @@
 const prisma = require('../../config/db');
 const { createSlug } = require('../../utils/slugify');
+const emailService = require('../../services/email.service');
+const notificationService = require('../notifications/notification.service');
 
 class PostService {
   async getPosts({ page = 1, limit = 9, category, search, status = 'published' }) {
@@ -152,6 +154,21 @@ class PostService {
         },
       },
     });
+
+    // Thông báo cho Admin & Moderator và gửi email nếu bài viết ở trạng thái chờ duyệt
+    if (initialStatus === 'pending') {
+      notificationService.notifyAdminsAndMods({
+        title: '📝 Có bài viết mới chờ duyệt',
+        message: `${user.fullName || 'Thành viên'} vừa gửi bài viết "${title.trim()}".`,
+        type: 'post_pending',
+        link: '/quan-tri',
+      }).catch(err => console.error('Lỗi tạo notification bài viết mới:', err.message));
+
+      emailService.sendNewPostAlert({
+        post,
+        author: user,
+      }).catch(err => console.error('Lỗi gửi email bài viết mới:', err.message));
+    }
 
     return post;
   }

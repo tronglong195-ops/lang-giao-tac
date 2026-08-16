@@ -17,6 +17,7 @@ const historyRoutes = require('./modules/history/history.routes');
 const commentRoutes = require('./modules/comments/comment.routes');
 const heroSlideRoutes = require('./modules/heroSlides/heroSlide.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
+const notificationRoutes = require('./modules/notifications/notification.routes');
 
 const app = express();
 
@@ -100,6 +101,7 @@ app.use('/api/history', historyRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/hero-slides', heroSlideRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Xử lý 404 Route
 app.use((req, res, next) => {

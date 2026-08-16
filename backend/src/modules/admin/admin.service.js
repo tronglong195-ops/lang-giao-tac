@@ -1,4 +1,6 @@
 const prisma = require('../../config/db');
+const emailService = require('../../services/email.service');
+const notificationService = require('../notifications/notification.service');
 
 class AdminService {
   async getStats() {
@@ -94,10 +96,35 @@ class AdminService {
           select: {
             id: true,
             fullName: true,
+            email: true,
           },
         },
       },
     });
+
+    // Tạo thông báo in-app và gửi email cho tác giả bài viết
+    if (status === 'published') {
+      notificationService.createNotification({
+        userId: post.authorId,
+        title: '🎉 Bài viết của bạn đã được phê duyệt!',
+        message: `Bài viết "${post.title}" của bạn đã được xuất bản chính thức trên Làng Giao Tác.`,
+        type: 'post_approved',
+        link: `/bai-viet/${post.slug}`,
+      }).catch(err => console.error('Lỗi tạo notification duyệt bài:', err.message));
+
+      emailService.sendPostApprovedAlert({
+        post,
+        author: updated.author,
+      }).catch(err => console.error('Lỗi gửi email duyệt bài:', err.message));
+    } else if (status === 'rejected') {
+      notificationService.createNotification({
+        userId: post.authorId,
+        title: '⚠️ Bài viết chưa được phê duyệt',
+        message: `Bài viết "${post.title}" của bạn chưa phù hợp với quy chuẩn cộng đồng.`,
+        type: 'post_rejected',
+        link: '/tai-khoan',
+      }).catch(err => console.error('Lỗi tạo notification từ chối bài:', err.message));
+    }
 
     return updated;
   }
@@ -168,6 +195,17 @@ class AdminService {
         where: { id: photo.albumId },
         data: { coverPhotoId: photo.id },
       });
+    }
+
+    // Tạo thông báo in-app cho người tải ảnh
+    if (status === 'approved') {
+      notificationService.createNotification({
+        userId: photo.uploaderId,
+        title: '🎉 Ảnh của bạn đã được phê duyệt!',
+        message: `Hình ảnh bạn đóng góp vào album "${photo.album?.title || 'Quê Hương'}" đã được duyệt và hiển thị.`,
+        type: 'photo_approved',
+        link: `/thu-vien-anh/${photo.albumId}`,
+      }).catch(err => console.error('Lỗi tạo notification duyệt ảnh:', err.message));
     }
 
     return updated;
