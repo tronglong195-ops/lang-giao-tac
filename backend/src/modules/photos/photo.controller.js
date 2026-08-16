@@ -83,6 +83,31 @@ class PhotoController {
     }
   }
 
+  async updatePhoto(req, res) {
+    try {
+      const { id } = req.params;
+      const { caption, takenYear, albumId, imageUrl, status } = req.body;
+      const photo = await photoService.updatePhoto(req.user, id, {
+        caption,
+        takenYear,
+        albumId,
+        imageUrl,
+        status,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Đã cập nhật thông tin ảnh thành công.',
+        data: { photo },
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Lỗi khi cập nhật ảnh.',
+      });
+    }
+  }
+
   async deletePhoto(req, res) {
     try {
       const { id } = req.params;

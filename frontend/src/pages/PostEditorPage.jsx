@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   PenSquare,
   Image as ImageIcon,
@@ -11,6 +11,7 @@ import {
   X,
   Link as LinkIcon,
   Sparkles,
+  Edit,
 } from 'lucide-react';
 import { postService } from '../services/postService';
 import { useAuth } from '../context/AuthContext';
@@ -47,7 +48,12 @@ const PRESET_IMAGES = [
 export const PostEditorPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { slug } = useParams();
+  const isEditing = Boolean(slug);
   const fileInputRef = useRef(null);
+
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [loadingPost, setLoadingPost] = useState(false);
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(CATEGORIES[1]); // Mặc định: Ký ức tuổi thơ
@@ -58,6 +64,43 @@ export const PostEditorPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Nạp dữ liệu bài viết cũ khi ở chế độ Sửa (isEditing)
+  useEffect(() => {
+    if (!slug) return;
+
+    const fetchPostToEdit = async () => {
+      setLoadingPost(true);
+      try {
+        const post = await postService.getPostBySlug(slug);
+        if (post) {
+          // Kiểm tra quyền: tác giả hoặc admin/moderator
+          if (
+            user &&
+            post.authorId !== user.id &&
+            user.role !== 'admin' &&
+            user.role !== 'moderator'
+          ) {
+            alert('Bạn không có quyền chỉnh sửa bài viết này.');
+            navigate('/bai-viet');
+            return;
+          }
+
+          setEditingPostId(post.id);
+          setTitle(post.title);
+          if (post.category) setCategory(post.category);
+          if (post.coverImageUrl) setCoverImageUrl(post.coverImageUrl);
+          if (post.contentHtml) setContentHtml(post.contentHtml);
+        }
+      } catch (err) {
+        setErrorMessage('Không thể tải thông tin bài viết để chỉnh sửa.');
+      } finally {
+        setLoadingPost(false);
+      }
+    };
+
+    fetchPostToEdit();
+  }, [slug, user]);
 
   // Xử lý upload ảnh từ thiết bị (máy tính / điện thoại)
   const handleFileChange = (e) => {
@@ -98,29 +141,53 @@ export const PostEditorPage = () => {
     setSubmitting(true);
     setErrorMessage('');
     try {
-      const res = await postService.createPost({
-        title: title.trim(),
-        category,
-        coverImageUrl: coverImageUrl.trim() || undefined,
-        contentHtml,
-      });
+      if (isEditing && editingPostId) {
+        // Cập nhật bài viết
+        const res = await postService.updatePost(editingPostId, {
+          title: title.trim(),
+          category,
+          coverImageUrl: coverImageUrl.trim() || undefined,
+          contentHtml,
+        });
 
-      if (res.success) {
-        setSuccessMessage(res.message);
+        setSuccessMessage('Đã cập nhật bài viết thành công!');
         setTimeout(() => {
-          if (user?.role === 'admin' || user?.role === 'moderator') {
-            navigate(`/bai-viet/${res.data.post.slug}`);
-          } else {
-            navigate('/tai-khoan');
-          }
-        }, 1800);
+          navigate(`/bai-viet/${res.data?.post?.slug || slug}`);
+        }, 1500);
+      } else {
+        // Tạo mới bài viết
+        const res = await postService.createPost({
+          title: title.trim(),
+          category,
+          coverImageUrl: coverImageUrl.trim() || undefined,
+          contentHtml,
+        });
+
+        if (res.success) {
+          setSuccessMessage(res.message);
+          setTimeout(() => {
+            if (user?.role === 'admin' || user?.role === 'moderator') {
+              navigate(`/bai-viet/${res.data.post.slug}`);
+            } else {
+              navigate('/tai-khoan');
+            }
+          }, 1800);
+        }
       }
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Có lỗi xảy ra khi gửi bài viết.');
+      setErrorMessage(error.response?.data?.message || 'Có lỗi xảy ra khi lưu bài viết.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (loadingPost) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center text-ink-muted">
+        Đang nạp thông tin bài viết...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -136,17 +203,19 @@ export const PostEditorPage = () => {
       {/* Header */}
       <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-8 shadow-warm space-y-2">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-subtle text-primary text-xs font-bold uppercase tracking-wider">
-          <PenSquare className="w-3.5 h-3.5" />
-          <span>Gửi bài viết cho Làng Quê</span>
+          {isEditing ? <Edit className="w-3.5 h-3.5" /> : <PenSquare className="w-3.5 h-3.5" />}
+          <span>{isEditing ? 'Chỉnh Sửa Bài Viết' : 'Gửi bài viết cho Làng Quê'}</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-primary-dark tracking-tight">
-          Soạn Bài Viết Cộng Đồng
+          {isEditing ? 'Chỉnh Sửa Bài Viết Đã Đăng' : 'Soạn Bài Viết Cộng Đồng'}
         </h1>
         <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-          Chia sẻ ký ức tuổi thơ, dòng họ - gia phả, công thức món ngon quê nhà hoặc câu chuyện của những người con xa xứ.
+          {isEditing
+            ? 'Cập nhật lại tiêu đề, hình ảnh bìa và nội dung bài viết của bạn.'
+            : 'Chia sẻ ký ức tuổi thơ, dòng họ - gia phả, công thức món ngon quê nhà hoặc câu chuyện của những người con xa xứ.'}
         </p>
 
-        {user?.role === 'member' && (
+        {!isEditing && user?.role === 'member' && (
           <div className="mt-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start space-x-2">
             <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <span>

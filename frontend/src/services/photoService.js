@@ -46,6 +46,11 @@ export const photoService = {
     return res.data?.data?.photos;
   },
 
+  async updatePhoto(id, data) {
+    const res = await api.put(`/photos/${id}`, data);
+    return res.data;
+  },
+
   async deletePhoto(id) {
     const res = await api.delete(`/photos/${id}`);
     return res.data;

@@ -6,6 +6,8 @@ import {
   Image as ImageIcon,
   KeyRound,
   Edit3,
+  Edit,
+  Trash2,
   MapPin,
   CheckCircle2,
   Calendar,
@@ -23,6 +25,7 @@ import { postService } from '../services/postService';
 import { photoService } from '../services/photoService';
 import { authService } from '../services/authService';
 import { StatusBadge } from '../components/common/StatusBadge';
+import { ConfirmModal } from '../components/common/ConfirmModal';
 
 export const ProfilePage = () => {
   const { user, updateProfile } = useAuth();
@@ -37,6 +40,16 @@ export const ProfilePage = () => {
   // My Photos
   const [myPhotos, setMyPhotos] = useState([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+  // Edit Photo Modal
+  const [showEditPhotoModal, setShowEditPhotoModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [photoCaption, setPhotoCaption] = useState('');
+  const [photoYear, setPhotoYear] = useState('');
+  const [savingPhoto, setSavingPhoto] = useState(false);
+
+  // Confirm Modal
+  const [confirmModalData, setConfirmModalData] = useState(null);
 
   // Edit Profile Form State
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -114,6 +127,66 @@ export const ProfilePage = () => {
       loadPhotos();
     }
   }, [activeTab]);
+
+  const handleDeleteMyPost = (postId, postTitle) => {
+    setConfirmModalData({
+      title: 'Xóa bài viết',
+      message: `Bạn có chắc chắn muốn xóa bài viết "${postTitle}" không? Hành động này không thể hoàn tác.`,
+      onConfirm: async () => {
+        try {
+          await postService.deletePost(postId);
+          setMyPosts((prev) => prev.filter((p) => p.id !== postId));
+          setConfirmModalData(null);
+        } catch (err) {
+          alert(err.response?.data?.message || 'Lỗi khi xóa bài viết.');
+        }
+      },
+    });
+  };
+
+  const handleOpenEditPhotoModal = (photo) => {
+    setSelectedPhoto(photo);
+    setPhotoCaption(photo.caption || '');
+    setPhotoYear(photo.takenYear ? photo.takenYear.toString() : '');
+    setShowEditPhotoModal(true);
+  };
+
+  const handleSavePhotoEdit = async (e) => {
+    e.preventDefault();
+    if (!selectedPhoto) return;
+    setSavingPhoto(true);
+    try {
+      const res = await photoService.updatePhoto(selectedPhoto.id, {
+        caption: photoCaption,
+        takenYear: photoYear,
+      });
+      setMyPhotos((prev) =>
+        prev.map((p) => (p.id === selectedPhoto.id ? { ...p, ...res.data?.photo } : p))
+      );
+      setShowEditPhotoModal(false);
+      setSelectedPhoto(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Lỗi khi cập nhật thông tin ảnh.');
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
+
+  const handleDeleteMyPhoto = (photoId) => {
+    setConfirmModalData({
+      title: 'Xóa ảnh đã đóng góp',
+      message: 'Bạn có chắc chắn muốn xóa bức ảnh này không? Hành động này không thể hoàn tác.',
+      onConfirm: async () => {
+        try {
+          await photoService.deletePhoto(photoId);
+          setMyPhotos((prev) => prev.filter((p) => p.id !== photoId));
+          setConfirmModalData(null);
+        } catch (err) {
+          alert(err.response?.data?.message || 'Lỗi khi xóa ảnh.');
+        }
+      },
+    });
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -359,7 +432,26 @@ export const ProfilePage = () => {
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-subtle text-primary">
                         {post.category}
                       </span>
-                      <StatusBadge status={post.status} />
+                      <div className="flex items-center space-x-1.5">
+                        <StatusBadge status={post.status} />
+                        {/* Edit Post Button */}
+                        <Link
+                          to={`/bai-viet/sua/${post.slug}`}
+                          className="p-1 rounded-lg text-ink-muted hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                          title="Chỉnh sửa bài viết"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </Link>
+                        {/* Delete Post Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMyPost(post.id, post.title)}
+                          className="p-1 rounded-lg text-ink-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Xóa bài viết"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     <h3 className="font-bold text-ink hover:text-primary transition-colors line-clamp-2">
@@ -419,15 +511,45 @@ export const ProfilePage = () => {
               {myPhotos.map((photo) => (
                 <div
                   key={photo.id}
-                  className="bg-surface rounded-2xl border border-warmBorder overflow-hidden shadow-sm space-y-2 p-2"
+                  className="bg-surface rounded-2xl border border-warmBorder overflow-hidden shadow-sm space-y-2 p-2 relative group"
                 >
-                  <img
-                    src={photo.imageUrl}
-                    alt={photo.caption || 'Ảnh cá nhân'}
-                    className="w-full h-40 object-cover rounded-xl"
-                  />
+                  <div className="relative overflow-hidden rounded-xl">
+                    <img
+                      src={photo.imageUrl}
+                      alt={photo.caption || 'Ảnh cá nhân'}
+                      className="w-full h-40 object-cover"
+                    />
+
+                    {/* Quick Edit/Delete on Hover Overlay */}
+                    <div className="absolute top-2 right-2 flex items-center space-x-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-ink/70 backdrop-blur-xs p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditPhotoModal(photo)}
+                        className="p-1 rounded-lg text-white hover:text-amber-300 hover:bg-white/20 transition-colors"
+                        title="Chỉnh sửa chú thích ảnh"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteMyPhoto(photo.id)}
+                        className="p-1 rounded-lg text-white hover:text-red-300 hover:bg-white/20 transition-colors"
+                        title="Xóa bức ảnh này"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="p-1 space-y-1">
-                    <StatusBadge status={photo.status} />
+                    <div className="flex items-center justify-between">
+                      <StatusBadge status={photo.status} />
+                      {photo.takenYear && (
+                        <span className="text-[10px] text-ink-muted font-medium">
+                          Năm {photo.takenYear}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs font-medium text-ink line-clamp-1">
                       {photo.caption || 'Không có chú thích'}
                     </p>
@@ -491,15 +613,28 @@ export const ProfilePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="block text-xs font-bold text-ink uppercase tracking-wider">
-                Xóm / Thôn gốc tại Giao Tác
+                Dòng họ / Quê gốc tại Giao Tác
               </label>
               <input
                 type="text"
+                list="profile-clan-list"
                 value={hometownGroup}
                 onChange={(e) => setHometownGroup(e.target.value)}
-                placeholder="Ví dụ: Xóm Đoài (Thôn 2)"
+                placeholder="Chọn hoặc nhập dòng họ (ví dụ: Họ Nguyễn Trọng...)"
                 className="w-full input-warm text-sm"
               />
+              <datalist id="profile-clan-list">
+                <option value="Họ Nguyễn Trọng" />
+                <option value="Họ Nguyễn Duy" />
+                <option value="Họ Nguyễn Huy" />
+                <option value="Họ Phan Sỹ" />
+                <option value="Họ Nguyễn Văn" />
+                <option value="Họ Phạm Hữu" />
+                <option value="Họ Trần Đình" />
+                <option value="Họ Lê" />
+                <option value="TDP 9 Thuận Lộc (Làng Giao Tác)" />
+                <option value="Dâu rể / Con em quê hương" />
+              </datalist>
             </div>
 
             <div className="space-y-1">
@@ -598,6 +733,88 @@ export const ProfilePage = () => {
             </button>
           </div>
         </form>
+      )}
+
+      {/* Edit Photo Modal */}
+      {showEditPhotoModal && selectedPhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-surface rounded-3xl border border-warmBorder max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-warmBorder pb-3">
+              <h3 className="font-bold text-lg text-ink">Chỉnh Sửa Thông Tin Ảnh</h3>
+              <button
+                type="button"
+                onClick={() => setShowEditPhotoModal(false)}
+                className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-paper"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePhotoEdit} className="space-y-4">
+              <div className="rounded-xl overflow-hidden border border-warmBorder h-36 bg-paper">
+                <img
+                  src={selectedPhoto.imageUrl}
+                  alt={selectedPhoto.caption || 'Ảnh'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                  Chú thích / Tiêu đề ảnh
+                </label>
+                <input
+                  type="text"
+                  value={photoCaption}
+                  onChange={(e) => setPhotoCaption(e.target.value)}
+                  placeholder="Ví dụ: Giếng nước cổ đầu làng năm 1995..."
+                  className="w-full input-warm text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                  Năm chụp / Thời gian
+                </label>
+                <input
+                  type="number"
+                  value={photoYear}
+                  onChange={(e) => setPhotoYear(e.target.value)}
+                  placeholder="Ví dụ: 1995, 2010, 2024..."
+                  className="w-full input-warm text-sm"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-warmBorder">
+                <button
+                  type="button"
+                  onClick={() => setShowEditPhotoModal(false)}
+                  className="px-4 py-2 rounded-xl border border-warmBorder text-xs text-ink hover:bg-paper font-semibold"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPhoto}
+                  className="px-5 py-2 rounded-xl bg-primary text-surface text-xs font-bold hover:bg-primary-dark shadow-sm disabled:opacity-50"
+                >
+                  {savingPhoto ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Global Confirm Modal */}
+      {confirmModalData && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmModalData.title}
+          message={confirmModalData.message}
+          onConfirm={confirmModalData.onConfirm}
+          onCancel={() => setConfirmModalData(null)}
+        />
       )}
     </div>
   );

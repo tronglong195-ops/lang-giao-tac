@@ -201,6 +201,52 @@ class PhotoService {
     return photos;
   }
 
+  async updatePhoto(user, photoId, { caption, takenYear, albumId, imageUrl, status }) {
+    const photo = await prisma.photo.findUnique({
+      where: { id: photoId },
+    });
+
+    if (!photo) {
+      throw new Error('Ảnh không tồn tại.');
+    }
+
+    const isUploader = photo.uploaderId === user.id;
+    const isAdminOrMod = user.role === 'admin' || user.role === 'moderator';
+
+    if (!isUploader && !isAdminOrMod) {
+      throw new Error('Bạn không có quyền chỉnh sửa bức ảnh này.');
+    }
+
+    const updateData = {};
+    if (caption !== undefined) updateData.caption = caption ? caption.trim() : null;
+    if (takenYear !== undefined) updateData.takenYear = takenYear ? parseInt(takenYear, 10) : null;
+    if (albumId !== undefined) updateData.albumId = albumId;
+    if (imageUrl !== undefined && imageUrl.trim()) {
+      updateData.imageUrl = imageUrl.trim();
+      updateData.thumbnailUrl = imageUrl.trim();
+    }
+    if (isAdminOrMod && status) {
+      updateData.status = status;
+    } else if (isUploader && !isAdminOrMod && photo.status === 'rejected') {
+      updateData.status = 'pending';
+    }
+
+    const updated = await prisma.photo.update({
+      where: { id: photoId },
+      data: updateData,
+      include: {
+        album: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    return updated;
+  }
+
   async deletePhoto(user, photoId) {
     const photo = await prisma.photo.findUnique({
       where: { id: photoId },

@@ -12,10 +12,12 @@ import {
   MapPin,
   Heart,
   CornerDownRight,
+  Edit3,
 } from 'lucide-react';
 import { postService } from '../services/postService';
 import { useAuth } from '../context/AuthContext';
 import { ShareModal } from '../components/common/ShareModal';
+import { ConfirmModal } from '../components/common/ConfirmModal';
 
 export const PostDetailPage = () => {
   const { slug } = useParams();
@@ -27,6 +29,7 @@ export const PostDetailPage = () => {
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const fetchPost = async () => {
     setLoading(true);
@@ -113,10 +116,23 @@ export const PostDetailPage = () => {
     );
   }
 
+  const handleDeletePost = async () => {
+    try {
+      await postService.deletePost(post.id);
+      setShowDeleteConfirm(false);
+      navigate('/bai-viet');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Lỗi khi xóa bài viết.');
+    }
+  };
+
+  const isAuthorOrAdmin =
+    user && (user.id === post?.authorId || user.role === 'admin' || user.role === 'moderator');
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Top Action Bar */}
-      <div className="flex items-center justify-between">
+      {/* Top Back & Share / Edit / Delete Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center space-x-1.5 text-sm font-medium text-ink-muted hover:text-primary transition-colors"
@@ -125,13 +141,35 @@ export const PostDetailPage = () => {
           <span>Quay lại</span>
         </button>
 
-        <button
-          onClick={() => setShowShareModal(true)}
-          className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-secondary/15 hover:bg-secondary/25 text-accent font-semibold text-xs transition-colors"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span>Chia sẻ bài viết</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {isAuthorOrAdmin && (
+            <>
+              <Link
+                to={`/bai-viet/sua/${post.slug}`}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold text-xs transition-colors shadow-xs"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                <span>Sửa bài viết</span>
+              </Link>
+
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold text-xs transition-colors shadow-xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xóa bài</span>
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-secondary/15 hover:bg-secondary/25 text-accent font-semibold text-xs transition-colors"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Chia sẻ</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Post Article */}
@@ -354,6 +392,17 @@ export const PostDetailPage = () => {
           title={post.title}
           url={`/bai-viet/${post.slug}`}
           description={post.title}
+        />
+      )}
+
+      {/* Delete Post Confirm Modal */}
+      {showDeleteConfirm && (
+        <ConfirmModal
+          isOpen={true}
+          title="Xác nhận xóa bài viết"
+          message={`Bạn có chắc chắn muốn xóa vĩnh viễn bài viết "${post?.title}" không? Hành động này không thể hoàn tác.`}
+          onConfirm={handleDeletePost}
+          onCancel={() => setShowDeleteConfirm(false)}
         />
       )}
     </div>

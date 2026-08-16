@@ -273,10 +273,16 @@ export const RegisterPage = () => {
                 onChange={(e) => setHometownGroup(e.target.value)}
                 className="w-full input-warm text-xs"
               >
+                <option value="Họ Nguyễn Trọng">Họ Nguyễn Trọng</option>
+                <option value="Họ Nguyễn Duy">Họ Nguyễn Duy</option>
+                <option value="Họ Nguyễn Huy">Họ Nguyễn Huy</option>
+                <option value="Họ Phan Sỹ">Họ Phan Sỹ</option>
+                <option value="Họ Nguyễn Văn">Họ Nguyễn Văn</option>
+                <option value="Họ Phạm Hữu">Họ Phạm Hữu</option>
+                <option value="Họ Trần Đình">Họ Trần Đình</option>
+                <option value="Họ Lê">Họ Lê</option>
                 <option value="TDP 9 Thuận Lộc (Làng Giao Tác)">TDP 9 Thuận Lộc (Làng Giao Tác)</option>
-                <option value="Con em xa quê (Hà Nội)">Con em xa quê (Hà Nội)</option>
-                <option value="Con em xa quê (TP.HCM / Miền Nam)">Con em xa quê (TP.HCM / Miền Nam)</option>
-                <option value="Dâu rể quê hương">Dâu rể quê hương</option>
+                <option value="Dâu rể / Con em quê hương">Dâu rể / Con em quê hương</option>
                 <option value="Khác">Khác</option>
               </select>
             </div>

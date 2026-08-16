@@ -12,6 +12,7 @@ import {
   Info,
   Share2,
   Trash2,
+  Edit,
   FileImage,
   Sparkles,
   Link2,
@@ -21,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { LightboxModal } from '../components/common/LightboxModal';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { ShareModal } from '../components/common/ShareModal';
+import { ConfirmModal } from '../components/common/ConfirmModal';
 
 export const AlbumDetailPage = () => {
   const { albumId } = useParams();
@@ -36,6 +38,16 @@ export const AlbumDetailPage = () => {
 
   // Share Modal
   const [showShareModal, setShowShareModal] = useState(false);
+
+  // Edit Photo Modal
+  const [showEditPhotoModal, setShowEditPhotoModal] = useState(false);
+  const [selectedPhotoForEdit, setSelectedPhotoForEdit] = useState(null);
+  const [editCaption, setEditCaption] = useState('');
+  const [editYear, setEditYear] = useState('');
+  const [savingEditPhoto, setSavingEditPhoto] = useState(false);
+
+  // Confirm Modal
+  const [confirmModalData, setConfirmModalData] = useState(null);
 
   // Upload Modal State
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -175,6 +187,56 @@ export const AlbumDetailPage = () => {
     setLightboxOpen(true);
   };
 
+  const handleOpenEditPhoto = (photo) => {
+    setSelectedPhotoForEdit(photo);
+    setEditCaption(photo.caption || '');
+    setEditYear(photo.takenYear ? photo.takenYear.toString() : '');
+    setShowEditPhotoModal(true);
+  };
+
+  const handleSaveEditPhoto = async (e) => {
+    e.preventDefault();
+    if (!selectedPhotoForEdit) return;
+    setSavingEditPhoto(true);
+    try {
+      const res = await photoService.updatePhoto(selectedPhotoForEdit.id, {
+        caption: editCaption,
+        takenYear: editYear,
+      });
+      setAlbum((prev) => ({
+        ...prev,
+        photos: prev.photos.map((p) =>
+          p.id === selectedPhotoForEdit.id ? { ...p, ...res.data?.photo } : p
+        ),
+      }));
+      setShowEditPhotoModal(false);
+      setSelectedPhotoForEdit(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Lỗi khi cập nhật ảnh.');
+    } finally {
+      setSavingEditPhoto(false);
+    }
+  };
+
+  const handleDeletePhoto = (photoId) => {
+    setConfirmModalData({
+      title: 'Xóa ảnh khỏi Album',
+      message: 'Bạn có chắc chắn muốn xóa bức ảnh này không? Hành động này không thể hoàn tác.',
+      onConfirm: async () => {
+        try {
+          await photoService.deletePhoto(photoId);
+          setAlbum((prev) => ({
+            ...prev,
+            photos: prev.photos.filter((p) => p.id !== photoId),
+          }));
+          setConfirmModalData(null);
+        } catch (err) {
+          alert(err.response?.data?.message || 'Lỗi khi xóa ảnh.');
+        }
+      },
+    });
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto py-20 text-center text-ink-muted">
@@ -268,37 +330,73 @@ export const AlbumDetailPage = () => {
       {/* Photos Grid */}
       {album.photos && album.photos.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {album.photos.map((photo, index) => (
-            <div
-              key={photo.id}
-              onClick={() => openLightbox(index)}
-              className="relative group rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-warm transition-all duration-300 bg-paper aspect-square sm:aspect-[4/3]"
-            >
-              <img
-                src={photo.imageUrl}
-                alt={photo.caption || 'Ảnh làng Giao Tác'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+          {album.photos.map((photo, index) => {
+            const isOwnerOrAdmin =
+              user &&
+              (user.id === photo.uploaderId || user.role === 'admin' || user.role === 'moderator');
 
-              {/* Status Badge overlay if not approved (visible for admin/mod) */}
-              {photo.status !== 'approved' && (
-                <div className="absolute top-2 left-2 z-10">
-                  <StatusBadge status={photo.status} />
-                </div>
-              )}
+            return (
+              <div
+                key={photo.id}
+                onClick={() => openLightbox(index)}
+                className="relative group rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-warm transition-all duration-300 bg-paper aspect-square sm:aspect-[4/3]"
+              >
+                <img
+                  src={photo.imageUrl}
+                  alt={photo.caption || 'Ảnh làng Giao Tác'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
 
-              {/* Overlay hover */}
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 text-surface text-xs space-y-1">
-                {photo.caption && (
-                  <p className="font-medium line-clamp-2 text-xs text-white">{photo.caption}</p>
+                {/* Status Badge overlay if not approved */}
+                {photo.status !== 'approved' && (
+                  <div className="absolute top-2 left-2 z-10">
+                    <StatusBadge status={photo.status} />
+                  </div>
                 )}
-                <div className="flex items-center justify-between text-[10px] text-paper/80 pt-1 border-t border-white/20">
-                  <span>{photo.takenYear ? `Năm ${photo.takenYear}` : 'Lưu trữ'}</span>
-                  <span className="truncate max-w-[100px]">{photo.uploader?.fullName || 'Ẩn danh'}</span>
+
+                {/* Quick Edit & Delete Actions for Uploader or Admin */}
+                {isOwnerOrAdmin && (
+                  <div className="absolute top-2 right-2 z-20 flex items-center space-x-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-ink/75 backdrop-blur-xs p-1 rounded-xl shadow-md">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenEditPhoto(photo);
+                      }}
+                      className="p-1 rounded-lg text-white hover:text-amber-300 hover:bg-white/20 transition-colors"
+                      title="Chỉnh sửa chú thích ảnh"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePhoto(photo.id);
+                      }}
+                      className="p-1 rounded-lg text-white hover:text-red-300 hover:bg-white/20 transition-colors"
+                      title="Xóa bức ảnh này"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Overlay hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 text-surface text-xs space-y-1">
+                  {photo.caption && (
+                    <p className="font-medium line-clamp-2 text-xs text-white">{photo.caption}</p>
+                  )}
+                  <div className="flex items-center justify-between text-[10px] text-paper/80 pt-1 border-t border-white/20">
+                    <span>{photo.takenYear ? `Năm ${photo.takenYear}` : 'Lưu trữ'}</span>
+                    <span className="truncate max-w-[100px]">
+                      {photo.uploader?.fullName || 'Ẩn danh'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-20 bg-surface rounded-2xl border border-warmBorder text-ink-muted text-sm space-y-4">
@@ -583,6 +681,88 @@ export const AlbumDetailPage = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Edit Photo Modal */}
+      {showEditPhotoModal && selectedPhotoForEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-surface rounded-3xl border border-warmBorder max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-warmBorder pb-3">
+              <h3 className="font-bold text-lg text-ink">Chỉnh Sửa Thông Tin Ảnh</h3>
+              <button
+                type="button"
+                onClick={() => setShowEditPhotoModal(false)}
+                className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-paper"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditPhoto} className="space-y-4">
+              <div className="rounded-xl overflow-hidden border border-warmBorder h-40 bg-paper">
+                <img
+                  src={selectedPhotoForEdit.imageUrl}
+                  alt={selectedPhotoForEdit.caption || 'Ảnh'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                  Chú thích / Tiêu đề ảnh
+                </label>
+                <input
+                  type="text"
+                  value={editCaption}
+                  onChange={(e) => setEditCaption(e.target.value)}
+                  placeholder="Ví dụ: Giếng nước cổ đầu làng năm 1995..."
+                  className="w-full input-warm text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                  Năm chụp / Thời gian
+                </label>
+                <input
+                  type="number"
+                  value={editYear}
+                  onChange={(e) => setEditYear(e.target.value)}
+                  placeholder="Ví dụ: 1995, 2010, 2024..."
+                  className="w-full input-warm text-sm"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-warmBorder">
+                <button
+                  type="button"
+                  onClick={() => setShowEditPhotoModal(false)}
+                  className="px-4 py-2 rounded-xl border border-warmBorder text-xs text-ink hover:bg-paper font-semibold"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEditPhoto}
+                  className="px-5 py-2 rounded-xl bg-primary text-surface text-xs font-bold hover:bg-primary-dark shadow-sm disabled:opacity-50"
+                >
+                  {savingEditPhoto ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Global Confirm Modal */}
+      {confirmModalData && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmModalData.title}
+          message={confirmModalData.message}
+          onConfirm={confirmModalData.onConfirm}
+          onCancel={() => setConfirmModalData(null)}
+        />
       )}
     </div>
   );

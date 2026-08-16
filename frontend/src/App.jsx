@@ -54,6 +54,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/bai-viet/sua/:slug"
+                element={
+                  <ProtectedRoute>
+                    <PostEditorPage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Thư viện ảnh */}
               <Route path="/thu-vien-anh" element={<GalleryPage />} />

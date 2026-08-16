@@ -8,6 +8,7 @@ router.get('/my/photos', authGuard, (req, res) => photoController.getMyPhotos(re
 
 router.post('/', authGuard, (req, res) => photoController.addPhoto(req, res));
 router.post('/batch', authGuard, (req, res) => photoController.addPhotosBatch(req, res));
+router.put('/:id', authGuard, (req, res) => photoController.updatePhoto(req, res));
 router.delete('/:id', authGuard, (req, res) => photoController.deletePhoto(req, res));
 
 module.exports = router;

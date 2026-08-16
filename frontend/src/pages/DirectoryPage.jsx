@@ -185,16 +185,15 @@ export const DirectoryPage = () => {
               onChange={(e) => setSelectedBranch(e.target.value)}
               className="w-full input-warm text-sm bg-surface"
             >
-              <option value="all">Tất cả dòng họ / Xóm gốc</option>
-              <option value="Phan">Họ Phan</option>
-              <option value="Hoàng">Họ Hoàng</option>
-              <option value="Trần">Họ Trần</option>
+              <option value="all">Tất cả dòng họ</option>
+              <option value="Nguyễn Trọng">Họ Nguyễn Trọng</option>
+              <option value="Nguyễn Duy">Họ Nguyễn Duy</option>
+              <option value="Nguyễn Huy">Họ Nguyễn Huy</option>
+              <option value="Phan Sỹ">Họ Phan Sỹ</option>
+              <option value="Nguyễn Văn">Họ Nguyễn Văn</option>
+              <option value="Phạm Hữu">Họ Phạm Hữu</option>
+              <option value="Trần Đình">Họ Trần Đình</option>
               <option value="Lê">Họ Lê</option>
-              <option value="Nguyễn">Họ Nguyễn</option>
-              <option value="Xóm Đoài">Xóm Đoài</option>
-              <option value="Xóm Đông">Xóm Đông</option>
-              <option value="Xóm Chùa">Xóm Chùa</option>
-              <option value="Xóm Bến">Xóm Bến</option>
             </select>
           </div>
         </div>
@@ -323,15 +322,26 @@ export const DirectoryPage = () => {
 
               <div className="space-y-1">
                 <label className="block text-xs font-bold text-ink uppercase tracking-wider">
-                  Dòng họ / Chi phái / Xóm gốc
+                  Dòng họ / Chi phái
                 </label>
                 <input
                   type="text"
+                  list="clan-list"
                   value={generationBranch}
                   onChange={(e) => setGenerationBranch(e.target.value)}
-                  placeholder="Ví dụ: Họ Phan Chi 2 - Xóm Đoài"
+                  placeholder="Chọn hoặc nhập dòng họ (ví dụ: Họ Nguyễn Trọng...)"
                   className="w-full input-warm text-sm"
                 />
+                <datalist id="clan-list">
+                  <option value="Họ Nguyễn Trọng" />
+                  <option value="Họ Nguyễn Duy" />
+                  <option value="Họ Nguyễn Huy" />
+                  <option value="Họ Phan Sỹ" />
+                  <option value="Họ Nguyễn Văn" />
+                  <option value="Họ Phạm Hữu" />
+                  <option value="Họ Trần Đình" />
+                  <option value="Họ Lê" />
+                </datalist>
               </div>
 
               <div className="space-y-1">
