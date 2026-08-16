@@ -1,3 +1,8 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const nodemailer = require('nodemailer');
 
 const ADMIN_EMAIL = process.env.ADMIN_ALERT_EMAIL || 'tronglong195@gmail.com';
@@ -16,11 +21,12 @@ class EmailService {
       const smtpPass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
 
       if (smtpUser && smtpPass) {
-        // Cấu hình kết nối trực tiếp qua cổng 465 (SSL) để tránh bị chặn cổng 587 trên Cloud Render
+        // Cấu hình kết nối trực tiếp qua cổng 465 (SSL) + ép buộc IPv4 để tránh bị lỗi ENETUNREACH IPv6 trên Render
         this.transporter = nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
           secure: smtpPort === 465, // True cho cổng 465 SSL
+          family: 4, // Ép buộc IPv4 (tránh IPv6 ENETUNREACH trên container Render)
           auth: {
             user: smtpUser,
             pass: smtpPass,
@@ -28,11 +34,11 @@ class EmailService {
           tls: {
             rejectUnauthorized: false,
           },
-          connectionTimeout: 8000, // 8 giây timeout
-          greetingTimeout: 8000,
-          socketTimeout: 8000,
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
         });
-        console.log(`📧 [EmailService] Đã cấu hình SMTP Server qua cổng ${smtpPort} (SSL: ${smtpPort === 465}) cho ${smtpUser} ➔ ${ADMIN_EMAIL}`);
+        console.log(`📧 [EmailService] Đã cấu hình SMTP Server qua cổng ${smtpPort} (SSL, IPv4) cho ${smtpUser} ➔ ${ADMIN_EMAIL}`);
       } else {
         this.transporter = null;
         console.log(`⚠️ [EmailService] Chưa thiết lập SMTP_USER/SMTP_PASS trong .env. Email thông báo sẽ được ghi log chi tiết tới ${ADMIN_EMAIL}.`);

@@ -1,3 +1,8 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const app = require('./app');
 const prisma = require('./config/db');
 const { runAutoSeed } = require('./config/autoSeed');
