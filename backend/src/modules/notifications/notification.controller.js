@@ -60,6 +60,35 @@ class NotificationController {
       next(error);
     }
   }
+
+  async deleteNotification(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+      await notificationService.deleteNotification(id, userId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Đã xóa thông báo thành công.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteAll(req, res, next) {
+    try {
+      const userId = req.user.id;
+      await notificationService.deleteAllNotifications(userId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Đã xóa toàn bộ danh sách thông báo.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new NotificationController();

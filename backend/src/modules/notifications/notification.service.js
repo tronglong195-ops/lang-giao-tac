@@ -114,6 +114,27 @@ class NotificationService {
       data: { isRead: true },
     });
   }
+
+  /**
+   * Xóa 1 thông báo
+   */
+  async deleteNotification(notificationId, userId) {
+    return await prisma.notification.deleteMany({
+      where: {
+        id: notificationId,
+        userId,
+      },
+    });
+  }
+
+  /**
+   * Xóa tất cả thông báo của user
+   */
+  async deleteAllNotifications(userId) {
+    return await prisma.notification.deleteMany({
+      where: { userId },
+    });
+  }
 }
 
 module.exports = new NotificationService();

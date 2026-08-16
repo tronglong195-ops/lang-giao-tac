@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   CheckCheck,
+  Trash2,
   FileText,
   Image as ImageIcon,
   Sparkles,
   AlertCircle,
   ExternalLink,
   UserPlus,
+  X,
 } from 'lucide-react';
 import { notificationService } from '../../services/notification.service';
 import { useAuth } from '../../context/AuthContext';
@@ -39,7 +41,7 @@ export const NotificationBell = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await notificationService.getNotifications({ limit: 15 });
+      const data = await notificationService.getNotifications({ limit: 20 });
       setNotifications(data.data || []);
       setUnreadCount(data.unreadCount || 0);
     } catch (err) {
@@ -78,23 +80,40 @@ export const NotificationBell = () => {
   };
 
   const handleNotificationClick = async (item) => {
-    if (!item.isRead) {
-      try {
+    try {
+      if (!item.isRead) {
         await notificationService.markAsRead(item.id);
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
-        );
         setUnreadCount((prev) => Math.max(0, prev - 1));
-      } catch (err) {
-        console.error('Lỗi đánh dấu đã đọc:', err);
       }
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
+      );
+    } catch (err) {
+      console.error('Lỗi xử lý thông báo:', err);
     }
+
     setIsOpen(false);
     if (item.link) {
       navigate(item.link);
     }
   };
 
+  // Xóa 1 thông báo đơn lẻ
+  const handleDeleteNotification = async (e, id) => {
+    e.stopPropagation();
+    try {
+      const target = notifications.find((n) => n.id === id);
+      await notificationService.deleteNotification(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      if (target && !target.isRead) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Lỗi xóa thông báo:', err);
+    }
+  };
+
+  // Đọc tất cả thông báo
   const handleMarkAllRead = async (e) => {
     e.stopPropagation();
     try {
@@ -106,21 +125,34 @@ export const NotificationBell = () => {
     }
   };
 
+  // Xóa sạch toàn bộ thông báo
+  const handleDeleteAll = async (e) => {
+    e.stopPropagation();
+    if (!window.confirm('Bạn có chắc chắn muốn dọn sạch tất cả thông báo không?')) return;
+    try {
+      await notificationService.deleteAll();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Lỗi xóa tất cả thông báo:', err);
+    }
+  };
+
   if (!user) return null;
 
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'member_registered':
-        return <UserPlus className="w-4 h-4 text-emerald-600" />;
+        return <UserPlus className="w-3.5 h-3.5 text-emerald-600" />;
       case 'post_pending':
-        return <FileText className="w-4 h-4 text-amber-600" />;
+        return <FileText className="w-3.5 h-3.5 text-amber-600" />;
       case 'photo_pending':
-        return <ImageIcon className="w-4 h-4 text-blue-600" />;
+        return <ImageIcon className="w-3.5 h-3.5 text-blue-600" />;
       case 'post_approved':
       case 'photo_approved':
-        return <Sparkles className="w-4 h-4 text-emerald-600" />;
+        return <Sparkles className="w-3.5 h-3.5 text-emerald-600" />;
       default:
-        return <AlertCircle className="w-4 h-4 text-primary" />;
+        return <AlertCircle className="w-3.5 h-3.5 text-primary" />;
     }
   };
 
@@ -128,9 +160,9 @@ export const NotificationBell = () => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const minutes = Math.floor(diff / 60000);
     if (minutes < 1) return 'Vừa xong';
-    if (minutes < 60) return `${minutes} phút trước`;
+    if (minutes < 60) return `${minutes}p trước`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} giờ trước`;
+    if (hours < 24) return `${hours}h trước`;
     const days = Math.floor(hours / 24);
     return `${days} ngày trước`;
   };
@@ -156,56 +188,76 @@ export const NotificationBell = () => {
       {isOpen && (
         <div className="fixed sm:absolute right-3 sm:right-0 top-16 sm:top-auto sm:mt-2.5 w-[calc(100vw-24px)] max-w-sm sm:w-96 bg-surface rounded-2xl border border-warmBorder shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
-          <div className="p-3.5 bg-paper border-b border-warmBorder flex items-center justify-between">
+          <div className="p-3 bg-paper border-b border-warmBorder flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="font-bold text-sm text-primary-dark">Thông Báo</span>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">
                   {unreadCount} mới
                 </span>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={handleMarkAllRead}
-                className="text-[11px] font-semibold text-primary hover:text-primary-dark flex items-center space-x-1 transition-colors"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>Đọc tất cả</span>
-              </button>
-            )}
+
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleMarkAllRead}
+                  className="text-[11px] font-semibold text-primary hover:text-primary-dark flex items-center space-x-0.5 transition-colors px-1.5 py-0.5 rounded hover:bg-primary-subtle"
+                  title="Đánh dấu tất cả là đã đọc"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Đọc hết</span>
+                </button>
+              )}
+
+              {notifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDeleteAll}
+                  className="text-[11px] font-semibold text-ink-muted hover:text-red-600 flex items-center space-x-0.5 transition-colors px-1.5 py-0.5 rounded hover:bg-red-50"
+                  title="Dọn sạch toàn bộ thông báo"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Xóa hết</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List of Notifications */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-warmBorder/50">
+          <div className="max-h-[360px] overflow-y-auto divide-y divide-warmBorder/40">
             {loading ? (
-              <div className="p-8 text-center text-xs text-ink-muted">
+              <div className="p-6 text-center text-xs text-ink-muted">
                 Đang tải thông báo...
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-paper flex items-center justify-center mx-auto text-ink-muted">
-                  <Bell className="w-5 h-5 opacity-40" />
+              <div className="p-6 text-center space-y-1.5">
+                <div className="w-9 h-9 rounded-full bg-paper flex items-center justify-center mx-auto text-ink-muted">
+                  <Bell className="w-4 h-4 opacity-40" />
                 </div>
-                <p className="text-xs text-ink-muted">Chưa có thông báo nào.</p>
+                <p className="text-xs text-ink-muted font-medium">Chưa có thông báo nào</p>
+                <p className="text-[11px] text-ink-muted/80">Các thông báo mới về bài viết, hình ảnh, thành viên sẽ hiển thị tại đây.</p>
               </div>
             ) : (
               notifications.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => handleNotificationClick(item)}
-                  className={`p-3.5 flex items-start space-x-3 cursor-pointer transition-colors ${
+                  className={`group relative p-3 flex items-start space-x-2.5 cursor-pointer transition-colors ${
                     item.isRead
-                      ? 'bg-surface hover:bg-paper/50'
-                      : 'bg-primary-subtle/40 hover:bg-primary-subtle/70 font-medium'
+                      ? 'bg-surface hover:bg-paper/70'
+                      : 'bg-primary-subtle/40 hover:bg-primary-subtle/70'
                   }`}
                 >
-                  <div className="p-2 rounded-xl bg-surface border border-warmBorder shrink-0 mt-0.5 shadow-xs">
+                  {/* Icon */}
+                  <div className="p-1.5 rounded-lg bg-surface border border-warmBorder/80 shrink-0 mt-0.5 shadow-2xs">
                     {getNotificationIcon(item.type)}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
+
+                  {/* Body Content */}
+                  <div className="flex-1 min-w-0 pr-6">
+                    <div className="flex items-baseline justify-between gap-1">
                       <p
                         className={`text-xs font-bold truncate ${
                           item.isRead ? 'text-ink' : 'text-primary-dark'
@@ -213,14 +265,24 @@ export const NotificationBell = () => {
                       >
                         {item.title}
                       </p>
-                      <span className="text-[10px] text-ink-muted shrink-0">
+                      <span className="text-[9px] text-ink-muted shrink-0">
                         {formatTimeAgo(item.createdAt)}
                       </span>
                     </div>
-                    <p className="text-xs text-ink-muted line-clamp-2 mt-0.5 leading-relaxed">
+                    <p className="text-[11px] text-ink-muted line-clamp-2 mt-0.5 leading-snug">
                       {item.message}
                     </p>
                   </div>
+
+                  {/* Nút Xóa Đơn Lẻ (Hiện khi hover trên Desktop hoặc hiển thị góc trên) */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteNotification(e, item.id)}
+                    className="absolute right-2 top-2 p-1 rounded-md text-ink-muted/50 hover:text-red-600 hover:bg-red-50 transition-colors opacity-70 sm:opacity-0 sm:group-hover:opacity-100"
+                    title="Xóa thông báo này"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               ))
             )}
@@ -228,17 +290,17 @@ export const NotificationBell = () => {
 
           {/* Footer Link */}
           {user.role === 'admin' || user.role === 'moderator' ? (
-            <div className="p-2.5 bg-paper/80 border-t border-warmBorder text-center">
+            <div className="p-2 bg-paper/80 border-t border-warmBorder text-center">
               <button
                 type="button"
                 onClick={() => {
                   setIsOpen(false);
                   navigate('/quan-tri');
                 }}
-                className="text-xs font-bold text-primary hover:text-primary-dark flex items-center justify-center space-x-1.5 w-full py-1"
+                className="text-[11px] font-bold text-primary hover:text-primary-dark flex items-center justify-center space-x-1 w-full py-1"
               >
                 <span>Mở Bảng Quản Trị & Phê Duyệt</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3 h-3" />
               </button>
             </div>
           ) : null}
