@@ -6,6 +6,12 @@ class PhotoService {
       throw new Error('Vui lòng chọn Album và cung cấp đường dẫn ảnh.');
     }
 
+    try {
+      new URL(imageUrl.trim());
+    } catch (e) {
+      throw new Error('Đường dẫn ảnh (imageUrl) không phải là URL hợp lệ.');
+    }
+
     const album = await prisma.album.findUnique({
       where: { id: albumId },
     });
@@ -68,6 +74,13 @@ class PhotoService {
 
     for (const item of photos) {
       if (!item.imageUrl) continue;
+
+      try {
+        new URL(item.imageUrl.trim());
+      } catch (e) {
+        throw new Error('Một hoặc nhiều bức ảnh có đường dẫn không phải là URL hợp lệ.');
+      }
+
       const photo = await prisma.photo.create({
         data: {
           albumId,

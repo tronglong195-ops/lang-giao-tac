@@ -1,7 +1,13 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'giao_tac_access_secret_key_2026_change_in_prod';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'giao_tac_refresh_secret_key_2026_change_in_prod';
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
+  throw new Error(
+    'Lỗi bảo mật nghiêm trọng: Biến môi trường JWT_ACCESS_SECRET và JWT_REFRESH_SECRET bắt buộc phải được thiết lập.'
+  );
+}
 
 const generateAccessToken = (user) => {
   return jwt.sign(

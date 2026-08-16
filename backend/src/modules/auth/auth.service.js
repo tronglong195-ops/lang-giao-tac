@@ -88,12 +88,33 @@ class AuthService {
   }
 
   // --- GOOGLE OAUTH LOGIN / REGISTER ---
-  async loginOrRegisterWithGoogle({ googleId, email, fullName, avatarUrl }) {
-    if (!email && !googleId) {
-      throw new Error('Thiếu thông tin xác thực từ Google.');
+  async loginOrRegisterWithGoogle({ idToken }) {
+    if (!idToken) {
+      throw new Error('Thiếu idToken xác thực từ Google.');
     }
 
-    const normalizedEmail = email ? email.toLowerCase().trim() : null;
+    const { OAuth2Client } = require('google-auth-library');
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      throw new Error('Xác thực idToken Google không hợp lệ hoặc đã hết hạn.');
+    }
+
+    if (!payload) {
+      throw new Error('Không lấy được thông tin xác thực từ Google.');
+    }
+
+    const googleId = payload.sub;
+    const email = payload.email ? payload.email.toLowerCase().trim() : null;
+    const fullName = payload.name ? payload.name.trim() : (email ? email.split('@')[0] : 'Thành viên Google');
+    const avatarUrl = payload.picture || null;
 
     let user = null;
 
@@ -104,9 +125,9 @@ class AuthService {
       });
     }
 
-    if (!user && normalizedEmail) {
+    if (!user && email) {
       user = await prisma.user.findUnique({
-        where: { email: normalizedEmail },
+        where: { email },
       });
     }
 
@@ -128,8 +149,8 @@ class AuthService {
 
       user = await prisma.user.create({
         data: {
-          fullName: fullName?.trim() || (normalizedEmail ? normalizedEmail.split('@')[0] : 'Thành viên Google'),
-          email: normalizedEmail || `google_${googleId}@langgiaotac.vn`,
+          fullName,
+          email: email || `google_${googleId}@langgiaotac.vn`,
           googleId: googleId || null,
           avatarUrl: avatarUrl || null,
           role,
@@ -160,20 +181,37 @@ class AuthService {
   }
 
   // --- FACEBOOK OAUTH LOGIN / REGISTER ---
-  async loginOrRegisterWithFacebook({ facebookId, email, fullName, avatarUrl }) {
-    if (!facebookId) {
-      throw new Error('Thiếu Facebook ID từ tài khoản.');
+  async loginOrRegisterWithFacebook({ accessToken: fbAccessToken }) {
+    if (!fbAccessToken) {
+      throw new Error('Thiếu accessToken xác thực từ Facebook.');
     }
 
-    const normalizedEmail = email ? email.toLowerCase().trim() : null;
+    let fbData;
+    try {
+      const response = await fetch(
+        `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${encodeURIComponent(fbAccessToken)}`
+      );
+      fbData = await response.json();
+    } catch (err) {
+      throw new Error('Không thể kết nối tới Facebook Graph API.');
+    }
+
+    if (!fbData || fbData.error || !fbData.id) {
+      throw new Error(fbData?.error?.message || 'Xác thực Facebook accessToken không hợp lệ.');
+    }
+
+    const facebookId = fbData.id;
+    const email = fbData.email ? fbData.email.toLowerCase().trim() : null;
+    const fullName = fbData.name ? fbData.name.trim() : (email ? email.split('@')[0] : 'Thành viên Facebook');
+    const avatarUrl = fbData.picture?.data?.url || null;
 
     let user = await prisma.user.findUnique({
       where: { facebookId },
     });
 
-    if (!user && normalizedEmail) {
+    if (!user && email) {
       user = await prisma.user.findUnique({
-        where: { email: normalizedEmail },
+        where: { email },
       });
     }
 
@@ -193,10 +231,10 @@ class AuthService {
 
       user = await prisma.user.create({
         data: {
-          fullName: fullName?.trim() || 'Thành viên Facebook',
-          email: normalizedEmail || `facebook_${facebookId}@langgiaotac.vn`,
+          fullName,
+          email: email || `facebook_${facebookId}@langgiaotac.vn`,
           facebookId,
-          avatarUrl: avatarUrl || null,
+          avatarUrl,
           role,
           hometownGroup: 'Dâu rể / Con em quê hương',
           currentLocation: null,

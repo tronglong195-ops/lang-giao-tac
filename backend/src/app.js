@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 
@@ -19,6 +20,8 @@ const adminRoutes = require('./modules/admin/admin.routes');
 
 const app = express();
 
+app.use(helmet());
+
 // Cấu hình CORS hỗ trợ cookie thông tin phiên làm việc
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -33,7 +36,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(null, true); // Trong môi trường dev linh hoạt
+        callback(new Error('Not allowed by CORS'));
       }
     },
     credentials: true,

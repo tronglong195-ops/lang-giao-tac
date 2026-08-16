@@ -85,20 +85,17 @@ class AuthController {
   // --- GOOGLE AUTH HANDLER ---
   async googleAuth(req, res) {
     try {
-      const { googleId, email, fullName, avatarUrl } = req.body;
+      const { idToken } = req.body;
 
-      if (!googleId && !email) {
+      if (!idToken) {
         return res.status(400).json({
           success: false,
-          message: 'Thiếu thông tin xác thực từ Google.',
+          message: 'Thiếu idToken xác thực từ Google.',
         });
       }
 
       const { user, accessToken, refreshToken } = await authService.loginOrRegisterWithGoogle({
-        googleId,
-        email,
-        fullName,
-        avatarUrl,
+        idToken,
       });
 
       res.cookie('refreshToken', refreshToken, getRefreshCookieOptions());
@@ -122,20 +119,17 @@ class AuthController {
   // --- FACEBOOK AUTH HANDLER ---
   async facebookAuth(req, res) {
     try {
-      const { facebookId, email, fullName, avatarUrl } = req.body;
+      const { accessToken: fbAccessToken } = req.body;
 
-      if (!facebookId) {
+      if (!fbAccessToken) {
         return res.status(400).json({
           success: false,
-          message: 'Thiếu Facebook ID.',
+          message: 'Thiếu accessToken xác thực từ Facebook.',
         });
       }
 
       const { user, accessToken, refreshToken } = await authService.loginOrRegisterWithFacebook({
-        facebookId,
-        email,
-        fullName,
-        avatarUrl,
+        accessToken: fbAccessToken,
       });
 
       res.cookie('refreshToken', refreshToken, getRefreshCookieOptions());
