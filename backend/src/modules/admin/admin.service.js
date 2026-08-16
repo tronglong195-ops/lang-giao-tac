@@ -219,6 +219,11 @@ class AdminService {
     if (role && role !== 'all') {
       where.role = role;
     }
+    if (status === 'banned') {
+      where.isBanned = true;
+    } else if (status === 'active') {
+      where.isBanned = false;
+    }
     if (search) {
       where.OR = [
         { fullName: { contains: search, mode: 'insensitive' } },
@@ -244,6 +249,11 @@ class AdminService {
           hometownGroup: true,
           currentLocation: true,
           isVerified: true,
+          isBanned: true,
+          banReason: true,
+          rating: true,
+          badge: true,
+          adminNote: true,
           createdAt: true,
           _count: {
             select: {
@@ -268,7 +278,7 @@ class AdminService {
 
   async updateUserRole(currentUserId, targetUserId, newRole) {
     if (!['admin', 'moderator', 'member'].includes(newRole)) {
-      throw new Error('Vai trò không hợp lệ.');
+      throw new Error('Vai trò không hợp lệ (admin, moderator, member).');
     }
 
     if (currentUserId === targetUserId && newRole !== 'admin') {
@@ -283,6 +293,7 @@ class AdminService {
         fullName: true,
         email: true,
         role: true,
+        isBanned: true,
       },
     });
 
@@ -309,6 +320,105 @@ class AdminService {
     });
 
     return updated;
+  }
+
+  /**
+   * Khóa hoặc Mở khóa tài khoản thành viên
+   */
+  async banUser(currentUserId, targetUserId, { isBanned, banReason }) {
+    if (currentUserId === targetUserId) {
+      throw new Error('Không thể tự khóa tài khoản của chính mình.');
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!targetUser) {
+      throw new Error('Người dùng không tồn tại.');
+    }
+
+    if (targetUser.role === 'admin') {
+      throw new Error('Không thể khóa tài khoản của Quản trị viên khác. Vui lòng hạ quyền trước.');
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        isBanned: Boolean(isBanned),
+        banReason: isBanned ? (banReason?.trim() || 'Vi phạm quy chuẩn cộng đồng Làng Giao Tác') : null,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        isBanned: true,
+        banReason: true,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Đánh giá, xếp hạng sao và cấp huy hiệu cho thành viên
+   */
+  async rateUser(targetUserId, { rating, badge, adminNote }) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!targetUser) {
+      throw new Error('Người dùng không tồn tại.');
+    }
+
+    const parsedRating = rating !== undefined ? Math.max(1, Math.min(5, Number(rating))) : undefined;
+
+    const updated = await prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        ...(parsedRating !== undefined && { rating: parsedRating }),
+        ...(badge !== undefined && { badge: badge?.trim() || null }),
+        ...(adminNote !== undefined && { adminNote: adminNote?.trim() || null }),
+      },
+      select: {
+        id: true,
+        fullName: true,
+        rating: true,
+        badge: true,
+        adminNote: true,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Xóa vĩnh viễn tài khoản thành viên khỏi hệ thống
+   */
+  async deleteUser(currentUserId, targetUserId) {
+    if (currentUserId === targetUserId) {
+      throw new Error('Không thể tự xóa tài khoản của chính mình.');
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!targetUser) {
+      throw new Error('Người dùng không tồn tại.');
+    }
+
+    if (targetUser.role === 'admin') {
+      throw new Error('Không thể xóa tài khoản Quản trị viên.');
+    }
+
+    // Xóa người dùng (Prisma onDelete: Cascade sẽ tự xóa bài viết, ảnh, thông báo của người này)
+    await prisma.user.delete({
+      where: { id: targetUserId },
+    });
+
+    return { success: true, message: `Đã xóa vĩnh viễn tài khoản ${targetUser.fullName} (${targetUser.email}).` };
   }
 }
 

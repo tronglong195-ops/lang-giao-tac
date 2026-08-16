@@ -75,6 +75,14 @@ class AuthService {
       throw new Error('Email hoặc mật khẩu không chính xác.');
     }
 
+    if (user.isBanned) {
+      throw new Error(
+        user.banReason
+          ? `Tài khoản của bạn đã bị khóa: ${user.banReason}`
+          : 'Tài khoản của bạn đã bị Ban Quản Trị khóa do vi phạm quy định cộng đồng.'
+      );
+    }
+
     if (!user.passwordHash) {
       throw new Error('Tài khoản này được tạo qua Google/Facebook. Vui lòng sử dụng nút đăng nhập xã hội tương ứng.');
     }
@@ -159,6 +167,14 @@ class AuthService {
       const updateData = {};
       if (!user.googleId && googleId) updateData.googleId = googleId;
       if (!user.avatarUrl && avatarUrl) updateData.avatarUrl = avatarUrl;
+      if (user.isBanned) {
+        throw new Error(
+          user.banReason
+            ? `Tài khoản của bạn đã bị khóa: ${user.banReason}`
+            : 'Tài khoản của bạn đã bị Ban Quản Trị khóa do vi phạm quy định cộng đồng.'
+        );
+      }
+
       if (Object.keys(updateData).length > 0) {
         user = await prisma.user.update({
           where: { id: user.id },

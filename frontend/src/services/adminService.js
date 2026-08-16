@@ -40,4 +40,19 @@ export const adminService = {
     const res = await api.patch(`/admin/users/${id}/verify`);
     return res.data;
   },
+
+  async banUser(id, data) {
+    const res = await api.patch(`/admin/users/${id}/ban`, data);
+    return res.data;
+  },
+
+  async rateUser(id, data) {
+    const res = await api.patch(`/admin/users/${id}/rate`, data);
+    return res.data;
+  },
+
+  async deleteUser(id) {
+    const res = await api.delete(`/admin/users/${id}`);
+    return res.data;
+  },
 };

@@ -21,6 +21,11 @@ model User {
   currentLocation String?            // Nơi đang sinh sống/làm việc (vd: Hà Nội, TP.HCM, Đà Nẵng...)
   bio             String?            // Giới thiệu ngắn
   isVerified      Boolean            @default(false)
+  isBanned        Boolean            @default(false)
+  banReason       String?
+  rating          Int                @default(5)
+  badge           String?
+  adminNote       String?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 

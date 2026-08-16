@@ -15,6 +15,15 @@ import {
   PlusCircle,
   Edit,
   AlertTriangle,
+  Star,
+  Lock,
+  Unlock,
+  Award,
+  Search,
+  Ban,
+  UserX,
+  MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 import { adminService } from '../services/adminService';
 import { newsService } from '../services/newsService';
@@ -71,6 +80,21 @@ export const AdminDashboardPage = () => {
   // Users Management
   const [usersList, setUsersList] = useState([]);
   const [searchUser, setSearchUser] = useState('');
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Rating Modal
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedUserForRating, setSelectedUserForRating] = useState(null);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingBadge, setRatingBadge] = useState('');
+  const [adminNote, setAdminNote] = useState('');
+
+  // Ban Modal
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [selectedUserForBan, setSelectedUserForBan] = useState(null);
+  const [banReasonInput, setBanReasonInput] = useState('');
 
   // Confirm Modal
   const [confirmModalData, setConfirmModalData] = useState(null);
@@ -326,12 +350,19 @@ export const AdminDashboardPage = () => {
   };
 
   // --- USERS MANAGEMENT ---
-  const loadUsersList = async () => {
+  const loadUsersList = async (customParams = {}) => {
+    setLoadingUsers(true);
     try {
-      const data = await adminService.getUsers({ search: searchUser || undefined });
+      const data = await adminService.getUsers({
+        search: customParams.search !== undefined ? customParams.search : (searchUser || undefined),
+        role: customParams.role !== undefined ? customParams.role : (filterRole !== 'all' ? filterRole : undefined),
+        status: customParams.status !== undefined ? customParams.status : (filterStatus !== 'all' ? filterStatus : undefined),
+      });
       if (data?.users) setUsersList(data.users);
     } catch (error) {
       console.error('Lỗi tải người dùng:', error);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -351,6 +382,69 @@ export const AdminDashboardPage = () => {
     } catch (error) {
       alert('Không thể đổi trạng thái xác minh.');
     }
+  };
+
+  const handleOpenRatingModal = (u) => {
+    setSelectedUserForRating(u);
+    setRatingScore(u.rating || 5);
+    setRatingBadge(u.badge || '');
+    setAdminNote(u.adminNote || '');
+    setShowRatingModal(true);
+  };
+
+  const handleSaveRating = async (e) => {
+    e.preventDefault();
+    if (!selectedUserForRating) return;
+    try {
+      await adminService.rateUser(selectedUserForRating.id, {
+        rating: ratingScore,
+        badge: ratingBadge,
+        adminNote,
+      });
+      setShowRatingModal(false);
+      setSelectedUserForRating(null);
+      loadUsersList();
+    } catch (error) {
+      alert('Lỗi khi lưu đánh giá thành viên.');
+    }
+  };
+
+  const handleOpenBanModal = (u) => {
+    setSelectedUserForBan(u);
+    setBanReasonInput(u.banReason || 'Vi phạm quy chuẩn cộng đồng Làng Giao Tác');
+    setShowBanModal(true);
+  };
+
+  const handleConfirmBan = async () => {
+    if (!selectedUserForBan) return;
+    try {
+      await adminService.banUser(selectedUserForBan.id, {
+        isBanned: !selectedUserForBan.isBanned,
+        banReason: !selectedUserForBan.isBanned ? banReasonInput : null,
+      });
+      setShowBanModal(false);
+      setSelectedUserForBan(null);
+      loadUsersList();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Lỗi khi thay đổi trạng thái khóa tài khoản.');
+    }
+  };
+
+  const handleDeleteUser = (u) => {
+    setConfirmModalData({
+      title: `Xác nhận xóa tài khoản: ${u.fullName}`,
+      message: `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${u.fullName}" (${u.email}) không? Toàn bộ bài viết và ảnh của người này sẽ bị xóa và lần sau không thể đăng nhập được nữa.`,
+      onConfirm: async () => {
+        try {
+          await adminService.deleteUser(u.id);
+          setConfirmModalData(null);
+          loadUsersList();
+          fetchStats();
+        } catch (error) {
+          alert(error.response?.data?.message || 'Lỗi khi xóa thành viên.');
+        }
+      },
+    });
   };
 
   return (
@@ -1097,79 +1191,525 @@ export const AdminDashboardPage = () => {
 
       {/* Tab 6: Users & Permissions Management (Admin only) */}
       {activeTab === 'users' && isAdmin && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="font-bold text-lg text-ink">Quản lý Thành viên ({usersList.length})</h2>
-            <div className="relative max-w-xs w-full">
+        <div className="space-y-6">
+          {/* Header & Bộ đếm thống kê thành viên */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-4 rounded-2xl bg-surface border border-warmBorder shadow-xs">
+              <span className="text-2xl font-bold text-primary-dark">{usersList.length}</span>
+              <p className="text-xs text-ink-muted mt-0.5">Tổng số thành viên</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-surface border border-warmBorder shadow-xs">
+              <span className="text-2xl font-bold text-emerald-600">
+                {usersList.filter((u) => u.isVerified).length}
+              </span>
+              <p className="text-xs text-ink-muted mt-0.5">Đã xác minh dân làng</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-surface border border-warmBorder shadow-xs">
+              <span className="text-2xl font-bold text-amber-600">
+                {usersList.filter((u) => u.badge || (u.rating && u.rating >= 4)).length}
+              </span>
+              <p className="text-xs text-ink-muted mt-0.5">Được khen thưởng / Đánh giá cao</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-surface border border-warmBorder shadow-xs">
+              <span className="text-2xl font-bold text-red-600">
+                {usersList.filter((u) => u.isBanned).length}
+              </span>
+              <p className="text-xs text-ink-muted mt-0.5">Tài khoản bị khóa</p>
+            </div>
+          </div>
+
+          {/* Thanh tìm kiếm và bộ lọc */}
+          <div className="bg-surface rounded-2xl border border-warmBorder p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs">
+            {/* Search Box */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && loadUsersList()}
-                placeholder="Tìm thành viên..."
-                className="w-full input-warm text-xs"
+                placeholder="Tìm theo tên, email, xóm làng hoặc nơi ở..."
+                className="w-full pl-9 pr-4 py-2 input-warm text-xs"
               />
+            </div>
+
+            {/* Filter Dropdowns */}
+            <div className="flex items-center space-x-2">
+              {/* Role Filter */}
+              <select
+                value={filterRole}
+                onChange={(e) => {
+                  setFilterRole(e.target.value);
+                  loadUsersList({ role: e.target.value });
+                }}
+                className="input-warm py-2 px-3 text-xs bg-surface"
+              >
+                <option value="all">Tất cả vai trò</option>
+                <option value="admin">👑 Quản trị viên</option>
+                <option value="moderator">🛡️ Điều hành viên</option>
+                <option value="member">🌾 Thành viên làng</option>
+              </select>
+
+              {/* Status Filter */}
+              <select
+                value={filterStatus}
+                onChange={(e) => {
+                  setFilterStatus(e.target.value);
+                  loadUsersList({ status: e.target.value });
+                }}
+                className="input-warm py-2 px-3 text-xs bg-surface"
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">🟢 Đang hoạt động</option>
+                <option value="banned">🔴 Bị khóa tài khoản</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={() => loadUsersList()}
+                className="px-3.5 py-2 rounded-xl bg-primary text-surface font-semibold text-xs hover:bg-primary-dark transition-colors shrink-0"
+              >
+                Lọc
+              </button>
             </div>
           </div>
 
+          {/* Bảng Danh Sách Thành Viên */}
           <div className="bg-surface rounded-3xl border border-warmBorder overflow-hidden shadow-warm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-ink">
-                <thead className="bg-paper border-b border-warmBorder text-ink-muted uppercase font-bold">
+                <thead className="bg-paper border-b border-warmBorder text-ink-muted uppercase font-bold tracking-wider">
                   <tr>
                     <th className="p-4">Thành viên</th>
-                    <th className="p-4">Email</th>
                     <th className="p-4">Quê quán & Nơi ở</th>
-                    <th className="p-4">Xác minh</th>
-                    <th className="p-4">Vai trò (Role)</th>
+                    <th className="p-4">Phân quyền chức vụ</th>
+                    <th className="p-4">Đánh giá & Khen thưởng</th>
+                    <th className="p-4">Trạng thái</th>
+                    <th className="p-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-warmBorder/60">
-                  {usersList.map((u) => (
-                    <tr key={u.id} className="hover:bg-paper/50 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-7 h-7 rounded-full bg-primary text-surface flex items-center justify-center font-bold text-[10px]">
-                            {u.fullName.charAt(0)}
-                          </div>
-                          <span className="font-bold text-ink">{u.fullName}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-ink-muted">{u.email}</td>
-                      <td className="p-4 text-ink-muted">
-                        <div>{u.hometownGroup || '—'}</div>
-                        <div className="text-[10px] text-accent">{u.currentLocation}</div>
-                      </td>
-                      <td className="p-4">
-                        <button
-                          onClick={() => handleToggleVerify(u.id)}
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                            u.isVerified
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                          }`}
-                        >
-                          {u.isVerified ? '✓ Đã xác minh' : 'Chưa xác minh'}
-                        </button>
-                      </td>
-                      <td className="p-4">
-                        <select
-                          value={u.role}
-                          onChange={(e) => handleUpdateRole(u.id, e.target.value)}
-                          disabled={u.id === user?.id}
-                          className="input-warm py-1 px-2 text-xs bg-surface"
-                        >
-                          <option value="member">Thành viên</option>
-                          <option value="moderator">Điều hành viên</option>
-                          <option value="admin">Quản trị viên</option>
-                        </select>
+                  {loadingUsers ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-ink-muted">
+                        Đang tải danh sách thành viên...
                       </td>
                     </tr>
-                  ))}
+                  ) : usersList.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-ink-muted">
+                        Không tìm thấy thành viên nào phù hợp.
+                      </td>
+                    </tr>
+                  ) : (
+                    usersList.map((u) => (
+                      <tr
+                        key={u.id}
+                        className={`transition-colors ${
+                          u.isBanned ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-paper/50'
+                        }`}
+                      >
+                        {/* 1. Thành viên info */}
+                        <td className="p-4">
+                          <div className="flex items-center space-x-3">
+                            {u.avatarUrl ? (
+                              <img
+                                src={u.avatarUrl}
+                                alt={u.fullName}
+                                className="w-9 h-9 rounded-xl object-cover border border-warmBorder shrink-0"
+                              />
+                            ) : (
+                              <div className="w-9 h-9 rounded-xl bg-primary-subtle text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                                {u.fullName ? u.fullName.charAt(0).toUpperCase() : 'U'}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <div className="flex items-center space-x-1.5">
+                                <span className="font-bold text-sm text-ink truncate">
+                                  {u.fullName}
+                                </span>
+                                {u.id === user?.id && (
+                                  <span className="text-[10px] font-bold text-primary bg-primary-subtle px-1.5 py-0.2 rounded">
+                                    (Bạn)
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-ink-muted truncate mt-0.5">{u.email}</p>
+                              <div className="flex items-center space-x-2 text-[10px] text-ink-muted/80 mt-1">
+                                <span>📝 {u._count?.posts || 0} bài viết</span>
+                                <span>•</span>
+                                <span>📸 {u._count?.photos || 0} ảnh</span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 2. Quê quán & Nơi ở */}
+                        <td className="p-4 text-xs">
+                          <div className="font-medium text-ink">
+                            {u.hometownGroup || 'TDP 9 Thuận Lộc'}
+                          </div>
+                          <div className="text-[11px] text-accent mt-0.5">
+                            {u.currentLocation || 'Chưa cập nhật nơi ở'}
+                          </div>
+                        </td>
+
+                        {/* 3. Phân quyền chức vụ */}
+                        <td className="p-4">
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleUpdateRole(u.id, e.target.value)}
+                            disabled={u.id === user?.id}
+                            className={`input-warm py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
+                              u.role === 'admin'
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : u.role === 'moderator'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-surface text-ink'
+                            }`}
+                          >
+                            <option value="member">🌾 Thành viên</option>
+                            <option value="moderator">🛡️ Điều hành viên</option>
+                            <option value="admin">👑 Quản trị viên</option>
+                          </select>
+                        </td>
+
+                        {/* 4. Đánh giá & Khen thưởng */}
+                        <td className="p-4">
+                          <div className="space-y-1.5">
+                            {/* Stars */}
+                            <div className="flex items-center space-x-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-3.5 h-3.5 ${
+                                    star <= (u.rating || 5)
+                                      ? 'text-amber-400 fill-amber-400'
+                                      : 'text-stone-300'
+                                  }`}
+                                />
+                              ))}
+                              <span className="text-[11px] font-bold text-ink-muted ml-1">
+                                {u.rating || 5}/5
+                              </span>
+                            </div>
+
+                            {/* Badge nếu có */}
+                            {u.badge && (
+                              <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold">
+                                <Award className="w-3 h-3 text-amber-600" />
+                                <span>{u.badge}</span>
+                              </div>
+                            )}
+
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenRatingModal(u)}
+                                className="text-[11px] font-semibold text-primary hover:text-primary-dark underline flex items-center space-x-1"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                <span>Đánh giá & Khen thưởng</span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 5. Trạng thái */}
+                        <td className="p-4 space-y-1.5">
+                          {/* Xác minh */}
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleVerify(u.id)}
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${
+                                u.isVerified
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200 border border-stone-200'
+                              }`}
+                              title="Bấm để đổi trạng thái xác minh"
+                            >
+                              {u.isVerified ? '✓ Đã xác minh dân làng' : 'Chưa xác minh'}
+                            </button>
+                          </div>
+
+                          {/* Khóa/Hoạt động */}
+                          <div>
+                            {u.isBanned ? (
+                              <span
+                                className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-red-100 text-red-800 text-[10px] font-bold border border-red-200"
+                                title={`Lý do khóa: ${u.banReason || 'Vi phạm quy định'}`}
+                              >
+                                <Ban className="w-3 h-3 text-red-600" />
+                                <span>Bị khóa tài khoản</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span>Đang hoạt động</span>
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* 6. Thao tác (Khóa, Mở khóa, Xóa) */}
+                        <td className="p-4 text-right">
+                          {u.id !== user?.id && u.role !== 'admin' && (
+                            <div className="flex items-center justify-end space-x-1.5">
+                              {/* Nút Khóa / Mở khóa */}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenBanModal(u)}
+                                className={`p-2 rounded-xl text-xs font-semibold flex items-center space-x-1 transition-colors ${
+                                  u.isBanned
+                                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                                    : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'
+                                }`}
+                                title={u.isBanned ? 'Mở khóa tài khoản' : 'Khóa tài khoản này'}
+                              >
+                                {u.isBanned ? (
+                                  <>
+                                    <Unlock className="w-3.5 h-3.5" />
+                                    <span>Mở khóa</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="w-3.5 h-3.5" />
+                                    <span>Khóa</span>
+                                  </>
+                                )}
+                              </button>
+
+                              {/* Nút Xóa vĩnh viễn */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteUser(u)}
+                                className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors"
+                                title="Xóa vĩnh viễn thành viên này"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
+
+          {/* Modal Đánh Giá & Khen Thưởng Thành Viên */}
+          {showRatingModal && selectedUserForRating && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="bg-surface rounded-3xl border border-warmBorder max-w-lg w-full p-6 sm:p-8 space-y-5 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-warmBorder pb-3">
+                  <div>
+                    <h3 className="font-bold text-lg text-ink">
+                      Đánh Giá & Khen Thưởng Thành Viên
+                    </h3>
+                    <p className="text-xs text-ink-muted mt-0.5">
+                      Thành viên: <strong>{selectedUserForRating.fullName}</strong> ({selectedUserForRating.email})
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowRatingModal(false)}
+                    className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-paper"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveRating} className="space-y-4">
+                  {/* Chấm điểm sao */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                      Mức độ đánh giá uy tín (1 - 5 Sao)
+                    </label>
+                    <div className="flex items-center space-x-2 p-3 bg-paper rounded-2xl border border-warmBorder">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRatingScore(star)}
+                          className="focus:outline-none p-1 transition-transform hover:scale-125"
+                        >
+                          <Star
+                            className={`w-7 h-7 ${
+                              star <= ratingScore
+                                ? 'text-amber-400 fill-amber-400'
+                                : 'text-stone-300 hover:text-amber-200'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="text-sm font-bold text-primary-dark ml-2">
+                        {ratingScore === 5
+                          ? '⭐⭐⭐⭐⭐ Xuất sắc'
+                          : ratingScore === 4
+                          ? '⭐⭐⭐⭐ Tốt / Tích cực'
+                          : ratingScore === 3
+                          ? '⭐⭐⭐ Khá'
+                          : ratingScore === 2
+                          ? '⭐⭐ Cần nhắc nhở'
+                          : '⭐ Kém / Cảnh cáo'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Danh sách huy hiệu gợi ý */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                      Trao tặng Huy hiệu Danh Dự
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        '🌾 Thành viên Tích Cực',
+                        '🎖️ Cống Hiến Xuất Sắc',
+                        '🤝 Đồng Hương Gắn Kết',
+                        '🪙 Nhà Tài Trợ Quê Hương',
+                        '✍️ Cây Bút Vàng Làng Xã',
+                        '📷 Nhiếp Ảnh Gia Quê Nhà',
+                      ].map((presetBadge) => (
+                        <button
+                          key={presetBadge}
+                          type="button"
+                          onClick={() =>
+                            setRatingBadge(ratingBadge === presetBadge ? '' : presetBadge)
+                          }
+                          className={`p-2 rounded-xl text-xs font-semibold text-left border transition-all ${
+                            ratingBadge === presetBadge
+                              ? 'bg-primary text-surface border-primary shadow-xs'
+                              : 'bg-paper text-ink border-warmBorder hover:border-primary/40'
+                          }`}
+                        >
+                          {presetBadge}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={ratingBadge}
+                      onChange={(e) => setRatingBadge(e.target.value)}
+                      placeholder="Hoặc nhập huy hiệu tùy chỉnh..."
+                      className="w-full input-warm text-xs mt-2"
+                    />
+                  </div>
+
+                  {/* Ghi chú / Đánh giá của Admin */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                      Ghi chú / Lời khen tặng của Ban Quản Trị
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={adminNote}
+                      onChange={(e) => setAdminNote(e.target.value)}
+                      placeholder="Ví dụ: Đóng góp tích cực nhiều hình ảnh xưa và bài viết ý nghĩa cho làng..."
+                      className="w-full input-warm text-xs resize-none"
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end space-x-2 pt-2 border-t border-warmBorder">
+                    <button
+                      type="button"
+                      onClick={() => setShowRatingModal(false)}
+                      className="px-4 py-2.5 rounded-xl border border-warmBorder text-xs text-ink hover:bg-paper font-semibold"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-primary text-surface text-xs font-bold hover:bg-primary-dark shadow-sm"
+                    >
+                      Lưu Đánh Giá
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Khóa / Mở Khóa Tài Khoản */}
+          {showBanModal && selectedUserForBan && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="bg-surface rounded-3xl border border-warmBorder max-w-md w-full p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                      selectedUserForBan.isBanned
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {selectedUserForBan.isBanned ? (
+                      <Unlock className="w-5 h-5" />
+                    ) : (
+                      <Ban className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-ink">
+                      {selectedUserForBan.isBanned
+                        ? 'Mở Khóa Tài Khoản Thành Viên'
+                        : 'Khóa Tài Khoản Thành Viên'}
+                    </h3>
+                    <p className="text-xs text-ink-muted">
+                      Thành viên: <strong>{selectedUserForBan.fullName}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                {!selectedUserForBan.isBanned ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-ink-muted leading-relaxed">
+                      Khi bị khóa, thành viên này sẽ <strong>không thể đăng nhập vào hệ thống</strong> được nữa cho đến khi Quản trị viên mở khóa lại.
+                    </p>
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                        Lý do khóa tài khoản
+                      </label>
+                      <input
+                        type="text"
+                        value={banReasonInput}
+                        onChange={(e) => setBanReasonInput(e.target.value)}
+                        placeholder="Ví dụ: Vi phạm quy tắc đăng bài, chia sẻ nội dung không phù hợp..."
+                        className="w-full input-warm text-xs"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-ink-muted leading-relaxed">
+                    Bạn có chắc chắn muốn mở khóa cho tài khoản <strong>{selectedUserForBan.fullName}</strong>? Sau khi mở khóa, người này có thể đăng nhập và sinh hoạt bình thường.
+                  </p>
+                )}
+
+                <div className="flex items-center justify-end space-x-2 pt-2 border-t border-warmBorder">
+                  <button
+                    type="button"
+                    onClick={() => setShowBanModal(false)}
+                    className="px-4 py-2 rounded-xl border border-warmBorder text-xs text-ink hover:bg-paper font-semibold"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmBan}
+                    className={`px-5 py-2 rounded-xl text-xs font-bold text-surface shadow-sm ${
+                      selectedUserForBan.isBanned
+                        ? 'bg-emerald-600 hover:bg-emerald-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
+                  >
+                    {selectedUserForBan.isBanned ? 'Xác Nhận Mở Khóa' : 'Xác Nhận Khóa Tài Khoản'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

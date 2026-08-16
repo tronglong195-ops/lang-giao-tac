@@ -15,6 +15,8 @@ import {
   Upload,
   X,
   Sparkles,
+  Star,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { postService } from '../services/postService';
@@ -226,8 +228,37 @@ export const ProfilePage = () => {
             )}
           </div>
 
-          {user?.bio && (
+            {user?.bio && (
             <p className="text-xs text-ink-muted max-w-2xl leading-relaxed pt-1">{user.bio}</p>
+          )}
+
+          {/* Huy hiệu danh dự & Đánh giá sao từ Ban Quản Trị */}
+          {(user?.badge || (user?.rating && user?.rating > 0)) && (
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-2">
+              {user?.badge && (
+                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold shadow-xs">
+                  <Award className="w-4 h-4 text-amber-600" />
+                  <span>{user.badge}</span>
+                </div>
+              )}
+              {user?.rating && (
+                <div className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-xs font-semibold text-ink">
+                  <span className="text-[11px] text-ink-muted">Độ uy tín:</span>
+                  <div className="flex items-center space-x-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-3.5 h-3.5 ${
+                          star <= user.rating
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-stone-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

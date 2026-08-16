@@ -98,8 +98,8 @@ class AdminController {
 
   async getUsers(req, res) {
     try {
-      const { page, limit, search, role } = req.query;
-      const result = await adminService.getUsers({ page, limit, search, role });
+      const { page, limit, search, role, status } = req.query;
+      const result = await adminService.getUsers({ page, limit, search, role, status });
 
       return res.status(200).json({
         success: true,
@@ -149,6 +149,64 @@ class AdminController {
       return res.status(400).json({
         success: false,
         message: error.message || 'Lỗi khi thay đổi trạng thái xác minh.',
+      });
+    }
+  }
+
+  async banUser(req, res) {
+    try {
+      const { id } = req.params;
+      const { isBanned, banReason } = req.body;
+
+      const updated = await adminService.banUser(req.user.id, id, { isBanned, banReason });
+
+      return res.status(200).json({
+        success: true,
+        message: isBanned ? 'Đã khóa tài khoản thành viên.' : 'Đã mở khóa tài khoản thành viên.',
+        data: { user: updated },
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Lỗi khi thay đổi trạng thái khóa tài khoản.',
+      });
+    }
+  }
+
+  async rateUser(req, res) {
+    try {
+      const { id } = req.params;
+      const { rating, badge, adminNote } = req.body;
+
+      const updated = await adminService.rateUser(id, { rating, badge, adminNote });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Đã lưu đánh giá và khen thưởng thành viên.',
+        data: { user: updated },
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Lỗi khi lưu đánh giá thành viên.',
+      });
+    }
+  }
+
+  async deleteUser(req, res) {
+    try {
+      const { id } = req.params;
+
+      const result = await adminService.deleteUser(req.user.id, id);
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Lỗi khi xóa thành viên.',
       });
     }
   }

@@ -33,6 +33,10 @@ const authGuard = async (req, res, next) => {
         hometownGroup: true,
         currentLocation: true,
         isVerified: true,
+        isBanned: true,
+        banReason: true,
+        rating: true,
+        badge: true,
       },
     });
 
@@ -40,6 +44,16 @@ const authGuard = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Người dùng không tồn tại.',
+      });
+    }
+
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        code: 'USER_BANNED',
+        message: user.banReason
+          ? `Tài khoản của bạn đã bị khóa: ${user.banReason}`
+          : 'Tài khoản của bạn đã bị Ban Quản Trị khóa do vi phạm quy định cộng đồng.',
       });
     }
 
@@ -72,9 +86,13 @@ const optionalAuthGuard = async (req, res, next) => {
             hometownGroup: true,
             currentLocation: true,
             isVerified: true,
+            isBanned: true,
+            banReason: true,
+            rating: true,
+            badge: true,
           },
         });
-        if (user) {
+        if (user && !user.isBanned) {
           req.user = user;
         }
       }

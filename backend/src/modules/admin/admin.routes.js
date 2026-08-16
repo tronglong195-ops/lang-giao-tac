@@ -26,5 +26,14 @@ router.patch('/users/:id/role', roleGuard(['admin']), (req, res) =>
 router.patch('/users/:id/verify', roleGuard(['admin']), (req, res) =>
   adminController.toggleVerifyUser(req, res)
 );
+router.patch('/users/:id/ban', roleGuard(['admin']), (req, res) =>
+  adminController.banUser(req, res)
+);
+router.patch('/users/:id/rate', roleGuard(['admin']), (req, res) =>
+  adminController.rateUser(req, res)
+);
+router.delete('/users/:id', roleGuard(['admin']), (req, res) =>
+  adminController.deleteUser(req, res)
+);
 
 module.exports = router;
