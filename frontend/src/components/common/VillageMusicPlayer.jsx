@@ -88,40 +88,40 @@ export const VillageMusicPlayer = () => {
       </div>
 
       {/* Floating Music Player Widget ở góc dưới bên trái */}
-      <div className="fixed bottom-5 left-5 z-40 flex items-center select-none group">
-        <div className="bg-surface/95 backdrop-blur-md border border-warmBorder shadow-warmHover rounded-full p-1.5 pr-4 flex items-center space-x-3 transition-all duration-300 hover:scale-[1.02] hover:border-primary/40">
+      <div className="fixed bottom-3 left-3 sm:bottom-5 sm:left-5 z-40 flex items-center select-none group max-w-[calc(100vw-24px)]">
+        <div className="bg-surface/95 backdrop-blur-md border border-warmBorder shadow-warmHover rounded-full p-1 sm:p-1.5 pr-2.5 sm:pr-4 flex items-center space-x-2 sm:space-x-3 transition-all duration-300 hover:scale-[1.02] hover:border-primary/40 max-w-full">
           {/* Đĩa nhạc xoay tròn khi đang phát */}
           <button
             onClick={togglePlay}
-            className="relative w-10 h-10 rounded-full bg-primary text-secondary-light flex items-center justify-center shadow-md overflow-hidden shrink-0 group-hover:bg-primary-dark transition-colors"
+            className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-secondary-light flex items-center justify-center shadow-md overflow-hidden shrink-0 group-hover:bg-primary-dark transition-colors"
             title={isPlaying ? 'Tạm dừng nhạc' : 'Phát nhạc quê hương'}
           >
             <Disc
-              className={`w-6 h-6 ${
+              className={`w-5 h-5 sm:w-6 sm:h-6 ${
                 isPlaying ? 'animate-spin' : ''
               }`}
               style={{ animationDuration: '4s' }}
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
               {isPlaying ? (
-                <Pause className="w-4 h-4 text-white" />
+                <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
               ) : (
-                <Play className="w-4 h-4 text-white ml-0.5" />
+                <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white ml-0.5" />
               )}
             </div>
           </button>
 
           {/* Thông tin bài hát & Equalizer sóng nhạc */}
-          <div className="flex flex-col cursor-pointer" onClick={() => setShowVideoModal(true)}>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-primary-dark tracking-tight hover:underline flex items-center space-x-1">
+          <div className="flex flex-col cursor-pointer min-w-0" onClick={() => setShowVideoModal(true)}>
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <span className="text-[11px] sm:text-xs font-bold text-primary-dark tracking-tight hover:underline flex items-center space-x-1 truncate max-w-[100px] xs:max-w-[140px] sm:max-w-none">
                 <Music className="w-3 h-3 text-primary inline mr-1 shrink-0" />
-                <span>Hà Tĩnh Nhớ Về</span>
+                <span className="truncate">Hà Tĩnh Nhớ Về</span>
               </span>
 
               {/* Equalizer thanh sóng âm thanh */}
               {isPlaying && (
-                <div className="flex items-end space-x-0.5 h-3">
+                <div className="flex items-end space-x-0.5 h-3 shrink-0">
                   <span className="w-0.5 bg-secondary rounded-full animate-bounce h-2" style={{ animationDelay: '0.1s' }}></span>
                   <span className="w-0.5 bg-primary rounded-full animate-bounce h-3" style={{ animationDelay: '0.3s' }}></span>
                   <span className="w-0.5 bg-accent rounded-full animate-bounce h-2.5" style={{ animationDelay: '0.2s' }}></span>
@@ -129,8 +129,8 @@ export const VillageMusicPlayer = () => {
               )}
             </div>
 
-            <span className="text-[10px] text-ink-muted leading-tight">
-              {isPlaying ? 'Giai điệu quê hương đang phát...' : 'Nhấp để nghe khúc tâm tình'}
+            <span className="text-[9px] sm:text-[10px] text-ink-muted leading-tight truncate max-w-[95px] xs:max-w-[130px] sm:max-w-[180px]">
+              {isPlaying ? 'Giai điệu quê hương...' : 'Nhấp để nghe khúc tâm tình'}
             </span>
           </div>
 

@@ -123,24 +123,25 @@ export const Navbar = () => {
       {/* Top Banner Accent Line */}
       <div className="h-1 bg-gradient-to-r from-primary via-secondary to-accent"></div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-2 xl:gap-4 h-20">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-4 h-16 sm:h-20">
           {/* Logo & Village Identity */}
           <Link
             to="/"
-            className="flex items-center space-x-2.5 group transition-transform duration-300 hover:scale-[1.01] shrink-0"
+            className="flex items-center space-x-2 sm:space-x-2.5 group transition-transform duration-300 hover:scale-[1.01] min-w-0"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary flex items-center justify-center text-secondary-light shadow-md border border-primary-dark/20 group-hover:bg-primary-dark transition-colors shrink-0">
-              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-primary flex items-center justify-center text-secondary-light shadow-md border border-primary-dark/20 group-hover:bg-primary-dark transition-colors shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 fill-current" viewBox="0 0 24 24">
                 <path d="M12 3L2 9h3v12h4v-7h6v7h4V9h3L12 3zm0 3.84L16.45 9H7.55L12 6.84zM13 14h-2v-3h2v3z" />
               </svg>
             </div>
-            <div className="whitespace-nowrap">
-              <span className="block font-bold text-base sm:text-lg xl:text-xl text-primary-dark tracking-tight leading-none group-hover:text-primary transition-colors">
+            <div className="min-w-0">
+              <span className="block font-bold text-sm sm:text-lg xl:text-xl text-primary-dark tracking-tight leading-none group-hover:text-primary transition-colors truncate">
                 LÀNG GIAO TÁC
               </span>
-              <span className="block text-[10px] sm:text-[11px] text-accent font-medium mt-1">
-                TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh
+              <span className="block text-[9px] sm:text-[11px] text-accent font-medium mt-0.5 sm:mt-1 truncate max-w-[150px] xs:max-w-[210px] sm:max-w-none">
+                <span className="hidden sm:inline">TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh</span>
+                <span className="sm:hidden">TDP 9 Thuận Lộc, TX Hồng Lĩnh</span>
               </span>
             </div>
           </Link>
@@ -407,13 +408,13 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="flex items-center lg:hidden space-x-2 shrink-0">
+          {/* Mobile Hamburger & Actions */}
+          <div className="flex items-center lg:hidden space-x-1.5 shrink-0">
             {user && <NotificationBell />}
             {user && (
               <Link
                 to="/bai-viet/viet-bai"
-                className="p-2 rounded-xl bg-primary text-surface hover:bg-primary-dark shadow-sm"
+                className="p-2 rounded-xl bg-primary text-surface hover:bg-primary-dark shadow-sm shrink-0"
                 title="Viết bài"
               >
                 <PenSquare className="w-4 h-4" />
@@ -421,10 +422,10 @@ export const Navbar = () => {
             )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-ink hover:bg-paper border border-warmBorder focus:outline-none"
+              className="p-2 rounded-xl text-ink hover:bg-paper border border-warmBorder focus:outline-none shrink-0"
               aria-label="Mở menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>

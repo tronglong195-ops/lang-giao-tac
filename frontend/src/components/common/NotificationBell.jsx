@@ -151,7 +151,7 @@ export const NotificationBell = () => {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2.5 w-80 sm:w-96 bg-surface rounded-2xl border border-warmBorder shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed sm:absolute right-3 sm:right-0 top-16 sm:top-auto sm:mt-2.5 w-[calc(100vw-24px)] max-w-sm sm:w-96 bg-surface rounded-2xl border border-warmBorder shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
           <div className="p-3.5 bg-paper border-b border-warmBorder flex items-center justify-between">
             <div className="flex items-center space-x-2">

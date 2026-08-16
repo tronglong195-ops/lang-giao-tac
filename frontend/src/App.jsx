@@ -29,9 +29,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="min-h-screen flex flex-col bg-paper text-ink font-sans relative">
+        <div className="min-h-screen flex flex-col bg-paper text-ink font-sans relative overflow-x-hidden w-full max-w-full">
           <Navbar />
-          <main className="flex-1">
+          <main className="flex-1 w-full max-w-full overflow-x-hidden">
             <Routes>
               {/* Trang chủ */}
               <Route path="/" element={<HomePage />} />
