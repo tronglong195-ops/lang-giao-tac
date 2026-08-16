@@ -28,6 +28,27 @@ class PhotoController {
     }
   }
 
+  async addPhotosBatch(req, res) {
+    try {
+      const { albumId, photos } = req.body;
+      const result = await photoService.addPhotosBatch(req.user, { albumId, photos });
+
+      return res.status(201).json({
+        success: true,
+        message:
+          result.status === 'pending'
+            ? `Đã tải lên ${result.photos.length} bức ảnh và đang chờ Ban quản trị duyệt.`
+            : `Đã tải lên thành công ${result.photos.length} bức ảnh vào Album.`,
+        data: result,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Lỗi khi tải nhiều ảnh lên.',
+      });
+    }
+  }
+
   async getMyPhotos(req, res) {
     try {
       const { page, limit, status } = req.query;

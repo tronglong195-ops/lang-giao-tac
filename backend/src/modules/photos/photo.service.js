@@ -50,6 +50,49 @@ class PhotoService {
     return photo;
   }
 
+  async addPhotosBatch(user, { albumId, photos }) {
+    if (!albumId || !Array.isArray(photos) || photos.length === 0) {
+      throw new Error('Vui lòng chọn Album và cung cấp ít nhất 1 bức ảnh.');
+    }
+
+    const album = await prisma.album.findUnique({
+      where: { id: albumId },
+    });
+
+    if (!album) {
+      throw new Error('Album ảnh không tồn tại.');
+    }
+
+    const status = user.role === 'admin' || user.role === 'moderator' ? 'approved' : 'pending';
+    const createdPhotos = [];
+
+    for (const item of photos) {
+      if (!item.imageUrl) continue;
+      const photo = await prisma.photo.create({
+        data: {
+          albumId,
+          uploaderId: user.id,
+          imageUrl: item.imageUrl.trim(),
+          thumbnailUrl: item.thumbnailUrl?.trim() || item.imageUrl.trim(),
+          caption: item.caption?.trim() || null,
+          takenYear: item.takenYear ? parseInt(item.takenYear, 10) : null,
+          status,
+        },
+      });
+      createdPhotos.push(photo);
+
+      if (!album.coverPhotoId && status === 'approved') {
+        await prisma.album.update({
+          where: { id: albumId },
+          data: { coverPhotoId: photo.id },
+        });
+        album.coverPhotoId = photo.id;
+      }
+    }
+
+    return { photos: createdPhotos, status };
+  }
+
   async getMyPhotos(userId, { page = 1, limit = 12, status }) {
     const skip = (Number(page) - 1) * Number(limit);
     const take = Number(limit);

@@ -31,6 +31,11 @@ export const photoService = {
     return res.data;
   },
 
+  async addPhotosBatch(data) {
+    const res = await api.post('/photos/batch', data);
+    return res.data;
+  },
+
   async getMyPhotos(params = {}) {
     const res = await api.get('/photos/my/photos', { params });
     return res.data?.data;

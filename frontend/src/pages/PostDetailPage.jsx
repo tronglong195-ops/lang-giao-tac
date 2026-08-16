@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { postService } from '../services/postService';
 import { useAuth } from '../context/AuthContext';
+import { ShareModal } from '../components/common/ShareModal';
 
 export const PostDetailPage = () => {
   const { slug } = useParams();
@@ -25,7 +26,7 @@ export const PostDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const fetchPost = async () => {
     setLoading(true);
@@ -125,11 +126,11 @@ export const PostDetailPage = () => {
         </button>
 
         <button
-          onClick={handleShare}
-          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-surface border border-warmBorder text-xs font-medium text-ink hover:bg-paper transition-colors"
+          onClick={() => setShowShareModal(true)}
+          className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-secondary/15 hover:bg-secondary/25 text-accent font-semibold text-xs transition-colors"
         >
           <Share2 className="w-3.5 h-3.5" />
-          <span>{copied ? 'Đã chép link!' : 'Chia sẻ'}</span>
+          <span>Chia sẻ bài viết</span>
         </button>
       </div>
 
@@ -344,6 +345,17 @@ export const PostDetailPage = () => {
           )}
         </div>
       </section>
+
+      {/* Share Modal */}
+      {post && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          title={post.title}
+          url={`/bai-viet/${post.slug}`}
+          description={post.title}
+        />
+      )}
     </div>
   );
 };
