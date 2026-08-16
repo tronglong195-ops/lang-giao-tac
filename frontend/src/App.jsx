@@ -23,6 +23,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { MobileSimulatorPage } from './pages/MobileSimulatorPage';
 
 function App() {
   return (
@@ -91,7 +92,10 @@ function App() {
                 }
               />
 
-              {/* Fallback */}
+              {/* Trình giả lập điện thoại tương tác trên máy tính */}
+              <Route path="/gia-lap" element={<MobileSimulatorPage />} />
+
+              {/* 404 Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
