@@ -162,10 +162,10 @@ export const HomePage = () => {
                 <span>Mảnh Đất Địa Linh Nhân Kiệt</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-ink tracking-tight leading-tight">
-                Về Thăm Làng Giao Tác — TDP 9 Thuận Lộc (Hồng Lĩnh, Hà Tĩnh)
+                Về Thăm Làng Giao Tác — TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh
               </h2>
               <p className="text-ink-muted text-sm sm:text-base leading-relaxed">
-                Tọa lạc dưới chân dãy núi Hồng Lĩnh hùng vĩ, <strong>Làng Giao Tác xưa (nay là Tổ dân phố 9, xã Thuận Lộc, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh)</strong> từ thuở khai hoang mở đất năm 1685 đã nổi tiếng là vùng quê giàu truyền thống hiếu học, kiên cường bất khuất trong bảo vệ quê hương và luôn gìn giữ nếp nhà thuần phong mỹ tục, nghĩa tình làng xóm.
+                Tọa lạc dưới chân dãy núi Hồng Lĩnh hùng vĩ, <strong>Làng Giao Tác xưa (nay là Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh)</strong> từ thuở khai hoang mở đất năm 1685 đã nổi tiếng là vùng quê giàu truyền thống hiếu học, kiên cường bất khuất trong bảo vệ quê hương và luôn gìn giữ nếp nhà thuần phong mỹ tục, nghĩa tình làng xóm.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                 <div className="p-4 rounded-xl bg-paper border border-warmBorder text-center">
@@ -174,7 +174,7 @@ export const HomePage = () => {
                 </div>
                 <div className="p-4 rounded-xl bg-paper border border-warmBorder text-center">
                   <div className="text-2xl font-extrabold text-secondary-dark">TDP 9</div>
-                  <div className="text-xs text-ink-muted mt-1 font-medium">Thuận Lộc (Hồng Lĩnh)</div>
+                  <div className="text-xs text-ink-muted mt-1 font-medium">Thuận Lộc (Nam Hồng Lĩnh)</div>
                 </div>
                 <div className="p-4 rounded-xl bg-paper border border-warmBorder text-center">
                   <div className="text-2xl font-extrabold text-accent">12 Đời</div>
@@ -254,7 +254,7 @@ export const HomePage = () => {
               </h3>
 
               <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-                Tọa lạc tại thôn Thuận Giang (nay là TDP 9), xã Thuận Lộc, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh — Nơi lưu giữ cội nguồn lịch sử, dấu ấn cách mạng và nếp sống văn hóa ngót 150 năm của làng.
+                Tọa lạc tại thôn Thuận Giang (nay là TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh) — Nơi lưu giữ cội nguồn lịch sử, dấu ấn cách mạng và nếp sống văn hóa ngót 150 năm của làng.
               </p>
 
               <div className="space-y-2 text-xs">

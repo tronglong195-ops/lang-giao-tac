@@ -97,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
               // Subtitle
               Text(
-                'TDP 9 Thuận Lộc, TX Hồng Lĩnh (Hà Tĩnh)',
+                'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.accent,
                       fontWeight: FontWeight.w600,

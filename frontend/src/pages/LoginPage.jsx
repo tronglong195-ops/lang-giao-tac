@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Landmark, Mail, Lock, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
+import { Landmark, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const GOOGLE_CLIENT_ID =
@@ -8,7 +8,7 @@ const GOOGLE_CLIENT_ID =
   '17339925701-s0tiajuplhl8e5h0o4epke98ksm3g00r.apps.googleusercontent.com';
 
 export const LoginPage = () => {
-  const { login, loginWithGoogle, loginWithFacebook } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,16 +17,10 @@ export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState(''); // 'google' | 'facebook' | ''
+  const [socialLoading, setSocialLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Dialog nhập email thử nghiệm nhanh cho Facebook trong môi trường dev
-  const [showSocialModal, setShowSocialModal] = useState(false);
-  const [socialProvider, setSocialProvider] = useState('facebook');
-  const [socialName, setSocialName] = useState('Trần Thị Lan (Facebook)');
-  const [socialEmail, setSocialEmail] = useState('tranlan.fb@gmail.com');
-
-  // Khởi tạo Google Identity Services
+  // Khởi tạo Google Identity Services chính thức
   useEffect(() => {
     const setupGoogle = () => {
       if (window.google?.accounts?.id) {
@@ -34,7 +28,7 @@ export const LoginPage = () => {
           client_id: GOOGLE_CLIENT_ID,
           callback: async (response) => {
             if (response.credential) {
-              setSocialLoading('google');
+              setSocialLoading(true);
               setError('');
               try {
                 await loginWithGoogle({ idToken: response.credential });
@@ -42,7 +36,7 @@ export const LoginPage = () => {
               } catch (err) {
                 setError(err.response?.data?.message || 'Đăng nhập Google thất bại.');
               } finally {
-                setSocialLoading('');
+                setSocialLoading(false);
               }
             }
           },
@@ -92,48 +86,17 @@ export const LoginPage = () => {
     }
   };
 
-  const handleGoogleClick = () => {
+  const handleGooglePrompt = () => {
     setError('');
     if (window.google?.accounts?.id) {
-      setSocialLoading('google');
+      setSocialLoading(true);
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          setSocialLoading('');
+          setSocialLoading(false);
         }
       });
     } else {
-      setError('Đang tải kết nối Google, vui lòng thử lại sau 2 giây.');
-    }
-  };
-
-  const handleFacebookClick = () => {
-    setError('');
-    setSocialProvider('facebook');
-    setSocialName('Trần Thị Lan (Facebook)');
-    setSocialEmail('tranlan.fb@gmail.com');
-    setShowSocialModal(true);
-  };
-
-  const handleConfirmSocialLogin = async (e) => {
-    e.preventDefault();
-    if (!socialEmail.trim()) return;
-
-    setSocialLoading('facebook');
-    setError('');
-    try {
-      await loginWithFacebook({
-        facebookId: `fbid_${Date.now()}`,
-        email: socialEmail.trim(),
-        fullName: socialName.trim() || 'Người dùng Facebook',
-        avatarUrl:
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-      });
-      setShowSocialModal(false);
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Đăng nhập qua Facebook thất bại.');
-    } finally {
-      setSocialLoading('');
+      setError('Đang tải thư viện Google, vui lòng thử lại sau 2 giây.');
     }
   };
 
@@ -149,7 +112,7 @@ export const LoginPage = () => {
             Đăng Nhập Làng Giao Tác
           </h1>
           <p className="text-xs text-ink-muted">
-            TDP 9 Thuận Lộc (TX Hồng Lĩnh) — Kết nối bà con quê hương
+            TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh — Kết nối bà con quê hương
           </p>
         </div>
 
@@ -160,16 +123,16 @@ export const LoginPage = () => {
           </div>
         )}
 
-        {/* 1. Social Login Buttons */}
+        {/* 1. Official Authorized Google Sign-In */}
         <div className="space-y-3">
-          {/* Google Official Render Slot */}
+          {/* Official Google Button Render Slot */}
           <div id="google-btn-slot" className="w-full min-h-[44px] flex justify-center"></div>
 
-          {/* Google Custom Button Fallback */}
+          {/* Custom Google Button Click Trigger */}
           <button
             type="button"
-            onClick={handleGoogleClick}
-            disabled={socialLoading !== ''}
+            onClick={handleGooglePrompt}
+            disabled={socialLoading}
             className="w-full py-2.5 px-4 rounded-xl border border-warmBorder hover:border-slate-400 bg-surface hover:bg-slate-50 transition-all font-semibold text-xs sm:text-sm text-ink flex items-center justify-center space-x-3 shadow-sm disabled:opacity-60"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -191,23 +154,8 @@ export const LoginPage = () => {
               />
             </svg>
             <span>
-              {socialLoading === 'google'
-                ? 'Đang kết nối Google...'
-                : 'Mở cửa sổ chọn tài khoản Google'}
+              {socialLoading ? 'Đang kết nối Google...' : 'Đăng nhập nhanh với Google'}
             </span>
-          </button>
-
-          {/* Facebook Button */}
-          <button
-            type="button"
-            onClick={handleFacebookClick}
-            disabled={socialLoading !== ''}
-            className="w-full py-2.5 px-4 rounded-xl border border-[#1877F2]/30 bg-[#1877F2] hover:bg-[#166fe5] text-white transition-all font-semibold text-xs sm:text-sm flex items-center justify-center space-x-3 shadow-sm disabled:opacity-60"
-          >
-            <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
-            <span>Đăng nhập với Facebook</span>
           </button>
         </div>
 
@@ -280,64 +228,6 @@ export const LoginPage = () => {
           </Link>
         </div>
       </div>
-
-      {/* Modal xác thực Facebook */}
-      {showSocialModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-surface rounded-3xl border border-warmBorder max-w-sm w-full p-6 space-y-4 shadow-warmHover">
-            <div className="text-center space-y-1">
-              <div className="p-3 bg-[#1877F2]/15 text-[#1877F2] rounded-2xl w-fit mx-auto">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-ink">Đăng Nhập Qua Facebook</h3>
-              <p className="text-xs text-ink-muted">
-                Xác nhận thông tin kết nối tài khoản Facebook
-              </p>
-            </div>
-
-            <form onSubmit={handleConfirmSocialLogin} className="space-y-3">
-              <div className="space-y-1">
-                <label className="block text-[11px] font-bold text-ink uppercase">Họ và tên</label>
-                <input
-                  type="text"
-                  value={socialName}
-                  onChange={(e) => setSocialName(e.target.value)}
-                  className="w-full input-warm text-xs"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[11px] font-bold text-ink uppercase">Email</label>
-                <input
-                  type="email"
-                  value={socialEmail}
-                  onChange={(e) => setSocialEmail(e.target.value)}
-                  className="w-full input-warm text-xs"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSocialModal(false)}
-                  className="px-3 py-1.5 rounded-xl border border-warmBorder text-xs text-ink hover:bg-paper"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={socialLoading !== ''}
-                  className="px-4 py-1.5 rounded-xl bg-primary text-surface text-xs font-semibold hover:bg-primary-dark"
-                >
-                  {socialLoading ? 'Đang kết nối...' : 'Xác nhận'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

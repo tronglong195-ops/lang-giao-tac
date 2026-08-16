@@ -6,7 +6,7 @@ class HeroSlideController {
       const defaultSlides = [
         {
           id: 'slide-1',
-          title: 'Làng Giao Tác — TDP 9 Thuận Lộc (Hồng Lĩnh)',
+          title: 'Làng Giao Tác — TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
           subtitle: 'Mảnh đất địa linh nhân kiệt dưới chân dãy Hồng Lĩnh hùng vĩ, tỉnh Hà Tĩnh',
           imageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
           link: '/lich-su',

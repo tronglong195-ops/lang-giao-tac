@@ -1,6 +1,6 @@
 # Ứng Dụng Di Động Làng Giao Tác (Flutter — Android & iOS)
 
-Ứng dụng di động chính thức của **Làng Giao Tác** (Tổ dân phố 9, phường Thuận Lộc, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh), được xây dựng bằng **Flutter & Dart**, kết nối trực tiếp với hệ thống máy chủ Backend Production (`https://lang-giao-tac.onrender.com`).
+Ứng dụng di động chính thức của **Làng Giao Tác** (Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh), được xây dựng bằng **Flutter & Dart**, kết nối trực tiếp với hệ thống máy chủ Backend Production (`https://lang-giao-tac.onrender.com`).
 
 ---
 

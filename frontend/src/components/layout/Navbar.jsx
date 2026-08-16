@@ -139,7 +139,7 @@ export const Navbar = () => {
                 LÀNG GIAO TÁC
               </span>
               <span className="block text-[10px] sm:text-[11px] text-accent font-medium mt-1">
-                TDP 9 Thuận Lộc, TX Hồng Lĩnh
+                TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh
               </span>
             </div>
           </Link>

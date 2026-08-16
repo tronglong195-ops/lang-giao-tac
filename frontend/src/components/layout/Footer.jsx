@@ -22,12 +22,12 @@ export const Footer = () => {
                   LÀNG GIAO TÁC
                 </span>
                 <span className="text-[11px] text-secondary block">
-                  TDP 9 Thuận Lộc, TX Hồng Lĩnh
+                  TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh
                 </span>
               </div>
             </div>
             <p className="text-sm leading-relaxed text-[#BFAFA0]">
-              Làng Giao Tác xưa, nay là <strong>Tổ dân phố 9, xã Thuận Lộc, thị xã Hồng Lĩnh (Hà Tĩnh)</strong>. Mảnh đất địa linh nhân kiệt dưới chân núi Hồng Lĩnh lưu giữ truyền thống hiếu học, nghĩa tình làng xóm và cội nguồn của bao thế hệ con em xa xứ.
+              Làng Giao Tác xưa, nay là <strong>Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh</strong>. Mảnh đất địa linh nhân kiệt dưới chân núi Hồng Lĩnh lưu giữ truyền thống hiếu học, nghĩa tình làng xóm và cội nguồn của bao thế hệ con em xa xứ.
             </p>
             <div className="p-3.5 rounded-xl bg-[#33261C] border border-[#483729] text-xs text-secondary-light italic">
               "Dù đi bốn hướng tám phương <br />
@@ -118,7 +118,7 @@ export const Footer = () => {
             <div className="space-y-3 text-sm text-[#BFAFA0]">
               <div className="flex items-start space-x-2.5">
                 <MapPin className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
-                <span>TDP 9, Xã Thuận Lộc, Thị xã Hồng Lĩnh, Tỉnh Hà Tĩnh</span>
+                <span>TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, Tỉnh Hà Tĩnh</span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <Phone className="w-4 h-4 text-secondary shrink-0" />
@@ -137,7 +137,7 @@ export const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-[#3A2D23] flex flex-col sm:flex-row items-center justify-between text-xs text-[#8E7E70] gap-4">
-          <p>© {new Date().getFullYear()} Làng Giao Tác (TDP 9 Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh). Tất cả quyền được bảo lưu.</p>
+          <p>© {new Date().getFullYear()} Làng Giao Tác (TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, Tỉnh Hà Tĩnh). Tất cả quyền được bảo lưu.</p>
           <div className="flex items-center space-x-1 text-[#BFAFA0]">
             <span>Gìn giữ & phát huy giá trị văn hóa làng quê quê hương</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-current inline mx-1" />

@@ -36,7 +36,7 @@ export const HistoryPage = () => {
             <span>Trang Sử Vàng Quê Hương</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight leading-tight">
-            Lịch Sử Làng Giao Tác — TDP 9 Thuận Lộc (Hồng Lĩnh)
+            Lịch Sử Làng Giao Tác — TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh
           </h1>
           <p className="text-paper/90 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             Hơn 300 năm khai hoang lập ấp dưới chân dãy núi Hồng Lĩnh hùng vĩ, bảo vệ quê hương và xây dựng Tổ dân phố 9 Thuận Lộc văn minh, ấm no, nghĩa tình.

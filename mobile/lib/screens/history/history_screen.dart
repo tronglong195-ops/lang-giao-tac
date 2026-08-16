@@ -273,7 +273,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  history.youtubeDescription ?? 'Phóng sự tư liệu lịch sử đình làng Thuận Lộc, TX Hồng Lĩnh.',
+                  history.youtubeDescription ?? 'Phóng sự tư liệu lịch sử đình làng TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh.',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.inkMuted,
@@ -308,7 +308,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Làng Giao Tác thuộc Tổ dân phố 9, phường Thuận Lộc, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh. Trải qua hơn 340 năm lịch sử, nhân dân Giao Tác luôn gìn giữ truyền thống hiếu học, đoàn kết, cần cù lao động và bảo tồn di tích đình làng uy nghiêm.',
+            'Làng Giao Tác thuộc Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. Trải qua hơn 340 năm lịch sử, nhân dân Giao Tác luôn gìn giữ truyền thống hiếu học, đoàn kết, cần cù lao động và bảo tồn di tích đình làng uy nghiêm.',
             style: TextStyle(
               fontSize: 12,
               color: AppColors.inkMuted,

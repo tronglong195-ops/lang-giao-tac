@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { MapPin, Navigation, Landmark } from 'lucide-react';
 
 // Tọa độ chuẩn xác từ liên kết Google Maps: https://maps.app.goo.gl/1VcKoJkDQq5Gf1d79
-// Vị trí: Tổ dân phố 9 (Làng Giao Tác xưa), Thuận Lộc, Phường Nam Hồng / Thị xã Hồng Lĩnh, Tỉnh Hà Tĩnh
+// Vị trí: Tổ dân phố 9 (Làng Giao Tác xưa), Thuận Lộc, Phường Nam Hồng Lĩnh, Tỉnh Hà Tĩnh
 export const VILLAGE_CENTER = [18.508554, 105.6881];
 
 export const VILLAGE_LANDMARKS = [
@@ -15,8 +15,8 @@ export const VILLAGE_LANDMARKS = [
     coords: [18.508554, 105.6881],
     imageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
     description:
-      'Trung tâm sinh hoạt văn hóa, hội họp và lễ hội cổ truyền của Tổ dân phố 9 (Làng Giao Tác xưa), xã Thuận Lộc, thị xã Hồng Lĩnh.',
-    address: 'Khu trung tâm TDP 9, Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh',
+      'Trung tâm sinh hoạt văn hóa, hội họp và lễ hội cổ truyền của Tổ dân phố 9 (Làng Giao Tác xưa), Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh.',
+    address: 'Khu trung tâm TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
   },
   {
     id: 'gieng-co-tdp9',

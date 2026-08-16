@@ -14,8 +14,8 @@ async function runAutoSeed(prisma) {
         passwordHash,
         role: 'admin',
         hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
-        currentLocation: 'TDP 9 Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh',
-        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, TX Hồng Lĩnh. SĐT: 0832991002',
+        currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
+        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
         avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
         isVerified: true,
       },
@@ -25,8 +25,8 @@ async function runAutoSeed(prisma) {
         passwordHash,
         role: 'admin',
         hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
-        currentLocation: 'TDP 9 Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh',
-        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, TX Hồng Lĩnh. SĐT: 0832991002',
+        currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
+        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
         avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
         isVerified: true,
       },
@@ -126,7 +126,7 @@ async function runAutoSeed(prisma) {
         category: 'Dòng họ - Gia phả',
         coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
         contentHtml: `<p class="lead font-medium text-base sm:text-lg text-primary-dark">
-          Video tư liệu đặc sắc giới thiệu về <strong>Đình làng Giao Tác</strong> — một di tích lịch sử văn hóa quan trọng tọa lạc tại thôn Thuận Giang (nay thuộc Tổ dân phố 9), xã Thuận Lộc, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh.
+          Video tư liệu đặc sắc giới thiệu về <strong>Đình làng Giao Tác</strong> — một di tích lịch sử văn hóa quan trọng tọa lạc tại thôn Thuận Giang (nay thuộc Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh).
         </p>
         <div class="my-6 aspect-video rounded-2xl overflow-hidden shadow-warm border border-warmBorder">
           <iframe 
@@ -183,7 +183,7 @@ async function runAutoSeed(prisma) {
         category: 'Đổi thay của làng',
         coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
         contentHtml: `<h3>Làng Giao Tác — Nơi cội nguồn máu thịt của bao thế hệ</h3>
-        <p>Dù theo thời gian, tên gọi hành chính nay là <strong>Tổ dân phố 9, xã Thuận Lộc, thị xã Hồng Lĩnh (Hà Tĩnh)</strong>, nhưng trong tâm thức của mỗi người con sinh ra và lớn lên nơi đây, cái tên <em>Làng Giao Tác</em> vẫn luôn là niềm tự hào sâu lắng.</p>`,
+        <p>Dù theo thời gian, tên gọi hành chính nay là <strong>Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh</strong>, nhưng trong tâm thức của mỗi người con sinh ra và lớn lên nơi đây, cái tên <em>Làng Giao Tác</em> vẫn luôn là niềm tự hào sâu lắng.</p>`,
         status: 'published',
         viewCount: 680,
         publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
