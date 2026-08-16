@@ -9,26 +9,31 @@ class EmailService {
   }
 
   initTransporter() {
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const smtpPort = parseInt(process.env.SMTP_PORT, 10) || 587;
-    const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-    const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+    try {
+      const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+      const smtpPort = parseInt(process.env.SMTP_PORT, 10) || 587;
+      const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+      const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 
-    if (smtpUser && smtpPass) {
-      this.transporter = nodemailer.createTransporter({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-      });
-      console.log(`📧 [EmailService] Đã cấu hình SMTP Server (${smtpHost}:${smtpPort}) gửi thư tới ${ADMIN_EMAIL}`);
-    } else {
-      // Fallback logger transporter nếu chưa cấu hình mật khẩu ứng dụng SMTP
+      if (smtpUser && smtpPass) {
+        this.transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465,
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+        console.log(`📧 [EmailService] Đã cấu hình SMTP Server (${smtpHost}:${smtpPort}) gửi thư tới ${ADMIN_EMAIL}`);
+      } else {
+        // Fallback logger transporter nếu chưa cấu hình mật khẩu ứng dụng SMTP
+        this.transporter = null;
+        console.log(`⚠️ [EmailService] Chưa thiết lập SMTP_USER/SMTP_PASS trong .env. Email thông báo sẽ được ghi log chi tiết tới ${ADMIN_EMAIL}.`);
+      }
+    } catch (err) {
       this.transporter = null;
-      console.log(`⚠️ [EmailService] Chưa thiết lập SMTP_USER/SMTP_PASS trong .env. Email thông báo sẽ được ghi log chi tiết tới ${ADMIN_EMAIL}.`);
+      console.error('⚠️ [EmailService] Lỗi khởi tạo transporter:', err.message);
     }
   }
 
