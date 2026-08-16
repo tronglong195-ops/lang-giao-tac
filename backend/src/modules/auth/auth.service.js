@@ -48,6 +48,12 @@ class AuthService {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    // Gửi email cảnh báo thành viên mới đăng ký tới Admin (tronglong195@gmail.com)
+    emailService.sendRegisterAlert({
+      user,
+      registrationMethod: 'Form Đăng ký thành viên',
+    }).catch(err => console.error('Lỗi gửi email đăng ký mới:', err.message));
+
     return { user, accessToken, refreshToken };
   }
 
@@ -138,6 +144,7 @@ class AuthService {
       });
     }
 
+    let isNewUser = false;
     if (user) {
       // Cập nhật thông tin nếu cần
       const updateData = {};
@@ -151,6 +158,7 @@ class AuthService {
       }
     } else {
       // Tạo tài khoản mới từ Google
+      isNewUser = true;
       const userCount = await prisma.user.count();
       const role = userCount === 0 ? 'admin' : 'member';
 
@@ -184,11 +192,19 @@ class AuthService {
     const accessToken = generateAccessToken(safeUser);
     const refreshToken = generateRefreshToken(safeUser);
 
-    // Gửi email cảnh báo đăng nhập Google tới Admin
-    emailService.sendLoginAlert({
-      user: safeUser,
-      loginMethod: 'Google Sign-In',
-    }).catch(err => console.error('Lỗi gửi email cảnh báo đăng nhập Google:', err.message));
+    if (isNewUser) {
+      // Gửi email thành viên mới qua Google
+      emailService.sendRegisterAlert({
+        user: safeUser,
+        registrationMethod: 'Google Sign-In (Tài khoản mới)',
+      }).catch(err => console.error('Lỗi gửi email đăng ký Google mới:', err.message));
+    } else {
+      // Gửi email cảnh báo đăng nhập Google tới Admin
+      emailService.sendLoginAlert({
+        user: safeUser,
+        loginMethod: 'Google Sign-In',
+      }).catch(err => console.error('Lỗi gửi email cảnh báo đăng nhập Google:', err.message));
+    }
 
     return { user: safeUser, accessToken, refreshToken };
   }

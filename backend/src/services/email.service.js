@@ -61,6 +61,68 @@ class EmailService {
   }
 
   /**
+   * 0. Gửi email thông báo khi có thành viên mới đăng ký tài khoản
+   */
+  async sendRegisterAlert({ user, registrationMethod = 'Form Đăng ký' }) {
+    const timeStr = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const subject = `👤 [Làng Giao Tác] Thành viên mới gia nhập: ${user.fullName || user.email}`;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FAF8F5; border: 1px solid #E8DFD5; border-radius: 16px; overflow: hidden;">
+        <div style="background-color: #2D5A27; padding: 20px; text-align: center; color: #FFFDF7;">
+          <h2 style="margin: 0; font-size: 20px;">🌾 CỘNG ĐỒNG LÀNG GIAO TÁC</h2>
+          <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, Tỉnh Hà Tĩnh</p>
+        </div>
+        <div style="padding: 24px; color: #2B2118;">
+          <h3 style="color: #2D5A27; margin-top: 0;">🎉 Chào Đón Thành Viên Mới</h3>
+          <p style="font-size: 14px; line-height: 1.6;">Hệ thống vừa có một thành viên mới hoàn tất đăng ký tài khoản:</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">
+            <tr style="border-bottom: 1px solid #E8DFD5;">
+              <td style="padding: 8px 0; font-weight: bold; width: 140px; color: #555;">Họ và tên:</td>
+              <td style="padding: 8px 0; font-weight: bold; color: #2D5A27;">${user.fullName || 'Chưa cập nhật'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8DFD5;">
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Email:</td>
+              <td style="padding: 8px 0; color: #222;">${user.email}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8DFD5;">
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Dòng họ / Nhóm:</td>
+              <td style="padding: 8px 0; color: #222;">${user.hometownGroup || 'TDP 9 Thuận Lộc'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8DFD5;">
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Nơi ở hiện tại:</td>
+              <td style="padding: 8px 0; color: #222;">${user.currentLocation || 'Chưa cập nhật'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #E8DFD5;">
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Phương thức:</td>
+              <td style="padding: 8px 0; color: #222;">${registrationMethod}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Thời gian:</td>
+              <td style="padding: 8px 0; color: #222;">${timeStr}</td>
+            </tr>
+          </table>
+
+          <div style="margin-top: 24px; text-align: center;">
+            <a href="https://lang-giao-tac-1.onrender.com/quan-tri" style="display: inline-block; background-color: #2D5A27; color: #FFFDF7; text-decoration: none; padding: 10px 24px; border-radius: 10px; font-weight: bold; font-size: 13px;">Xem Danh Sách Thành Viên</a>
+          </div>
+        </div>
+        <div style="background-color: #EFE8DF; padding: 12px 20px; text-align: center; font-size: 11px; color: #777;">
+          Email thông báo tự động gửi tới Quản trị viên (${ADMIN_EMAIL})
+        </div>
+      </div>
+    `;
+
+    return this.sendMail({
+      to: ADMIN_EMAIL,
+      subject,
+      text: `Thành viên mới ${user.fullName} (${user.email}) vừa đăng ký tài khoản Làng Giao Tác lúc ${timeStr} qua ${registrationMethod}.`,
+      html,
+    });
+  }
+
+  /**
    * 1. Gửi email thông báo khi có người đăng nhập
    */
   async sendLoginAlert({ user, loginMethod = 'Email', ipAddress = 'Unknown', userAgent = 'Unknown' }) {
