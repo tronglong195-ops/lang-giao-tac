@@ -24,6 +24,7 @@ import {
   UserX,
   MessageSquare,
   Sparkles,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { adminService } from '../services/adminService';
 import { newsService } from '../services/newsService';
@@ -32,11 +33,12 @@ import { historyService } from '../services/historyService';
 import { useAuth } from '../context/AuthContext';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { ConfirmModal } from '../components/common/ConfirmModal';
+import { GoogleSyncSettings } from '../components/admin/GoogleSyncSettings';
 
 export const AdminDashboardPage = () => {
   const { user, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'posts'; // 'posts' | 'photos' | 'news' | 'events' | 'history' | 'users'
+  const activeTab = searchParams.get('tab') || 'posts'; // 'posts' | 'photos' | 'news' | 'events' | 'history' | 'users' | 'googlesync'
 
   const [stats, setStats] = useState(null);
 
@@ -565,6 +567,20 @@ export const AdminDashboardPage = () => {
           >
             <Users className="w-4 h-4" />
             <span>Thành viên & Phân quyền</span>
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            onClick={() => setTab('googlesync')}
+            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'googlesync'
+                ? 'bg-emerald-700 text-surface shadow-sm'
+                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300'
+            }`}
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Đồng bộ Google Drive & Sheets</span>
           </button>
         )}
       </div>
@@ -1716,6 +1732,11 @@ export const AdminDashboardPage = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Tab 7: Google Drive & Sheets Sync */}
+      {activeTab === 'googlesync' && (
+        <GoogleSyncSettings />
       )}
 
       {/* Global Confirm Modal */}

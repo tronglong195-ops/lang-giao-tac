@@ -14,6 +14,7 @@ import {
   Info,
 } from 'lucide-react';
 import { fundService } from '../services/fundService';
+import { googleSheetsService } from '../services/googleSheetsService';
 import { VietQRModal } from '../components/fund/VietQRModal';
 
 export const FundPage = () => {
@@ -30,6 +31,23 @@ export const FundPage = () => {
       setCampaigns(data);
       if (data.length > 0) {
         const detail = await fundService.getCampaignBySlug(data[0].slug);
+        
+        // Kiểm tra xem có cấu hình Google Sheets Quỹ không
+        try {
+          const syncConfig = JSON.parse(localStorage.getItem('giaotac_google_sync_settings') || '{}');
+          if (syncConfig.enabled && syncConfig.syncFund && syncConfig.sheetUrl) {
+            const cleanId = googleSheetsService.extractSheetId(syncConfig.sheetUrl);
+            const sheetDonations = await googleSheetsService.fetchDonations(cleanId);
+            if (sheetDonations && sheetDonations.length > 0) {
+              const totalRaisedFromSheet = sheetDonations.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+              detail.donations = [...sheetDonations, ...(detail.donations || [])];
+              detail.raisedAmount = Math.max(detail.raisedAmount, totalRaisedFromSheet);
+            }
+          }
+        } catch (e) {
+          console.warn('Không thể nạp Google Sheets:', e);
+        }
+
         setSelectedCampaign(detail);
       }
     } catch (err) {

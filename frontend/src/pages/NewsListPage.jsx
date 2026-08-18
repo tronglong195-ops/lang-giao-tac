@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Search, Calendar, User, ChevronRight, PlusCircle } from 'lucide-react';
 import { newsService } from '../services/newsService';
+import { googleSheetsService } from '../services/googleSheetsService';
 import { useAuth } from '../context/AuthContext';
 
 export const NewsListPage = () => {
@@ -15,8 +16,24 @@ export const NewsListPage = () => {
     setLoading(true);
     try {
       const data = await newsService.getNews({ page, limit: 8, search: searchQuery });
-      if (data) {
-        setNewsList(data.news);
+      let currentNews = data?.news || [];
+
+      // Kiểm tra xem có cấu hình Google Sheets Tin tức không
+      try {
+        const syncConfig = JSON.parse(localStorage.getItem('giaotac_google_sync_settings') || '{}');
+        if (syncConfig.enabled && syncConfig.syncNews && syncConfig.sheetUrl) {
+          const cleanId = googleSheetsService.extractSheetId(syncConfig.sheetUrl);
+          const sheetNews = await googleSheetsService.fetchNews(cleanId);
+          if (sheetNews && sheetNews.length > 0) {
+            currentNews = [...sheetNews, ...currentNews];
+          }
+        }
+      } catch (e) {
+        console.warn('Không thể nạp Google Sheets News:', e);
+      }
+
+      setNewsList(currentNews);
+      if (data?.pagination) {
         setPagination(data.pagination);
       }
     } catch (error) {
