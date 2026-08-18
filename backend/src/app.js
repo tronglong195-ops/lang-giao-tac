@@ -18,6 +18,12 @@ const commentRoutes = require('./modules/comments/comment.routes');
 const heroSlideRoutes = require('./modules/heroSlides/heroSlide.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const notificationRoutes = require('./modules/notifications/notification.routes');
+const uploadRoutes = require('./modules/upload/upload.routes');
+const genealogyRoutes = require('./modules/genealogy/genealogy.routes');
+const fundRoutes = require('./modules/funds/fund.routes');
+const marketRoutes = require('./modules/market/market.routes');
+const memorialRoutes = require('./modules/memorial/memorial.routes');
+const { rateLimiter } = require('./middlewares/rateLimiter');
 
 const app = express();
 
@@ -160,18 +166,23 @@ app.get('/api/health/test-photo-email', async (req, res) => {
 });
 
 // Đăng ký các modules API theo đúng đặc tả
-app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
+app.use('/api/auth', rateLimiter(60 * 1000, 20, 'Quá nhiều yêu cầu đăng nhập/đăng ký. Vui lòng thử lại sau 1 phút.'), authRoutes);
+app.use('/api/posts', rateLimiter(60 * 1000, 30), postRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/albums', albumRoutes);
 app.use('/api/photos', photoRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/villagers', villagerRoutes);
 app.use('/api/history', historyRoutes);
-app.use('/api/comments', commentRoutes);
+app.use('/api/comments', rateLimiter(60 * 1000, 15, 'Bạn đang gửi bình luận quá nhanh. Vui lòng chờ ít giây.'), commentRoutes);
 app.use('/api/hero-slides', heroSlideRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/upload', rateLimiter(60 * 1000, 25), uploadRoutes);
+app.use('/api/clans', genealogyRoutes);
+app.use('/api/funds', fundRoutes);
+app.use('/api/market', marketRoutes);
+app.use('/api/memorial', memorialRoutes);
 
 // Xử lý 404 Route
 app.use((req, res, next) => {

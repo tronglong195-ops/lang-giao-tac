@@ -43,6 +43,24 @@ export const Footer = () => {
             </h3>
             <ul className="space-y-2.5 text-sm">
               <li>
+                <Link to="/gia-pha" className="hover:text-secondary transition-colors flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  <span>Gia phả 8 dòng họ</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/quy-que-huong" className="hover:text-secondary transition-colors flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  <span>Quỹ quê hương & Khuyến học</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/tham-quan-360" className="hover:text-secondary transition-colors flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  <span>Tour tham quan 360° VR</span>
+                </Link>
+              </li>
+              <li>
                 <Link to="/lich-su" className="hover:text-secondary transition-colors flex items-center space-x-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                   <span>Lịch sử hình thành làng</span>
@@ -55,21 +73,9 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/bai-viet" className="hover:text-secondary transition-colors flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                  <span>Bài viết cộng đồng</span>
-                </Link>
-              </li>
-              <li>
                 <Link to="/thu-vien-anh" className="hover:text-secondary transition-colors flex items-center space-x-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                   <span>Thư viện ảnh làng quê</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/ban-do" className="hover:text-secondary transition-colors flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                  <span>Bản đồ vị trí & Di tích</span>
                 </Link>
               </li>
             </ul>
@@ -89,21 +95,27 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/cho-que" className="hover:text-secondary transition-colors flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  <span>Chợ quê & Đặc sản OCOP</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/so-tang" className="hover:text-secondary transition-colors flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  <span>Sổ tang & Tri ân tâm linh</span>
+                </Link>
+              </li>
+              <li>
                 <Link to="/su-kien" className="hover:text-secondary transition-colors flex items-center space-x-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                   <span>Lễ hội & Sự kiện thường niên</span>
                 </Link>
               </li>
               <li>
-                <Link to="/bai-viet?category=Ẩm thực quê" className="hover:text-secondary transition-colors flex items-center space-x-2">
+                <Link to="/bai-viet" className="hover:text-secondary transition-colors flex items-center space-x-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  <span>Đặc sản & Ẩm thực quê</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/bai-viet/viet-bai" className="hover:text-secondary transition-colors flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                  <span>Đóng góp bài viết kỷ niệm</span>
+                  <span>Bài viết & Kỷ niệm quê hương</span>
                 </Link>
               </li>
             </ul>

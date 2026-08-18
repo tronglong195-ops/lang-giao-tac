@@ -237,23 +237,351 @@ async function runAutoSeed(prisma) {
       if (firstPhotoId) await prisma.album.update({ where: { id: album1.id }, data: { coverPhotoId: firstPhotoId } });
     }
 
-    // 6. Danh bạ Đồng hương
-    const villagerCount = await prisma.villagerDirectory.count();
-    if (villagerCount === 0) {
-      await prisma.villagerDirectory.create({
+    // 7. Khởi tạo 8 Dòng họ Làng Giao Tác & Cây Phả Hệ Mẫu
+    const clanCount = await prisma.clan.count();
+    if (clanCount === 0) {
+      const clansData = [
+        {
+          name: 'Họ Nguyễn Trọng',
+          slug: 'ho-nguyen-trong',
+          ancestorName: 'Tiên tổ Nguyễn Trọng Đại Lang',
+          originStory: 'Khởi nguồn từ thế kỷ 17, dòng họ Nguyễn Trọng là một trong những dòng họ tiền khai lập ấp tại vùng đất Giao Tác, kế thừa truyền thống hiếu học và cần cù.',
+          templeAddress: 'Xóm Trung, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Cụ Nguyễn Trọng Thắng (Trưởng tộc)',
+          leaderPhone: '0912345678',
+          deathAnniversary: '16 tháng Giêng (Âm lịch)',
+          coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+        },
+        {
+          name: 'Họ Nguyễn Duy',
+          slug: 'ho-nguyen-duy',
+          ancestorName: 'Tiên tổ Nguyễn Duy Công',
+          originStory: 'Dòng họ Nguyễn Duy có bề dày truyền thống yêu nước, hiếu nghĩa, đóng góp nhiều công sức xây dựng làng xóm.',
+          templeAddress: 'Xóm Đông, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Ông Nguyễn Duy Hùng (Trưởng ban khánh tiết)',
+          leaderPhone: '0987654321',
+          deathAnniversary: '10 tháng Hai (Âm lịch)',
+          coverImageUrl: '/images/village/476468343_1020712713424436_7762543762157463751_n.jpg',
+        },
+        {
+          name: 'Họ Nguyễn Huy',
+          slug: 'ho-nguyen-huy',
+          ancestorName: 'Tiên tổ Nguyễn Huy Tự',
+          originStory: 'Dòng họ Nguyễn Huy rạng danh khoa bảng, con cháu nhiều đời đỗ đạt phụng sự quê hương đất nước.',
+          templeAddress: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Ông Nguyễn Huy Hoàng',
+          deathAnniversary: '15 tháng Tám (Âm lịch)',
+          coverImageUrl: '/images/village/476776564_1020712773424430_8938770403532008026_n.jpg',
+        },
+        {
+          name: 'Họ Phan Sỹ',
+          slug: 'ho-phan-sy',
+          ancestorName: 'Tiên tổ Phan Sỹ Bá',
+          originStory: 'Dòng họ Phan Sỹ nổi tiếng với tinh thần trượng nghĩa, đoàn kết và giữ gìn gia phong dòng tộc vững bền.',
+          templeAddress: 'Xóm Đoài, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Ông Phan Sỹ Minh',
+          deathAnniversary: '08 tháng Giêng (Âm lịch)',
+          coverImageUrl: '/images/village/480212312_1025661522929555_8709853623689778697_n.jpg',
+        },
+        {
+          name: 'Họ Nguyễn Văn',
+          slug: 'ho-nguyen-van',
+          ancestorName: 'Tiên tổ Nguyễn Văn Đức',
+          originStory: 'Dòng họ Nguyễn Văn gắn liền với đồng ruộng trù phú và sự phát triển nông nghiệp hưng thịnh của làng Giao Tác.',
+          templeAddress: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Ông Nguyễn Văn Thành',
+          deathAnniversary: '20 tháng Mười Một (Âm lịch)',
+          coverImageUrl: '/images/village/474096867_1006185811543793_8014259646970075430_n.jpg',
+        },
+        {
+          name: 'Họ Phạm Hữu',
+          slug: 'ho-pham-huu',
+          ancestorName: 'Tiên tổ Phạm Hữu Cương',
+          originStory: 'Dòng họ Phạm Hữu có truyền thống gìn giữ nề nếp gia phong, tương thân tương ái, con cháu muôn phương luôn hướng về nguồn cội.',
+          templeAddress: 'Xóm Giếng, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Ông Phạm Hữu Nghị',
+          deathAnniversary: '12 tháng Chạp (Âm lịch)',
+          coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+        },
+        {
+          name: 'Họ Trần Đình',
+          slug: 'ho-tran-dinh',
+          ancestorName: 'Tiên tổ Trần Đình Phúc',
+          originStory: 'Dòng họ Trần Đình mang hào khí kiên trung, nhiều thế hệ con cháu tham gia bảo vệ và xây dựng Tổ quốc.',
+          templeAddress: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Ông Trần Đình Quý',
+          deathAnniversary: '25 tháng Hai (Âm lịch)',
+          coverImageUrl: '/images/village/476468343_1020712713424436_7762543762157463751_n.jpg',
+        },
+        {
+          name: 'Họ Lê',
+          slug: 'ho-le',
+          ancestorName: 'Tiên tổ Lê Văn Chính',
+          originStory: 'Dòng họ Lê sinh sống lâu đời bên dòng sông mát lành, đoàn kết gắn bó keo sơn cùng bà con làng Giao Tác.',
+          templeAddress: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          leaderName: 'Ông Lê Văn Tuấn',
+          deathAnniversary: '18 tháng Giêng (Âm lịch)',
+          coverImageUrl: '/images/village/476776564_1020712773424430_8938770403532008026_n.jpg',
+        },
+      ];
+
+      for (const item of clansData) {
+        const clan = await prisma.clan.create({ data: item });
+
+        // Tạo cây phả hệ mẫu 3 đời cho Họ Nguyễn Trọng
+        if (clan.slug === 'ho-nguyen-trong') {
+          // Đời 1: Cụ Thủy tổ
+          const doi1 = await prisma.genealogyMember.create({
+            data: {
+              clanId: clan.id,
+              fullName: 'Nguyễn Trọng Đại Lang (Cụ Thủy Tổ)',
+              gender: 'male',
+              generation: 1,
+              branchName: 'Thủy Tổ Chi Bộ',
+              birthYear: '1660',
+              deathYear: '1735',
+              spouseName: 'Bà Lê Thị Phúc',
+              tombLocation: 'Gò Đống Mả Cả, Núi Hồng Lĩnh',
+              careerHonor: 'Tiền khai canh lập ấp Làng Giao Tác',
+              biography: 'Khai khẩn đất hoang, dựng ấp và lập nên chi họ Nguyễn Trọng đầu tiên tại làng.',
+              orderIndex: 1,
+            },
+          });
+
+          // Đời 2: Các cụ chi trưởng và chi thứ
+          const doi2_1 = await prisma.genealogyMember.create({
+            data: {
+              clanId: clan.id,
+              parentId: doi1.id,
+              fullName: 'Nguyễn Trọng Văn (Cụ Đời 2 - Chi Trưởng)',
+              gender: 'male',
+              generation: 2,
+              branchName: 'Chi Trưởng',
+              birthYear: '1695',
+              deathYear: '1768',
+              spouseName: 'Bà Trần Thị Hiền',
+              tombLocation: 'Khu nghĩa trang dòng họ',
+              careerHonor: 'Hương sư giảng dạy chữ Nho',
+              orderIndex: 1,
+            },
+          });
+
+          const doi2_2 = await prisma.genealogyMember.create({
+            data: {
+              clanId: clan.id,
+              parentId: doi1.id,
+              fullName: 'Nguyễn Trọng Võ (Cụ Đời 2 - Chi Thứ)',
+              gender: 'male',
+              generation: 2,
+              branchName: 'Chi Thứ Hai',
+              birthYear: '1702',
+              deathYear: '1775',
+              spouseName: 'Bà Phan Thị Lan',
+              careerHonor: 'Đội trưởng tuần tra bảo vệ đê làng',
+              orderIndex: 2,
+            },
+          });
+
+          // Đời 3
+          await prisma.genealogyMember.create({
+            data: {
+              clanId: clan.id,
+              parentId: doi2_1.id,
+              fullName: 'Nguyễn Trọng Phúc (Đời 3 - Chi Trưởng)',
+              gender: 'male',
+              generation: 3,
+              branchName: 'Chi Trưởng',
+              birthYear: '1730',
+              deathYear: '1802',
+              spouseName: 'Bà Nguyễn Thị Dung',
+              careerHonor: 'Thủ từ trông coi Nhà thờ họ',
+              orderIndex: 1,
+            },
+          });
+
+          await prisma.genealogyMember.create({
+            data: {
+              clanId: clan.id,
+              parentId: doi2_2.id,
+              fullName: 'Nguyễn Trọng Lộc (Đời 3 - Chi Thứ)',
+              gender: 'male',
+              generation: 3,
+              branchName: 'Chi Thứ Hai',
+              birthYear: '1738',
+              deathYear: '1810',
+              spouseName: 'Bà Hoàng Thị Mai',
+              orderIndex: 1,
+            },
+          });
+        }
+      }
+    }
+
+    // 8. Khởi tạo Chiến dịch Quỹ Quê Hương & Khuyến Học
+    const fundCount = await prisma.fundCampaign.count();
+    if (fundCount === 0) {
+      const fund1 = await prisma.fundCampaign.create({
         data: {
-          fullName: 'Nguyễn Trọng Long',
-          region: 'Hà Tĩnh (TDP 9 Thuận Lộc)',
-          phonePublic: true,
-          contactInfo: '0832991002 (Zalo / ĐT Admin)',
-          generationBranch: 'Họ Nguyễn Trọng — TDP 9 Thuận Lộc',
-          userId: adminUser.id,
+          title: 'Quỹ Khuyến Học & Tiếp Sức Tài Năng Làng Giao Tác 2026-2027',
+          slug: 'quy-khuyen-hoc-2026',
+          description: 'Trao học bổng cho các em học sinh đỗ Đại học, học sinh giỏi cấp Tỉnh/Quốc gia và tiếp sức cho các hoàn cảnh khó khăn vươn lên trong học tập.',
+          targetAmount: 50000000,
+          raisedAmount: 18500000,
+          bankName: 'MBBANK',
+          bankAccount: '0912345678',
+          bankAccountName: 'BAN CAN SU TDP 9 THUAN LOC',
+          qrCodePrefix: 'GIAOTAC KHUYENHOC',
+          coverImageUrl: '/images/village/476776564_1020712773424430_8938770403532008026_n.jpg',
+        },
+      });
+
+      // Tạo một số khoản công đức mẫu minh bạch
+      await prisma.fundDonation.createMany({
+        data: [
+          {
+            campaignId: fund1.id,
+            donorName: 'Gia đình ông Nguyễn Trọng Hùng',
+            donorClan: 'Họ Nguyễn Trọng — Hà Nội',
+            amount: 5000000,
+            message: 'Chúc các cháu con em Làng Giao Tác học giỏi, thành tài làm rạng danh quê hương!',
+            isVerified: true,
+          },
+          {
+            campaignId: fund1.id,
+            donorName: 'Bà Phan Thị Mai',
+            donorClan: 'Họ Phan Sỹ — TP. Hồ Chí Minh',
+            amount: 3000000,
+            message: 'Ủng hộ các cháu hiếu học vượt khó.',
+            isVerified: true,
+          },
+          {
+            campaignId: fund1.id,
+            donorName: 'Hội đồng hương Giao Tác tại Đà Nẵng',
+            donorClan: 'Con em xa quê',
+            amount: 10000000,
+            message: 'Tiếp sức tài năng trẻ quê nhà Thuận Lộc.',
+            isVerified: true,
+          },
+          {
+            campaignId: fund1.id,
+            donorName: 'Bác Lê Văn Dũng',
+            donorClan: 'Họ Lê — TDP 9 Thuận Lộc',
+            amount: 500000,
+            message: 'Góp chút tấm lòng cho phong trào khuyến học.',
+            isVerified: true,
+          },
+        ],
+      });
+
+      await prisma.fundCampaign.create({
+        data: {
+          title: 'Quỹ Tôn Tạo Cảnh Quan Đình Làng & Khu Thể Thao TDP 9',
+          slug: 'quy-ton-tao-dinh-lang',
+          description: 'Sửa sang sân đình, lắp đặt hệ thống đèn chiếu sáng năng lượng mặt trời và ghế đá quanh giếng cổ cho bà con sinh hoạt cộng đồng.',
+          targetAmount: 80000000,
+          raisedAmount: 32000000,
+          bankName: 'MBBANK',
+          bankAccount: '0912345678',
+          bankAccountName: 'BAN CAN SU TDP 9 THUAN LOC',
+          qrCodePrefix: 'GIAOTAC DINHLANG',
+          coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
         },
       });
     }
 
-    console.log('🎉 Hoàn tất đồng bộ toàn bộ dữ liệu mẫu!');
-    return { seeded: true, message: 'Đã đồng bộ toàn bộ dữ liệu Lịch sử, Bài viết, Ảnh và tài khoản Admin thành công.' };
+    // 9. Khởi tạo Sản phẩm Chợ Quê & Đặc Sản OCOP Làng Giao Tác
+    const marketCount = await prisma.marketProduct.count();
+    if (marketCount === 0) {
+      await prisma.marketProduct.createMany({
+        data: [
+          {
+            title: 'Kẹo Cu Đơ Hà Tĩnh Truyền Thống (Đậm Vị Mật Mía & Gừng Tươi)',
+            category: 'DacSan',
+            price: '45.000đ / hộp 5 chiếc',
+            description: 'Kẹo Cu Đơ giòn rụm, mật mía nguyên chất quyện gừng cay nồng và lạc thơm bùi nướng thủ công.',
+            imageUrl: '/images/village/486669654_9667039090022304_8533644671297434351_n.jpg',
+            sellerName: 'Hộ Bác Nguyễn Trọng An',
+            sellerPhone: '0988123456',
+            sellerZalo: '0988123456',
+            address: 'Xóm Trung, TDP 9 Thuận Lộc',
+          },
+          {
+            title: 'Cam Bù Núi Hồng Lĩnh (Trái Mọng Nước, Vị Ngọt Thanh)',
+            category: 'NongSan',
+            price: '60.000đ / kg',
+            description: 'Cam bù trồng theo tiêu chuẩn VietGAP, thu hoạch chính vụ tại vùng đồi chân núi Hồng Lĩnh.',
+            imageUrl: '/images/village/480212312_1025661522929555_8709853623689778697_n.jpg',
+            sellerName: 'Nhà Vườn Phan Sỹ Hùng',
+            sellerPhone: '0977234567',
+            sellerZalo: '0977234567',
+            address: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+          },
+          {
+            title: 'Rượu Nếp Quê Lên Men Lá Cổ Truyền Làng Giao Tác',
+            category: 'DacSan',
+            price: '70.000đ / lít',
+            description: 'Rượu nếp cái hoa vàng nấu thủ công bằng nồi đồng truyền thống, êm say, thơm nồng đượm vị quê hương.',
+            imageUrl: '/images/village/476468343_1020712713424436_7762543762157463751_n.jpg',
+            sellerName: 'Cơ Sở Rượu Quê Nguyễn Duy',
+            sellerPhone: '0915345678',
+            sellerZalo: '0915345678',
+            address: 'Xóm Đông, TDP 9 Thuận Lộc',
+          },
+          {
+            title: 'Mật Mía Nấu Thủ Công Nguyên Chất (Thơm Dẻo Tự Nhiên)',
+            category: 'AmThuc',
+            price: '50.000đ / chai 1 lít',
+            description: 'Mật mía đỏ sánh đậm đà, không chất bảo quản, chuyên dùng kho cá, làm bánh ngào, chè sen quê.',
+            imageUrl: '/images/village/474096867_1006185811543793_8014259646970075430_n.jpg',
+            sellerName: 'Hộ Cô Trần Thị Mai',
+            sellerPhone: '0944567890',
+            sellerZalo: '0944567890',
+            address: 'TDP 9 Thuận Lộc',
+          },
+        ],
+      });
+    }
+
+    // 10. Khởi tạo Sổ Tang & Cáo Phó Mẫu
+    const obitCount = await prisma.obituary.count();
+    if (obitCount === 0) {
+      const obit1 = await prisma.obituary.create({
+        data: {
+          deceasedName: 'Cụ Bà Nguyễn Thị Lương',
+          aliasName: 'Cụ Cố Lương (Thân mẫu ông Nguyễn Trọng Thành)',
+          age: 92,
+          clanName: 'Họ Nguyễn Trọng',
+          diedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 ngày trước
+          funeralTime: '07h00 ngày 15 tháng 07 năm 2026',
+          burialTime: '14h30 cùng ngày',
+          cemeteryPlace: 'Nghĩa trang xứ Đồng Làng Giao Tác — TDP 9 Thuận Lộc',
+          biography: 'Cụ bà Nguyễn Thị Lương trọn đời tận tụy vì gia đình, làng xóm, sống đức độ, hiền hậu, nuôi dạy con cháu thành đạt.',
+          coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+        },
+      });
+
+      await prisma.condolence.createMany({
+        data: [
+          {
+            obituaryId: obit1.id,
+            senderName: 'Hội đồng hương Giao Tác tại Hà Nội',
+            senderFrom: 'Hà Nội',
+            message: 'Xin thành kính dâng nén tâm nhang tiễn biệt Cụ về cõi vĩnh hằng và gửi lời chia buồn sâu sắc tới toàn thể tang quyến.',
+            incenseCount: 3,
+          },
+          {
+            obituaryId: obit1.id,
+            senderName: 'Gia đình cháu Phan Sỹ Đức',
+            senderFrom: 'TP. Hồ Chí Minh',
+            message: 'Vô cùng thương tiếc Cụ. Cầu mong linh hồn Cụ an nghỉ ngàn thu nơi cõi Phật.',
+            incenseCount: 1,
+          },
+        ],
+      });
+    }
+
+    console.log('🎉 Hoàn tất đồng bộ toàn bộ dữ liệu mẫu 8 Dòng họ, Quỹ, Chợ Quê và Sổ Tang!');
+    return { seeded: true, message: 'Đã đồng bộ toàn bộ dữ liệu hệ thống thành công.' };
   } catch (err) {
     console.error('❌ Lỗi khi tự động khởi tạo dữ liệu:', err.message);
     return { seeded: false, error: err.message };
@@ -261,3 +589,4 @@ async function runAutoSeed(prisma) {
 }
 
 module.exports = { runAutoSeed };
+

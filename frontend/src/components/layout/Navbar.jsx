@@ -19,6 +19,11 @@ import {
   Users,
   Calendar,
   Sparkles,
+  Heart,
+  ShoppingBag,
+  Flame,
+  Compass,
+  QrCode,
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -52,7 +57,7 @@ export const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Nhóm 1: Di Tích & Ký Ức
+  // Nhóm 1: Di Tích & Cội Nguồn
   const heritageGroup = [
     {
       name: 'Lịch sử & Đình Làng',
@@ -60,6 +65,20 @@ export const Navbar = () => {
       icon: Landmark,
       desc: '6 mốc lịch sử, video tư liệu Đình làng Giao Tác',
       color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    {
+      name: 'Gia phả 8 dòng họ',
+      path: '/gia-pha',
+      icon: Users,
+      desc: 'Phả hệ số, thủy tổ, chi phái & lịch giỗ tổ',
+      color: 'bg-teal-50 text-teal-700 border-teal-200',
+    },
+    {
+      name: 'Tour tham quan 360° VR',
+      path: '/tham-quan-360',
+      icon: Compass,
+      desc: 'Ngắm nhìn toàn cảnh đình làng, giếng cổ ảo',
+      color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     },
     {
       name: 'Thư viện Album ảnh',
@@ -77,8 +96,29 @@ export const Navbar = () => {
     },
   ];
 
-  // Nhóm 2: Bản Tin & Sinh Hoạt
+  // Nhóm 2: Bản Tin & Đời Sống Cộng Đồng
   const communityGroup = [
+    {
+      name: 'Quỹ quê hương & VietQR',
+      path: '/quy-que-huong',
+      icon: Heart,
+      desc: 'Ủng hộ khuyến học, tôn tạo di tích minh bạch 100%',
+      color: 'bg-rose-50 text-rose-700 border-rose-200',
+    },
+    {
+      name: 'Chợ quê & Nông sản OCOP',
+      path: '/cho-que',
+      icon: ShoppingBag,
+      desc: 'Kẹo cu đơ, cam bù, mật mía, rượu nếp quê',
+      color: 'bg-amber-50 text-amber-800 border-amber-200',
+    },
+    {
+      name: 'Sổ tang & Tri ân tâm linh',
+      path: '/so-tang',
+      icon: Flame,
+      desc: 'Cáo phó, thắp nén tâm nhang, thành kính phân ưu',
+      color: 'bg-stone-100 text-stone-800 border-stone-300',
+    },
     {
       name: 'Tin tức & Thông báo',
       path: '/tin-tuc',
@@ -98,7 +138,7 @@ export const Navbar = () => {
       path: '/dong-huong',
       icon: Users,
       desc: 'Danh bạ kết nối con em xa quê',
-      color: 'bg-teal-50 text-teal-700 border-teal-200',
+      color: 'bg-cyan-50 text-cyan-700 border-cyan-200',
     },
     {
       name: 'Lịch sự kiện',

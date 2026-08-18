@@ -202,3 +202,150 @@ model Notification {
   @@index([createdAt])
   @@map("notifications")
 }
+
+model Clan {
+  id               String            @id @default(uuid())
+  name             String            @unique // Họ Nguyễn Trọng, Họ Nguyễn Duy, Họ Nguyễn Huy, Họ Phan Sỹ, Họ Nguyễn Văn, Họ Phạm Hữu, Họ Trần Đình, Họ Lê
+  slug             String            @unique
+  ancestorName     String?           // Thủy tổ / Tiên tổ
+  originStory      String?           // Lịch sử khởi nguồn dòng họ
+  templeAddress    String?           // Địa chỉ nhà thờ họ tại TDP 9 Thuận Lộc
+  templeLatitude   Float?
+  templeLongitude  Float?
+  leaderName       String?           // Trưởng tộc / Trưởng ban khánh tiết
+  leaderPhone      String?
+  deathAnniversary String?           // Ngày giỗ tổ (ví dụ: "16 tháng Giêng", "10 tháng Ba (Âm lịch)")
+  coverImageUrl    String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  members          GenealogyMember[]
+
+  @@map("clans")
+}
+
+model GenealogyMember {
+  id             String            @id @default(uuid())
+  clanId         String
+  parentId       String?           // Khóa trỏ đến cha (hoặc mẹ) để vẽ cây phân nhánh
+  fullName       String
+  gender         String            @default("male") // male | female
+  generation     Int               @default(1) // Đời thứ mấy (Đời 1: Thủy tổ, Đời 2, Đời 3...)
+  branchName     String?           // Chi họ (Chi trưởng, Chi hai, Chi ba, Phái Giáp...)
+  birthYear      String?
+  deathYear      String?
+  spouseName     String?           // Tên phối ngẫu (vợ / chồng)
+  tombLocation   String?           // Vị trí mộ phần
+  careerHonor    String?           // Chức vị, công đức, học vị, danh hiệu
+  biography      String?           // Tiểu sử ngắn
+  avatarUrl      String?
+  orderIndex     Int               @default(0) // Thứ tự sinh trong gia đình (con trưởng = 1, con thứ = 2...)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  clan           Clan              @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  parent         GenealogyMember?  @relation("MemberHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children       GenealogyMember[] @relation("MemberHierarchy")
+
+  @@index([clanId])
+  @@index([parentId])
+  @@index([generation])
+  @@map("genealogy_members")
+}
+
+model FundCampaign {
+  id            String         @id @default(uuid())
+  title         String
+  slug          String         @unique
+  description   String
+  targetAmount  Float          // Số tiền mục tiêu (VNĐ)
+  raisedAmount  Float          @default(0) // Số tiền đã nhận được
+  bankName      String         @default("MBBANK") // Tên ngân hàng nhận (MBBank, Vietcombank, BIDV, Techcombank, Agribank...)
+  bankAccount   String         @default("0912345678") // Số tài khoản nhận
+  bankAccountName String       @default("BAN CAN SU TDP 9 THUAN LOC")
+  qrCodePrefix  String         @default("GIAOTAC") // Cú pháp chuyển khoản
+  coverImageUrl String?
+  startDate     DateTime       @default(now())
+  endDate       DateTime?
+  status        String         @default("active") // active | completed | paused
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  donations     FundDonation[]
+
+  @@map("fund_campaigns")
+}
+
+model FundDonation {
+  id          String       @id @default(uuid())
+  campaignId  String
+  donorName   String       // Họ tên người ủng hộ (hoặc "Gia đình ông/bà...", "Con cháu xa quê")
+  donorClan   String?      // Dòng họ / Địa chỉ hiện tại (vd: Họ Nguyễn Trọng - Hà Nội)
+  amount      Float        // Số tiền (VNĐ)
+  message     String?      // Lời chúc / Lời nhắn gửi quê hương
+  txCode      String?      // Mã giao dịch ngân hàng
+  isVerified  Boolean      @default(true) // Đã xác nhận tiền về tài khoản
+  donatedAt   DateTime     @default(now())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  campaign    FundCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([donatedAt])
+  @@map("fund_donations")
+}
+
+model MarketProduct {
+  id          String   @id @default(uuid())
+  title       String   // Tên đặc sản (Kẹo Cu Đơ, Cam Bù, Rượu Nếp Quê, Mật Mía...)
+  category    String   // DacSan | NongSan | ThuCong | AmThuc
+  price       String   // Giá tham khảo (vd: "50.000đ / hộp 5 chiếc", "Liên hệ")
+  description String
+  imageUrl    String
+  sellerName  String   // Tên hộ sản xuất (vd: Hộ Bác Nguyễn Trọng An)
+  sellerPhone String   // Số điện thoại gọi điện trực tiếp
+  sellerZalo  String?  // Số Zalo liên hệ
+  address     String   @default("TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh")
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@map("market_products")
+}
+
+model Obituary {
+  id            String       @id @default(uuid())
+  deceasedName  String       // Họ và tên người quá cố
+  aliasName     String?      // Tên thường gọi / Tự hiệu
+  age           Int          // Hưởng thọ / Hưởng dương
+  clanName      String?      // Dòng họ
+  diedAt        DateTime     // Thời gian từ trần
+  funeralTime   String?      // Thời gian phát tang
+  burialTime    String?      // Thời gian an táng
+  cemeteryPlace String?      // Nơi an nghỉ cuối cùng
+  biography     String?      // Tiểu sử / Đôi nét tưởng nhớ
+  coverImageUrl String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  condolences   Condolence[]
+
+  @@map("obituaries")
+}
+
+model Condolence {
+  id         String   @id @default(uuid())
+  obituaryId String
+  senderName String
+  senderFrom String?  // Nơi ở hiện tại (vd: Hội đồng hương Giao Tác tại Miền Nam)
+  message    String   // Lời chia buồn
+  incenseCount Int    @default(1) // Số nén tâm nhang
+  createdAt  DateTime @default(now())
+
+  obituary   Obituary @relation(fields: [obituaryId], references: [id], onDelete: Cascade)
+
+  @@index([obituaryId])
+  @@map("condolences")
+}

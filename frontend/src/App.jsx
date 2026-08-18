@@ -24,6 +24,11 @@ import { RegisterPage } from './pages/RegisterPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { MobileSimulatorPage } from './pages/MobileSimulatorPage';
+import { GenealogyPage } from './pages/GenealogyPage';
+import { FundPage } from './pages/FundPage';
+import { MarketPage } from './pages/MarketPage';
+import { MemorialPage } from './pages/MemorialPage';
+import { VirtualTourPage } from './pages/VirtualTourPage';
 
 function App() {
   return (
@@ -38,6 +43,22 @@ function App() {
 
               {/* Lịch sử làng */}
               <Route path="/lich-su" element={<HistoryPage />} />
+
+              {/* Gia Phả 8 Dòng Họ */}
+              <Route path="/gia-pha" element={<GenealogyPage />} />
+              <Route path="/gia-pha/:clanSlug" element={<GenealogyPage />} />
+
+              {/* Quỹ Quê Hương & Khuyến Học VietQR */}
+              <Route path="/quy-que-huong" element={<FundPage />} />
+
+              {/* Chợ Quê & Đặc Sản OCOP */}
+              <Route path="/cho-que" element={<MarketPage />} />
+
+              {/* Sổ Tang & Thắp Nến Tri Ân */}
+              <Route path="/so-tang" element={<MemorialPage />} />
+
+              {/* Tour Tham Quan 360° VR */}
+              <Route path="/tham-quan-360" element={<VirtualTourPage />} />
 
               {/* Tin tức chính quyền */}
               <Route path="/tin-tuc" element={<NewsListPage />} />
