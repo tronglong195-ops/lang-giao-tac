@@ -2,10 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getDirectImageUrl } from '../../utils/imageHelper';
 
 export const HeroSlider = ({ slides = [] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Preload ảnh của các slide tiếp theo để chuyển cảnh tức thì không bị giật/lag
+  useEffect(() => {
+    if (slides && slides.length > 0) {
+      slides.forEach((slide) => {
+        if (slide.imageUrl) {
+          const img = new Image();
+          img.src = getDirectImageUrl(slide.imageUrl);
+        }
+      });
+    }
+  }, [slides]);
 
   useEffect(() => {
     if (slides.length <= 1 || isPaused) return;
@@ -20,6 +33,7 @@ export const HeroSlider = ({ slides = [] }) => {
   if (!slides || slides.length === 0) return null;
 
   const currentSlide = slides[currentIndex];
+  const directImageUrl = getDirectImageUrl(currentSlide.imageUrl);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
@@ -42,13 +56,13 @@ export const HeroSlider = ({ slides = [] }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1, ease: 'easeOut' }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
           className="absolute inset-0 w-full h-full"
         >
           <div
             className="w-full h-full bg-cover bg-center animate-kenburns"
             style={{
-              backgroundImage: `url(${currentSlide.imageUrl})`,
+              backgroundImage: `url(${directImageUrl})`,
             }}
           />
           {/* Subtle Warm Gradient Overlay */}

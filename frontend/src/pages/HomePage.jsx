@@ -24,8 +24,47 @@ import { HeroSlider } from '../components/common/HeroSlider';
 import { SectionDivider } from '../components/layout/SectionDivider';
 import { LightboxModal } from '../components/common/LightboxModal';
 
+const DEFAULT_HERO_SLIDES = [
+  {
+    id: 'slide-1',
+    title: 'Làng Giao Tác — TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
+    subtitle: 'Mảnh đất địa linh nhân kiệt dưới chân dãy Hồng Lĩnh hùng vĩ, tỉnh Hà Tĩnh',
+    imageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+    link: '/lich-su',
+    linkText: 'Tìm hiểu lịch sử làng',
+    tag: 'Lịch sử & Cội nguồn',
+  },
+  {
+    id: 'slide-2',
+    title: 'Giữ Gìn Bản Sắc Văn Hóa & Cội Nguồn 8 Dòng Họ',
+    subtitle: 'Nơi kết nối các thế hệ con em Giao Tác — TDP 9 Thuận Lộc từ khắp mọi miền',
+    imageUrl: '/images/village/476468343_1020712713424436_7762543762157463751_n.jpg',
+    link: '/gia-pha',
+    linkText: 'Tra cứu gia phả 8 dòng họ',
+    tag: 'Phả hệ & Cội nguồn',
+  },
+  {
+    id: 'slide-3',
+    title: 'Tổ Dân Phố 9 Thuận Lộc Ngày Càng Đổi Thay',
+    subtitle: 'Đường hoa rực rỡ, nông thôn mới kiểu mẫu và đô thị văn minh',
+    imageUrl: '/images/village/476776564_1020712773424430_8938770403532008026_n.jpg',
+    link: '/bai-viet',
+    linkText: 'Đọc bài viết cộng đồng',
+    tag: 'Đổi thay quê hương',
+  },
+  {
+    id: 'slide-4',
+    title: 'Chung Tay Xây Dựng Quỹ Quê Hương & Khuyến Học',
+    subtitle: 'Ủng hộ tài năng trẻ quê nhà minh bạch 100% qua mã VietQR',
+    imageUrl: '/images/village/486784254_9667039123355634_3798108786214067335_n.jpg',
+    link: '/quy-que-huong',
+    linkText: 'Xem quỹ khuyến học',
+    tag: 'Quỹ quê hương',
+  },
+];
+
 export const HomePage = () => {
-  const [heroSlides, setHeroSlides] = useState([]);
+  const [heroSlides, setHeroSlides] = useState(DEFAULT_HERO_SLIDES);
   const [latestNews, setLatestNews] = useState([]);
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [featuredPhotos, setFeaturedPhotos] = useState([]);
