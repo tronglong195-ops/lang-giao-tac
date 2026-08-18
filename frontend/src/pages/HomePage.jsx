@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { newsService } from '../services/newsService';
+import { googleSheetsService } from '../services/googleSheetsService';
 import { postService } from '../services/postService';
 import { photoService } from '../services/photoService';
 import { eventService } from '../services/eventService';
@@ -86,12 +87,23 @@ export const HomePage = () => {
           eventService.getEvents({ limit: 3, timeFilter: 'upcoming' }),
         ]);
 
-        if (slidesRes.data?.data?.slides) {
-          setHeroSlides(slidesRes.data.data.slides);
+        let finalNews = newsRes?.news || [];
+
+        // Kiểm tra xem có cấu hình Google Sheets không
+        try {
+          const syncConfig = JSON.parse(localStorage.getItem('giaotac_google_sync_settings') || '{}');
+          if (syncConfig.enabled && syncConfig.syncNews && syncConfig.sheetUrl) {
+            const cleanId = googleSheetsService.extractSheetId(syncConfig.sheetUrl);
+            const sheetNews = await googleSheetsService.fetchNews(cleanId);
+            if (sheetNews && sheetNews.length > 0) {
+              finalNews = [...sheetNews.slice(0, 3), ...finalNews].slice(0, 3);
+            }
+          }
+        } catch (e) {
+          console.warn('Lỗi đọc Google Sheets trên Trang chủ:', e);
         }
-        if (newsRes?.news) {
-          setLatestNews(newsRes.news);
-        }
+
+        setLatestNews(finalNews);
         if (postsRes?.posts) {
           setFeaturedPosts(postsRes.posts);
         }

@@ -1,16 +1,21 @@
 /**
  * Dịch vụ đọc dữ liệu trực tiếp từ Google Sheets qua Google Visualization API.
- * Ưu điểm:
- * - Hoàn toàn MIỄN PHÍ, không cần đăng ký API Key hay thẻ tín dụng.
- * - Chỉ cần file Google Sheets được bật chế độ: "Bất kỳ ai có đường liên kết đều có thể xem".
- * - Tự động trích xuất tiêu đề cột và chuyển thành mảng JSON đối tượng.
+ * Cơ chế thông minh, tự động nhận diện tiếng Việt có dấu/không dấu và thứ tự cột.
  */
 
+// Hàm loại bỏ dấu tiếng Việt để so sánh tên cột dễ dàng
+const removeVietnameseTones = (str) => {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim();
+};
+
 export const googleSheetsService = {
-  /**
-   * Trích xuất Sheet ID từ đường dẫn Google Sheets
-   * Ví dụ: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit -> 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
-   */
   extractSheetId: (input) => {
     if (!input) return '';
     const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
@@ -18,111 +23,173 @@ export const googleSheetsService = {
   },
 
   /**
-   * Lấy dữ liệu từ một trang tính Google Sheets
-   * @param {string} sheetId - ID của file Google Sheets
-   * @param {string} sheetName - Tên sheet (ví dụ: 'TinTuc', 'QuyKhuyenHoc', 'DanhBa')
+   * Đọc dữ liệu thô từ Google Sheets
    */
   fetchSheetData: async (sheetId, sheetName = '') => {
     const cleanId = googleSheetsService.extractSheetId(sheetId);
     if (!cleanId) return [];
 
-    let url = `https://docs.google.com/spreadsheets/d/${cleanId}/gviz/tq?tqx=out:json`;
-    if (sheetName) {
-      url += `&sheet=${encodeURIComponent(sheetName)}`;
-    }
+    // Các biến thể tên sheet có thể có
+    const sheetVariations = sheetName
+      ? [sheetName, sheetName.toLowerCase(), 'TinTuc', 'Tin tức', 'Sheet1', '']
+      : [''];
 
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Lỗi kết nối Google Sheets: ${res.statusText}`);
+    for (const name of sheetVariations) {
+      let url = `https://docs.google.com/spreadsheets/d/${cleanId}/gviz/tq?tqx=out:json`;
+      if (name) {
+        url += `&sheet=${encodeURIComponent(name)}`;
+      }
 
-      const text = await res.text();
-      // Google Visualization trả về dạng: /*O_o*/ google.visualization.Query.setResponse({...});
-      const jsonString = text.replace(/^[/*\sO_o]*google\.visualization\.Query\.setResponse\(/, '').replace(/\);?\s*$/, '');
-      const data = JSON.parse(jsonString);
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
 
-      if (!data.table || !data.table.rows) return [];
+        const text = await res.text();
+        // Bóc tách JSON từ hàm query callback của Google
+        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?/);
+        if (!jsonMatch || !jsonMatch[1]) continue;
 
-      // Lấy danh sách tên cột từ dòng tiêu đề (cols)
-      const cols = data.table.cols.map((col, idx) => col.label || `col_${idx}`);
+        const data = JSON.parse(jsonMatch[1]);
+        if (!data.table || !data.table.rows || data.table.rows.length === 0) continue;
 
-      // Chuyển đổi các dòng thành danh sách đối tượng JSON
-      const rows = data.table.rows.map((row, rowIndex) => {
-        const item = { id: `gsheet-${rowIndex + 1}` };
-        row.c.forEach((cell, cellIdx) => {
-          const colName = cols[cellIdx] || `col_${cellIdx}`;
-          item[colName] = cell ? cell.v : '';
+        // Lấy danh sách tên cột
+        const cols = data.table.cols.map((col, idx) => ({
+          raw: col.label || `col_${idx}`,
+          normalized: removeVietnameseTones(col.label || `col_${idx}`).replace(/[^a-z0-9]/g, ''),
+          index: idx,
+        }));
+
+        // Chuyển đổi các dòng thành danh sách đối tượng
+        const rows = data.table.rows.map((row, rowIndex) => {
+          const item = { _rowIndex: rowIndex + 1 };
+          if (row.c) {
+            row.c.forEach((cell, cellIdx) => {
+              const colInfo = cols[cellIdx] || { normalized: `col_${cellIdx}`, raw: `col_${cellIdx}` };
+              const cellValue = cell ? (cell.f !== undefined ? cell.f : cell.v) : '';
+              item[colInfo.normalized] = cellValue;
+              item[colInfo.raw] = cellValue;
+              item[`col_${cellIdx}`] = cellValue;
+            });
+          }
+          return item;
         });
-        return item;
-      });
 
-      return rows;
-    } catch (error) {
-      console.error(`Lỗi đọc dữ liệu Google Sheet (${sheetName}):`, error);
-      return [];
+        if (rows.length > 0) {
+          return rows;
+        }
+      } catch (err) {
+        // Thử tiếp biến thể tên sheet tiếp theo
+        continue;
+      }
     }
+
+    return [];
   },
 
   /**
    * Đọc danh sách Tin tức từ Google Sheets
-   * Cột mong đợi: TieuDe, TomTat, NoiDung, AnhBia, TacGia, NgayDang, Nguon
    */
   fetchNews: async (sheetId) => {
     const rows = await googleSheetsService.fetchSheetData(sheetId, 'TinTuc');
-    return rows.map((r, i) => ({
-      id: r.id || `news-gsheet-${i}`,
-      title: r.TieuDe || r.title || 'Thông báo từ Ban Quản Lý',
-      slug: (r.TieuDe || `tin-tuc-${i}`).toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      summary: r.TomTat || r.summary || '',
-      content: r.NoiDung || r.content || '',
-      coverImage: r.AnhBia || r.imageUrl || '',
-      author: r.TacGia || 'Ban Cán sự TDP 9',
-      source: r.Nguon || 'Làng Giao Tác',
-      publishedAt: r.NgayDang || new Date().toISOString(),
-      isOfficial: true,
-      fromGoogleSheets: true,
-    }));
+    if (!rows || rows.length === 0) return [];
+
+    const newsList = rows
+      .map((r, i) => {
+        // Tìm giá trị Tiêu đề linh hoạt
+        const title =
+          r.tieude || r.title || r.tenbaiviet || r.ten || r['Tiêu đề'] || r.col_0 || '';
+        if (!title || String(title).trim().length === 0) return null;
+
+        const summary =
+          r.tomtat || r.summary || r.mota || r['Tóm tắt'] || r.col_1 || '';
+        const content =
+          r.noidung || r.content || r.chitiet || r['Nội dung'] || r.col_2 || summary || title;
+        const rawImage =
+          r.anhbia || r.anh || r.image || r.hinh || r.hinhanh || r['Ảnh bìa'] || r.col_3 || '';
+        const author =
+          r.tacgia || r.author || r.nguoidang || r['Tác giả'] || r.col_4 || 'Ban Cán sự TDP 9';
+        const date =
+          r.ngaydang || r.ngay || r.date || r['Ngày đăng'] || r.col_5 || new Date().toLocaleDateString('vi-VN');
+
+        // Định dạng URL ảnh nếu là Google Drive
+        let coverImage = rawImage;
+        if (rawImage && (rawImage.includes('drive.google.com') || rawImage.includes('docs.google.com'))) {
+          const match = rawImage.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || rawImage.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (match && match[1]) {
+            coverImage = `https://lh3.googleusercontent.com/d/${match[1]}`;
+          }
+        }
+
+        const slug = `gsheet-news-${i + 1}-${title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .slice(0, 50)}`;
+
+        return {
+          id: `gsheet-news-${i + 1}`,
+          title: String(title).trim(),
+          slug,
+          summary: String(summary).trim(),
+          contentHtml: String(content).trim(),
+          coverImageUrl: coverImage || '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+          author: { fullName: String(author).trim() },
+          source: 'Google Sheets (Tự động)',
+          publishedAt: date,
+          isOfficial: true,
+          fromGoogleSheets: true,
+        };
+      })
+      .filter(Boolean);
+
+    // Lưu vào bộ nhớ tạm thời của trình duyệt để trang chi tiết bài viết có thể mở được
+    if (newsList.length > 0) {
+      try {
+        sessionStorage.setItem('giaotac_gsheet_news_cache', JSON.stringify(newsList));
+      } catch (e) {}
+    }
+
+    return newsList;
   },
 
   /**
    * Đọc danh sách Đóng góp Quỹ từ Google Sheets
-   * Cột mong đợi: NguoiUngHo, DongHo, SoTien, LoiChuc, NgayUngHo, MaGiaoDich
    */
   fetchDonations: async (sheetId) => {
     const rows = await googleSheetsService.fetchSheetData(sheetId, 'QuyQueHuong');
-    return rows.map((r, i) => ({
-      id: r.id || `donation-gsheet-${i}`,
-      donorName: r.NguoiUngHo || r.donorName || 'Nhà hảo tâm',
-      donorClan: r.DongHo || r.clan || 'Con em quê hương',
-      amount: Number(r.SoTien || r.amount || 0),
-      message: r.LoiChuc || r.message || '',
-      donatedAt: r.NgayUngHo || new Date().toISOString(),
-      txCode: r.MaGiaoDich || `TX-${i + 1}`,
-      fromGoogleSheets: true,
-    }));
+    if (!rows || rows.length === 0) return [];
+
+    return rows
+      .map((r, i) => {
+        const donorName =
+          r.nguoiungho || r.donorname || r.ten || r['Người ủng hộ'] || r.col_0 || '';
+        if (!donorName) return null;
+
+        const donorClan =
+          r.dongho || r.clan || r.noio || r['Dòng họ'] || r.col_1 || 'Con em quê hương';
+        const amount = Number(
+          String(r.sotien || r.amount || r['Số tiền'] || r.col_2 || '0').replace(/[^0-9]/g, '')
+        );
+        const message =
+          r.loichuc || r.message || r.noidung || r['Lời chúc'] || r.col_3 || '';
+        const date =
+          r.ngayungho || r.date || r['Ngày ủng hộ'] || r.col_4 || new Date().toISOString();
+
+        return {
+          id: `donation-gsheet-${i + 1}`,
+          donorName: String(donorName).trim(),
+          donorClan: String(donorClan).trim(),
+          amount: amount || 0,
+          message: String(message).trim(),
+          donatedAt: date,
+          txCode: `GS-${i + 1}`,
+          fromGoogleSheets: true,
+        };
+      })
+      .filter(Boolean);
   },
 
   /**
-   * Đọc danh bạ Hội đồng hương từ Google Sheets
-   * Cột mong đợi: HoVaTen, DongHo, NoiO, SoDienThoai, NgheNghiep, GhiChu
-   */
-  fetchDirectory: async (sheetId) => {
-    const rows = await googleSheetsService.fetchSheetData(sheetId, 'DanhBa');
-    return rows.map((r, i) => ({
-      id: r.id || `dir-gsheet-${i}`,
-      fullName: r.HoVaTen || r.fullName || 'Thành viên',
-      clan: r.DongHo || 'Chưa cập nhật',
-      currentLocation: r.NoiO || 'Hà Nội',
-      phone: r.SoDienThoai || '',
-      occupation: r.NgheNghiep || '',
-      note: r.GhiChu || '',
-      fromGoogleSheets: true,
-    }));
-  },
-
-  /**
-   * Gửi dữ liệu bài viết mới, tin tức, đóng góp quỹ ngược lên Google Sheets qua Webhook (Google Apps Script)
-   * @param {string} webhookUrl - URL Web App của Google Apps Script
-   * @param {object} payload - Dữ liệu cần ghi
+   * Gửi dữ liệu bài viết mới ngược lên Google Sheets qua Webhook
    */
   sendToWebhook: async (webhookUrl, payload) => {
     if (!webhookUrl || !webhookUrl.trim()) return false;
@@ -138,7 +205,7 @@ export const googleSheetsService = {
       });
       return true;
     } catch (err) {
-      console.error('Lỗi khi gửi dữ liệu lên Google Sheets Webhook:', err);
+      console.error('Lỗi gửi Webhook Google Apps Script:', err);
       return false;
     }
   },

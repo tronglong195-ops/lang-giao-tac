@@ -14,6 +14,18 @@ export const NewsDetailPage = () => {
     const fetchDetail = async () => {
       setLoading(true);
       try {
+        // 1. Kiểm tra trong bộ nhớ Google Sheets Cache trước
+        try {
+          const cached = JSON.parse(sessionStorage.getItem('giaotac_gsheet_news_cache') || '[]');
+          const found = cached.find((item) => item.slug === slug || item.id === slug);
+          if (found) {
+            setNewsItem(found);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {}
+
+        // 2. Nếu không có thì gọi API backend bình thường
         const data = await newsService.getNewsBySlug(slug);
         if (data) {
           setNewsItem(data);
