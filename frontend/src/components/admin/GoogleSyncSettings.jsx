@@ -18,6 +18,7 @@ import { googleDriveService } from '../../services/googleDriveService';
 export const GoogleSyncSettings = () => {
   const [enabled, setEnabled] = useState(false);
   const [sheetUrl, setSheetUrl] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState('');
   const [driveFolderUrl, setDriveFolderUrl] = useState('');
   const [syncNews, setSyncNews] = useState(true);
   const [syncFund, setSyncFund] = useState(true);
@@ -29,6 +30,7 @@ export const GoogleSyncSettings = () => {
   const [previewNews, setPreviewNews] = useState([]);
   const [previewDonations, setPreviewDonations] = useState([]);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
 
   // Load saved settings from localStorage
   useEffect(() => {
@@ -38,6 +40,7 @@ export const GoogleSyncSettings = () => {
         const parsed = JSON.parse(saved);
         setEnabled(parsed.enabled ?? false);
         setSheetUrl(parsed.sheetUrl || '');
+        setWebhookUrl(parsed.webhookUrl || '');
         setDriveFolderUrl(parsed.driveFolderUrl || '');
         setSyncNews(parsed.syncNews ?? true);
         setSyncFund(parsed.syncFund ?? true);
@@ -52,6 +55,7 @@ export const GoogleSyncSettings = () => {
     const config = {
       enabled,
       sheetUrl: sheetUrl.trim(),
+      webhookUrl: webhookUrl.trim(),
       driveFolderUrl: driveFolderUrl.trim(),
       syncNews,
       syncFund,
@@ -164,10 +168,30 @@ export const GoogleSyncSettings = () => {
             </p>
           </div>
 
+          {/* Webhook for 2-Way Sync (Ghi ngược từ Web lên Google Sheets) */}
+          <div className="space-y-1.5 pt-2 border-t border-warmBorder">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-ink uppercase">
+                3. Google Apps Script Webhook URL (Đồng bộ 2 chiều: Ghi bài từ Web lên Sheets)
+              </label>
+              <span className="text-[11px] text-accent font-semibold">Tự động thêm dòng mới khi có bài viết</span>
+            </div>
+            <input
+              type="text"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
+              className="w-full input-warm text-sm font-mono"
+            />
+            <p className="text-[11px] text-ink-muted">
+              💡 Khi điền link Webhook này, mỗi khi bạn hoặc thành viên đăng bài viết/ủng hộ quỹ trên web, hệ thống sẽ <strong>tự động ghi thêm một dòng mới vào file Google Sheets</strong> của bạn ngay lập tức!
+            </p>
+          </div>
+
           {/* Sync Targets Checkboxes */}
           <div className="space-y-2 pt-2">
             <label className="block text-xs font-bold text-ink uppercase">
-              2. Các chuyên mục tự động đồng bộ từ các Tab Sheets
+              4. Các chuyên mục tự động đọc từ các Tab Sheets
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-paper border border-warmBorder cursor-pointer">
@@ -289,6 +313,71 @@ export const GoogleSyncSettings = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* 2-Way Sync Webhook Setup Guide */}
+      <div className="p-6 bg-paper rounded-3xl border border-warmBorder space-y-4 text-xs text-ink leading-relaxed">
+        <div className="flex items-center justify-between">
+          <h4 className="font-bold text-sm text-primary-dark flex items-center space-x-1.5">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <span>Cách Thiết Lập Tự Động Ghi Bài Viết Từ Web Vào Google Sheets (1 Phút)</span>
+          </h4>
+          <button
+            type="button"
+            onClick={() => {
+              const scriptCode = `function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var data = JSON.parse(e.postData.contents);
+    
+    // Ghi vào tab TinTuc hoặc Bài Viết
+    var sheet = ss.getSheetByName('TinTuc') || ss.getActiveSheet();
+    sheet.appendRow([
+      data.title || '',
+      data.summary || data.category || '',
+      data.content || '',
+      data.coverImage || '',
+      data.author || '',
+      new Date().toLocaleDateString('vi-VN')
+    ]);
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+              navigator.clipboard.writeText(scriptCode);
+              setCopiedScript(true);
+              setTimeout(() => setCopiedScript(false), 2500);
+            }}
+            className="px-3.5 py-1.5 rounded-xl bg-primary text-surface font-semibold text-xs flex items-center space-x-1.5 hover:bg-primary-dark shadow-xs"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            <span>{copiedScript ? 'Đã sao chép mã!' : 'Sao Chép Mã Script'}</span>
+          </button>
+        </div>
+
+        <ol className="list-decimal pl-4 space-y-2 text-ink-muted">
+          <li>
+            Mở file <strong>Google Sheets</strong> của bạn ➔ Trên menu bấm vào <strong>Tiện ích mở rộng (Extensions)</strong> ➔ Chọn <strong>Apps Script</strong>.
+          </li>
+          <li>
+            Xóa hết mã có sẵn trong cửa sổ soạn thảo ➔ Bấm nút <strong>"Sao Chép Mã Script"</strong> ở trên và dán vào đó ➔ Bấm biểu tượng <strong>Lưu (Save)</strong>.
+          </li>
+          <li>
+            Bấm nút <strong>Triển khai (Deploy)</strong> ở góc phải ➔ Chọn <strong>Tùy chọn triển khai mới (New deployment)</strong>:
+            <ul className="list-disc pl-4 pt-1 space-y-1 text-ink">
+              <li>Loại: chọn <strong>Ứng dụng web (Web app)</strong>.</li>
+              <li>Ai có quyền truy cập (Who has access): chọn <strong>Bất kỳ ai (Anyone)</strong>.</li>
+              <li>Bấm <strong>Triển khai (Deploy)</strong> ➔ Sao chép <strong>URL Ứng dụng web</strong> (dạng <code>https://script.google.com/macros/s/.../exec</code>).</li>
+            </ul>
+          </li>
+          <li>
+            Dán URL đó vào ô <strong>"3. Google Apps Script Webhook URL"</strong> ở trên rồi bấm <strong>Lưu Cấu Hình</strong>.
+          </li>
+        </ol>
       </div>
     </div>
   );

@@ -118,4 +118,28 @@ export const googleSheetsService = {
       fromGoogleSheets: true,
     }));
   },
+
+  /**
+   * Gửi dữ liệu bài viết mới, tin tức, đóng góp quỹ ngược lên Google Sheets qua Webhook (Google Apps Script)
+   * @param {string} webhookUrl - URL Web App của Google Apps Script
+   * @param {object} payload - Dữ liệu cần ghi
+   */
+  sendToWebhook: async (webhookUrl, payload) => {
+    if (!webhookUrl || !webhookUrl.trim()) return false;
+    try {
+      await fetch(webhookUrl.trim(), {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          ...payload,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+      return true;
+    } catch (err) {
+      console.error('Lỗi khi gửi dữ liệu lên Google Sheets Webhook:', err);
+      return false;
+    }
+  },
 };

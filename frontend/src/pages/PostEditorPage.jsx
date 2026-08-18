@@ -14,6 +14,7 @@ import {
   Edit,
 } from 'lucide-react';
 import { postService } from '../services/postService';
+import { googleSheetsService } from '../services/googleSheetsService';
 import { useAuth } from '../context/AuthContext';
 import { TiptapEditor } from '../components/common/TiptapEditor';
 import { CATEGORIES } from './PostListPage';
@@ -164,6 +165,23 @@ export const PostEditorPage = () => {
         });
 
         if (res.success) {
+          // Tự động bắn dữ liệu sang Google Sheets nếu đã cài đặt Webhook
+          try {
+            const syncConfig = JSON.parse(localStorage.getItem('giaotac_google_sync_settings') || '{}');
+            if (syncConfig.enabled && syncConfig.webhookUrl) {
+              googleSheetsService.sendToWebhook(syncConfig.webhookUrl, {
+                type: 'post',
+                title: title.trim(),
+                category,
+                coverImage: coverImageUrl.trim(),
+                author: user?.fullName || 'Người dân làng',
+                content: contentHtml,
+              });
+            }
+          } catch (err) {
+            console.warn('Không thể gửi Google Sheets Webhook:', err);
+          }
+
           setSuccessMessage(res.message);
           setTimeout(() => {
             if (user?.role === 'admin' || user?.role === 'moderator') {
