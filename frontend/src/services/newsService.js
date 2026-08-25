@@ -25,4 +25,14 @@ export const newsService = {
     const res = await api.delete(`/news/${id}`);
     return res.data;
   },
+
+  async getWardNewsFeed(page = 1) {
+    const res = await api.get('/news/ward/feed', { params: { page } });
+    return res.data?.data?.articles || [];
+  },
+
+  async syncWardNews(maxPages = 2) {
+    const res = await api.post('/news/ward/sync', { maxPages });
+    return res.data;
+  },
 };

@@ -101,6 +101,37 @@ class NewsController {
       });
     }
   }
+
+  async getWardFeed(req, res) {
+    try {
+      const { page = 1 } = req.query;
+      const { scrapeWardNewsPage } = require('../../services/wardCrawler.service');
+      const articles = await scrapeWardNewsPage(Number(page) || 1);
+      return res.status(200).json({
+        success: true,
+        data: { articles },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Lỗi khi tải tin tức từ Cổng TTĐT Phường.',
+      });
+    }
+  }
+
+  async syncWardNews(req, res) {
+    try {
+      const { maxPages = 2 } = req.body || {};
+      const { syncWardNews } = require('../../services/wardCrawler.service');
+      const result = await syncWardNews({ maxPages: Number(maxPages) || 2 });
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Lỗi khi đồng bộ tin tức phường.',
+      });
+    }
+  }
 }
 
 module.exports = new NewsController();
