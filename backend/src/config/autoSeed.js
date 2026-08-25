@@ -279,7 +279,7 @@ async function runAutoSeed(prisma) {
         {
           name: 'Họ Nguyễn Trọng',
           slug: 'ho-nguyen-trong',
-          ancestorName: 'Tiên tổ Nguyễn Trọng Đại Lang',
+          ancestorName: 'Ông Tổ: Nguyễn Trọng',
           originStory: 'Khởi nguồn từ thế kỷ 17, dòng họ Nguyễn Trọng là một trong những dòng họ tiền khai lập ấp tại vùng đất Giao Tác, kế thừa truyền thống hiếu học và cần cù.',
           templeAddress: 'Xóm Trung, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
           leaderName: 'Cụ Nguyễn Trọng Thắng (Trưởng tộc)',
@@ -363,93 +363,72 @@ async function runAutoSeed(prisma) {
       for (const item of clansData) {
         const clan = await prisma.clan.create({ data: item });
 
-        // Tạo cây phả hệ mẫu 3 đời cho Họ Nguyễn Trọng
+        // Tạo cây phả hệ ban đầu: Chỉ để lại duy nhất một mình Ông Tổ: Nguyễn Trọng
         if (clan.slug === 'ho-nguyen-trong') {
-          // Đời 1: Cụ Thủy tổ
-          const doi1 = await prisma.genealogyMember.create({
+          await prisma.genealogyMember.create({
             data: {
               clanId: clan.id,
-              fullName: 'Nguyễn Trọng Đại Lang (Cụ Thủy Tổ)',
+              fullName: 'Ông Tổ: Nguyễn Trọng',
               gender: 'male',
               generation: 1,
-              branchName: 'Thủy Tổ Chi Bộ',
+              branchName: 'Thủy Tổ / Khởi Tổ',
               birthYear: '1660',
-              deathYear: '1735',
-              spouseName: 'Bà Lê Thị Phúc',
-              tombLocation: 'Gò Đống Mả Cả, Núi Hồng Lĩnh',
-              careerHonor: 'Tiền khai canh lập ấp Làng Giao Tác',
-              biography: 'Khai khẩn đất hoang, dựng ấp và lập nên chi họ Nguyễn Trọng đầu tiên tại làng.',
-              orderIndex: 1,
-            },
-          });
-
-          // Đời 2: Các cụ chi trưởng và chi thứ
-          const doi2_1 = await prisma.genealogyMember.create({
-            data: {
-              clanId: clan.id,
-              parentId: doi1.id,
-              fullName: 'Nguyễn Trọng Văn (Cụ Đời 2 - Chi Trưởng)',
-              gender: 'male',
-              generation: 2,
-              branchName: 'Chi Trưởng',
-              birthYear: '1695',
-              deathYear: '1768',
-              spouseName: 'Bà Trần Thị Hiền',
-              tombLocation: 'Khu nghĩa trang dòng họ',
-              careerHonor: 'Hương sư giảng dạy chữ Nho',
-              orderIndex: 1,
-            },
-          });
-
-          const doi2_2 = await prisma.genealogyMember.create({
-            data: {
-              clanId: clan.id,
-              parentId: doi1.id,
-              fullName: 'Nguyễn Trọng Võ (Cụ Đời 2 - Chi Thứ)',
-              gender: 'male',
-              generation: 2,
-              branchName: 'Chi Thứ Hai',
-              birthYear: '1702',
-              deathYear: '1775',
-              spouseName: 'Bà Phan Thị Lan',
-              careerHonor: 'Đội trưởng tuần tra bảo vệ đê làng',
-              orderIndex: 2,
-            },
-          });
-
-          // Đời 3
-          await prisma.genealogyMember.create({
-            data: {
-              clanId: clan.id,
-              parentId: doi2_1.id,
-              fullName: 'Nguyễn Trọng Phúc (Đời 3 - Chi Trưởng)',
-              gender: 'male',
-              generation: 3,
-              branchName: 'Chi Trưởng',
-              birthYear: '1730',
-              deathYear: '1802',
-              spouseName: 'Bà Nguyễn Thị Dung',
-              careerHonor: 'Thủ từ trông coi Nhà thờ họ',
-              orderIndex: 1,
-            },
-          });
-
-          await prisma.genealogyMember.create({
-            data: {
-              clanId: clan.id,
-              parentId: doi2_2.id,
-              fullName: 'Nguyễn Trọng Lộc (Đời 3 - Chi Thứ)',
-              gender: 'male',
-              generation: 3,
-              branchName: 'Chi Thứ Hai',
-              birthYear: '1738',
-              deathYear: '1810',
-              spouseName: 'Bà Hoàng Thị Mai',
+              deathYear: '',
+              spouseName: '',
+              tombLocation: 'Núi Hồng Lĩnh, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+              careerHonor: 'Cụ Thủy Tổ Tiền Khai Khẩn Dòng Họ Nguyễn Trọng',
+              biography: 'Cụ Thủy Tổ tiền khai canh lập nghiệp, khởi dựng cơ đồ dòng họ Nguyễn Trọng tại Làng Giao Tác.',
               orderIndex: 1,
             },
           });
         }
       }
+    }
+
+    // Đảm bảo Họ Nguyễn Trọng luôn có đúng 'Ông Tổ: Nguyễn Trọng' và chỉ giữ lại một mình Ông Tổ
+    try {
+      const nguyenTrongClan = await prisma.clan.findUnique({ where: { slug: 'ho-nguyen-trong' } });
+      if (nguyenTrongClan) {
+        await prisma.clan.update({
+          where: { id: nguyenTrongClan.id },
+          data: { ancestorName: 'Ông Tổ: Nguyễn Trọng' },
+        });
+
+        const existingMembers = await prisma.genealogyMember.findMany({
+          where: { clanId: nguyenTrongClan.id },
+        });
+
+        const isOldSeed = existingMembers.some(
+          (m) =>
+            m.fullName.includes('Đại Lang') ||
+            m.fullName.includes('Chi Trưởng') ||
+            m.fullName.includes('Chi Thứ')
+        );
+
+        if (isOldSeed) {
+          // Xóa các node con cháu mẫu cũ để chỉ để lại duy nhất Ông Tổ: Nguyễn Trọng
+          await prisma.genealogyMember.deleteMany({ where: { clanId: nguyenTrongClan.id } });
+          await prisma.genealogyMember.create({
+            data: {
+              clanId: nguyenTrongClan.id,
+              fullName: 'Ông Tổ: Nguyễn Trọng',
+              gender: 'male',
+              generation: 1,
+              branchName: 'Thủy Tổ / Khởi Tổ',
+              birthYear: '1660',
+              deathYear: '',
+              spouseName: '',
+              tombLocation: 'Núi Hồng Lĩnh, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
+              careerHonor: 'Cụ Thủy Tổ Tiền Khai Khẩn Dòng Họ Nguyễn Trọng',
+              biography: 'Cụ Thủy Tổ tiền khai canh lập nghiệp, khởi dựng cơ đồ dòng họ Nguyễn Trọng tại Làng Giao Tác.',
+              orderIndex: 1,
+            },
+          });
+          console.log('✅ Đã cập nhật dòng họ Nguyễn Trọng chỉ giữ lại một mình Ông Tổ: Nguyễn Trọng.');
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi kiểm tra cập nhật dòng họ Nguyễn Trọng:', e.message);
     }
 
     // 8. Khởi tạo Chiến dịch Quỹ Quê Hương & Khuyến Học

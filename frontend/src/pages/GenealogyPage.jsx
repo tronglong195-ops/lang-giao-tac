@@ -2,24 +2,81 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Users,
-  BookOpen,
   Calendar,
   MapPin,
-  Phone,
   Search,
   PlusCircle,
   Award,
   Heart,
-  ChevronRight,
   Sparkles,
   Info,
   Shield,
   X,
+  Scroll,
+  BookOpen,
 } from 'lucide-react';
 import { genealogyService } from '../services/genealogyService';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import { FamilyTreeCanvas } from '../components/genealogy/FamilyTreeCanvas';
+
+// --- HỌA TIẾT HOÀNG GIA & CUNG ĐÌNH VIỆT NAM ---
+
+/**
+ * Bức Hoành Phi Lưỡng Long Chầu Nguyệt & Đại Tự Thếp Vàng
+ */
+const RoyalImperialBanner = () => (
+  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#581010] via-[#7F1D1D] to-[#3B0707] border-4 border-amber-500/90 p-6 sm:p-10 text-center shadow-2xl space-y-4">
+    {/* Họa tiết hoa văn triện 4 góc */}
+    <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2 border-amber-400" />
+    <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-amber-400" />
+    <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-amber-400" />
+    <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-amber-400" />
+
+    {/* Đại tự Hoành phi dát vàng */}
+    <div className="inline-flex flex-col items-center justify-center space-y-1">
+      <div className="px-6 py-2 rounded-2xl bg-gradient-to-r from-amber-700 via-yellow-500 to-amber-700 border-2 border-yellow-200 shadow-xl">
+        <span className="font-serif text-xl sm:text-3xl font-black text-stone-950 tracking-[0.3em] uppercase drop-shadow-sm">
+          木 本 水 源 • 飲 水 思 源
+        </span>
+      </div>
+      <span className="text-[11px] sm:text-xs font-serif italic text-amber-200/90 tracking-widest pt-1">
+        "Cây Có Cội Nước Có Nguồn — Uống Nước Nhớ Nguồn Tri Ân Tiên Tổ"
+      </span>
+    </div>
+
+    {/* Tiêu đề chính */}
+    <div className="space-y-2 max-w-4xl mx-auto">
+      <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-200 tracking-tight leading-snug drop-shadow-md">
+        BÁCH GIA PHẢ HỆ • BÁT ĐẠI DÒNG TỘC
+      </h1>
+      <p className="text-xs sm:text-sm text-amber-100/80 font-serif leading-relaxed max-w-3xl mx-auto">
+        Nơi phụng thờ, tôn vinh và lưu truyền mạch nguồn phả tộc thiêng liêng của các bậc tiền nhân khai canh lập ấp 
+        tại <strong>Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh</strong>.
+      </p>
+    </div>
+
+    {/* Đôi Câu Đối Cổ Phong Cung Đình */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 max-w-3xl mx-auto">
+      <div className="px-4 py-2 rounded-xl bg-black/40 border border-amber-500/60 flex items-center justify-center space-x-2">
+        <span className="font-serif font-bold text-yellow-300 text-sm sm:text-base tracking-wider">
+          祖 宗 功 德 千 年 盛
+        </span>
+        <span className="text-amber-200/70 text-xs italic font-serif">
+          (Tổ tông công đức thiên niên thịnh)
+        </span>
+      </div>
+      <div className="px-4 py-2 rounded-xl bg-black/40 border border-amber-500/60 flex items-center justify-center space-x-2">
+        <span className="font-serif font-bold text-yellow-300 text-sm sm:text-base tracking-wider">
+          子 孝 孫 賢 萬 代 榮
+        </span>
+        <span className="text-amber-200/70 text-xs italic font-serif">
+          (Tử hiếu tôn hiền vạn đại vinh)
+        </span>
+      </div>
+    </div>
+  </div>
+);
 
 export const GenealogyPage = () => {
   const { clanSlug } = useParams();
@@ -30,7 +87,7 @@ export const GenealogyPage = () => {
   const [clans, setClans] = useState([]);
   const [selectedClan, setSelectedClan] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('tree'); // 'tree' | 'members' | 'history'
+  const [activeTab, setActiveTab] = useState('tree'); // 'tree' | 'members'
 
   // Modal Detail Member
   const [selectedMemberDetail, setSelectedMemberDetail] = useState(null);
@@ -96,7 +153,7 @@ export const GenealogyPage = () => {
       fullName: '',
       gender: 'male',
       generation: 1,
-      branchName: 'Thủy Tổ / Tiên Tổ',
+      branchName: 'Thủy Tổ / Tiên Khởi',
       birthYear: '',
       deathYear: '',
       spouseName: '',
@@ -112,8 +169,8 @@ export const GenealogyPage = () => {
     setMemberForm({
       fullName: '',
       gender: 'male',
-      generation: parentNode.generation + 1,
-      branchName: parentNode.branchName || '',
+      generation: parentNode ? parentNode.generation + 1 : 1,
+      branchName: parentNode ? parentNode.branchName || '' : 'Chi Trưởng',
       birthYear: '',
       deathYear: '',
       spouseName: '',
@@ -143,17 +200,20 @@ export const GenealogyPage = () => {
     }
   };
 
-  const filteredMembers = selectedClan?.members?.filter((m) =>
-    m.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.branchName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.careerHonor?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredMembers =
+    selectedClan?.members?.filter(
+      (m) =>
+        m.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.branchName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.careerHonor?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   const clanTitle = selectedClan
     ? `Gia Phả ${selectedClan.name} — Cội Nguồn Làng Giao Tác`
     : 'Gia Phả & Cội Nguồn 8 Dòng Họ — Làng Giao Tác';
 
-  const clanDesc = selectedClan?.description ||
+  const clanDesc =
+    selectedClan?.originStory ||
     'Phả hệ số, danh sách tiên tổ, chi phái và lịch giỗ tổ của 8 dòng họ Làng Giao Tác — TDP 9 Thuận Lộc, Hà Tĩnh.';
 
   return (
@@ -166,55 +226,54 @@ export const GenealogyPage = () => {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      {/* Hero Banner Header */}
-      <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-10 shadow-warm space-y-4">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-subtle text-primary text-xs font-bold uppercase tracking-wider">
-          <Users className="w-3.5 h-3.5" />
-          <span>Phả Hệ Số Làng Giao Tác</span>
+      {/* 1. Hoành Phi Cung Đình & Câu Đối Hoàng Gia */}
+      <RoyalImperialBanner />
+
+      {/* 2. Thanh Chọn 8 Dòng Họ (Thẻ Bài Bát Đại Dòng Tộc Sơn Son Thếp Vàng) */}
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-widest text-[#7F1D1D] px-1">
+          <Scroll className="w-4 h-4 text-amber-700" />
+          <span>Bát Đại Dòng Tộc Tiền Khai Làng Giao Tác</span>
         </div>
 
-        <h1 className="text-2xl sm:text-4xl font-bold text-primary-dark tracking-tight leading-snug">
-          Gia Phả & Cội Nguồn 8 Dòng Họ
-        </h1>
-
-        <p className="text-xs sm:text-sm text-ink-muted leading-relaxed max-w-3xl">
-          Nơi lưu giữ phả hệ thiêng liêng, tri ân tiên tổ và kết nối mạch nguồn huyết thống của 8 dòng họ lớn: 
-          <strong> Họ Nguyễn Trọng, Nguyễn Duy, Nguyễn Huy, Phan Sỹ, Nguyễn Văn, Phạm Hữu, Trần Đình, Họ Lê</strong> tại Tổ dân phố 9 Thuận Lộc.
-        </p>
+        <div className="flex items-center space-x-2.5 overflow-x-auto pb-3 scrollbar-none">
+          {clans.map((clan) => {
+            const isSelected = selectedClan?.id === clan.id;
+            return (
+              <button
+                key={clan.id}
+                onClick={() => handleSelectClan(clan)}
+                className={`px-4 py-3 rounded-2xl text-xs sm:text-sm font-serif font-black whitespace-nowrap transition-all duration-300 flex items-center space-x-2.5 shadow-md ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-[#7F1D1D] via-[#991B1B] to-[#7F1D1D] text-yellow-300 border-2 border-amber-400 ring-4 ring-amber-400/30 scale-102 shadow-xl'
+                    : 'bg-gradient-to-r from-[#FDFBF7] to-[#F5EBE1] hover:from-[#FFF] hover:to-[#FDFBF7] text-stone-900 border border-amber-700/30 hover:border-amber-600'
+                }`}
+              >
+                <span>⚜️ {clan.name}</span>
+                <span
+                  className={`text-[10px] px-2.5 py-0.5 rounded-full font-sans font-bold ${
+                    isSelected
+                      ? 'bg-amber-400 text-stone-950 shadow-xs'
+                      : 'bg-amber-100 text-amber-900 border border-amber-300/60'
+                  }`}
+                >
+                  {clan._count?.members || 0} vị
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* 8 Clan Navigation Pills */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
-        {clans.map((clan) => {
-          const isSelected = selectedClan?.id === clan.id;
-          return (
-            <button
-              key={clan.id}
-              onClick={() => handleSelectClan(clan)}
-              className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center space-x-2 shadow-xs ${
-                isSelected
-                  ? 'bg-primary text-surface shadow-warm scale-102 ring-2 ring-primary/30'
-                  : 'bg-surface hover:bg-paper text-ink border border-warmBorder'
-              }`}
-            >
-              <span>{clan.name}</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${isSelected ? 'bg-surface/20 text-surface' : 'bg-primary-subtle text-primary'}`}>
-                {clan._count?.members || 0} cụ/vị
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Clan Overview Card */}
+      {/* 3. Khung Tổng Quan Dòng Tộc (Nhà Thờ Họ, Ngày Giỗ Tổ, Trưởng Tộc) */}
       {selectedClan && (
-        <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-8 shadow-warm space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-warmBorder pb-6">
+        <div className="rounded-3xl bg-gradient-to-b from-[#FFFDF9] via-[#FAF5EE] to-[#F5EBE1] border-2 border-amber-600/60 p-6 sm:p-8 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-2 border-amber-300/80 pb-6">
             <div className="space-y-1">
-              <span className="text-xs font-bold text-accent uppercase tracking-wider">
-                {selectedClan.ancestorName || 'Tiên Tổ Khởi Dựng'}
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-primary-dark">
+              <div className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full bg-red-900 text-yellow-300 text-xs font-serif font-bold uppercase tracking-wider border border-amber-400">
+                <span>{selectedClan.ancestorName || 'Tiên Tổ Khởi Dựng'}</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-serif font-black text-red-950">
                 {selectedClan.name} — Làng Giao Tác
               </h2>
             </div>
@@ -223,90 +282,99 @@ export const GenealogyPage = () => {
               {isAdmin && (
                 <button
                   onClick={handleOpenAddRootMember}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-primary text-surface text-xs sm:text-sm font-semibold hover:bg-primary-dark shadow-sm transition-colors"
+                  className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-900 to-red-800 hover:from-red-800 hover:to-red-700 text-yellow-200 text-xs sm:text-sm font-serif font-bold shadow-md transition-all border border-amber-400"
                 >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Thêm cụ Thủy Tổ / Tiên Tổ</span>
+                  <PlusCircle className="w-4 h-4 text-yellow-300" />
+                  <span>Khởi Tạo Cụ Thủy Tổ</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Quick Info Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-ink">
+          {/* Hộp Thông Tin Cổ Kính (Từ đường, Lễ giỗ, Trưởng tộc) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             {selectedClan.templeAddress && (
-              <div className="p-3.5 rounded-2xl bg-paper/70 border border-warmBorder space-y-1">
-                <div className="flex items-center space-x-1 text-primary font-bold">
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>Nhà thờ họ</span>
+              <div className="p-4 rounded-2xl bg-white/80 border border-amber-300 space-y-1.5 shadow-xs">
+                <div className="flex items-center space-x-1.5 text-red-900 font-serif font-bold">
+                  <MapPin className="w-4 h-4 text-red-700" />
+                  <span>Từ Đường / Nhà Thờ Họ</span>
                 </div>
-                <p className="text-ink-muted">{selectedClan.templeAddress}</p>
+                <p className="text-stone-700 font-medium">{selectedClan.templeAddress}</p>
               </div>
             )}
 
             {selectedClan.deathAnniversary && (
-              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-1 text-amber-900">
-                <div className="flex items-center space-x-1 font-bold text-amber-800">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Ngày Giỗ Tổ (Âm lịch)</span>
+              <div className="p-4 rounded-2xl bg-amber-100/70 border border-amber-400 space-y-1.5 text-amber-950 shadow-xs">
+                <div className="flex items-center space-x-1.5 font-serif font-bold text-amber-900">
+                  <Calendar className="w-4 h-4 text-amber-800" />
+                  <span>Ngày Giỗ Tổ (Âm Lịch)</span>
                 </div>
-                <p className="font-semibold">{selectedClan.deathAnniversary}</p>
+                <p className="font-serif font-bold text-sm text-red-900">{selectedClan.deathAnniversary}</p>
               </div>
             )}
 
             {selectedClan.leaderName && (
-              <div className="p-3.5 rounded-2xl bg-paper/70 border border-warmBorder space-y-1">
-                <div className="flex items-center space-x-1 text-accent font-bold">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>Trưởng tộc / Ban khánh tiết</span>
+              <div className="p-4 rounded-2xl bg-white/80 border border-amber-300 space-y-1.5 shadow-xs">
+                <div className="flex items-center space-x-1.5 text-red-900 font-serif font-bold">
+                  <Shield className="w-4 h-4 text-red-700" />
+                  <span>Trưởng Tộc / Khánh Tiết</span>
                 </div>
-                <p className="text-ink-muted">{selectedClan.leaderName}</p>
+                <p className="text-stone-700 font-medium">{selectedClan.leaderName}</p>
               </div>
             )}
           </div>
 
           {selectedClan.originStory && (
-            <p className="text-xs sm:text-sm text-ink-muted leading-relaxed italic bg-paper/40 p-4 rounded-2xl border border-warmBorder/60">
-              "{selectedClan.originStory}"
-            </p>
+            <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border border-amber-300/80 space-y-1">
+              <span className="text-[11px] font-serif font-bold uppercase tracking-widest text-amber-900">
+                📜 Lược Sử Khai Canh & Tông Phả
+              </span>
+              <p className="text-xs sm:text-sm text-stone-800 font-serif leading-relaxed italic">
+                "{selectedClan.originStory}"
+              </p>
+            </div>
           )}
 
-          {/* View Mode Tabs */}
-          <div className="flex items-center justify-between border-b border-warmBorder pb-3 pt-2">
+          {/* Chuyển Đổi Chế Độ Xem */}
+          <div className="flex items-center justify-between border-b-2 border-amber-300/80 pb-3 pt-2">
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setActiveTab('tree')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
-                  activeTab === 'tree' ? 'bg-primary text-surface' : 'text-ink-muted hover:bg-paper'
+                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-serif font-bold transition-all shadow-xs ${
+                  activeTab === 'tree'
+                    ? 'bg-gradient-to-r from-red-950 via-red-900 to-red-950 text-yellow-300 border border-amber-400 shadow-md'
+                    : 'text-stone-700 hover:bg-amber-100/60 border border-amber-200'
                 }`}
               >
-                Sơ đồ Cây Phả Hệ
+                🌳 Sơ Đồ Cây Phả Hệ
               </button>
               <button
                 onClick={() => setActiveTab('members')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
-                  activeTab === 'members' ? 'bg-primary text-surface' : 'text-ink-muted hover:bg-paper'
+                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-serif font-bold transition-all shadow-xs ${
+                  activeTab === 'members'
+                    ? 'bg-gradient-to-r from-red-950 via-red-900 to-red-950 text-yellow-300 border border-amber-400 shadow-md'
+                    : 'text-stone-700 hover:bg-amber-100/60 border border-amber-200'
                 }`}
               >
-                Danh Sách Tra Cứu ({selectedClan.members?.length || 0})
+                📖 Danh Mục Phả Tộc ({selectedClan.members?.length || 0})
               </button>
             </div>
 
             {activeTab === 'members' && (
               <div className="relative max-w-xs w-full">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-ink-light" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm theo tên, chức vị, chi..."
-                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-warmBorder bg-paper text-xs"
+                  placeholder="Tra cứu tiên tổ, chức vị, chi..."
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-amber-300 bg-white text-xs text-stone-900 outline-none focus:border-red-800"
                 />
               </div>
             )}
           </div>
 
-          {/* Tab 1: Interactive Tree View */}
+          {/* Tab 1: Cây Phả Hệ Tương Tác Cổ Điển */}
           {activeTab === 'tree' && (
             <FamilyTreeCanvas
               tree={selectedClan.tree || []}
@@ -317,36 +385,43 @@ export const GenealogyPage = () => {
             />
           )}
 
-          {/* Tab 2: Members List View */}
+          {/* Tab 2: Danh Mục Tra Cứu Bài Vị */}
           {activeTab === 'members' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredMembers.map((member) => (
                 <div
                   key={member.id}
                   onClick={() => setSelectedMemberDetail(member)}
-                  className="p-4 rounded-2xl bg-paper/60 hover:bg-paper border border-warmBorder hover:border-primary/50 shadow-xs cursor-pointer space-y-2 transition-all"
+                  className="p-4 rounded-2xl bg-gradient-to-b from-[#FFFDF9] to-[#FDF8F0] hover:to-[#FAF0E1] border-2 border-amber-400/80 hover:border-red-700 shadow-md cursor-pointer space-y-2 transition-all hover:scale-101"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded-full bg-primary-subtle text-primary text-[10px] font-bold">
-                      Đời thứ {member.generation}
+                    <span className="px-2.5 py-0.5 rounded-full bg-red-900 text-yellow-300 text-[10px] font-serif font-bold uppercase">
+                      Đời Thứ {member.generation}
                     </span>
                     {member.branchName && (
-                      <span className="text-[11px] text-accent font-medium">{member.branchName}</span>
+                      <span className="text-[11px] text-amber-900 font-serif font-semibold">{member.branchName}</span>
                     )}
                   </div>
 
-                  <h4 className="font-bold text-sm text-ink">{member.fullName}</h4>
+                  <h4 className="font-serif font-bold text-base text-red-950">{member.fullName}</h4>
 
-                  <div className="text-xs text-ink-muted flex items-center space-x-1">
-                    <Calendar className="w-3 h-3 text-ink-light" />
+                  <div className="text-xs text-stone-600 flex items-center space-x-1.5 font-mono">
+                    <Calendar className="w-3.5 h-3.5 text-amber-700" />
                     <span>
                       {member.birthYear || '?'} — {member.deathYear || (member.careerHonor ? 'Hiện diện' : '?')}
                     </span>
                   </div>
 
                   {member.careerHonor && (
-                    <div className="text-[11px] text-amber-800 bg-amber-50/80 px-2 py-0.5 rounded truncate">
+                    <div className="text-[11px] text-red-900 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300 font-serif italic truncate">
                       {member.careerHonor}
+                    </div>
+                  )}
+
+                  {member.spouseName && (
+                    <div className="text-[11px] text-rose-800 flex items-center space-x-1 pt-1 truncate">
+                      <Heart className="w-3 h-3 text-rose-600 shrink-0" />
+                      <span className="truncate">Phối ngẫu: {member.spouseName}</span>
                     </div>
                   )}
                 </div>
@@ -356,61 +431,74 @@ export const GenealogyPage = () => {
         </div>
       )}
 
-      {/* Member Detail Modal */}
+      {/* --- MODAL CHI TIẾT THÀNH VIÊN (DẠNG SẮC PHONG HOÀNG TRIỀU) --- */}
       {selectedMemberDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-surface rounded-3xl border border-warmBorder max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-warmBorder pb-3">
-              <div className="flex items-center space-x-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-primary text-surface text-xs font-bold">
-                  Đời thứ {selectedMemberDetail.generation}
-                </span>
-                <span className="text-xs font-semibold text-accent">{selectedMemberDetail.branchName}</span>
-              </div>
-              <button
-                onClick={() => setSelectedMemberDetail(null)}
-                className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-paper"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#FFFDF9] via-[#FAF5EE] to-[#F5EBE1] border-4 border-amber-600 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setSelectedMemberDetail(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Header Sắc Phong */}
+            <div className="text-center space-y-1.5 border-b-2 border-amber-300 pb-4">
+              <span className="px-3 py-1 rounded-full bg-red-950 text-yellow-300 text-xs font-serif font-black uppercase tracking-widest border border-amber-400 shadow-sm">
+                ⚜️ TÔNG PHẢ CHI TIẾT • ĐỜI THỨ {selectedMemberDetail.generation}
+              </span>
+              <h3 className="text-2xl font-serif font-black text-red-950 pt-1">
+                {selectedMemberDetail.fullName}
+              </h3>
+              {selectedMemberDetail.branchName && (
+                <p className="text-xs text-amber-900 font-serif font-semibold">
+                  Phân nhánh: {selectedMemberDetail.branchName}
+                </p>
+              )}
             </div>
 
-            <div className="space-y-3 text-xs sm:text-sm">
-              <h3 className="text-xl font-bold text-primary-dark">{selectedMemberDetail.fullName}</h3>
-
-              <div className="grid grid-cols-2 gap-3 p-3.5 bg-paper rounded-2xl border border-warmBorder">
-                <div>
-                  <span className="text-ink-muted block text-[11px]">Năm sinh - Năm mất</span>
-                  <span className="font-semibold text-ink">
-                    {selectedMemberDetail.birthYear || '?'} — {selectedMemberDetail.deathYear || '?'}
-                  </span>
-                </div>
-                {selectedMemberDetail.spouseName && (
-                  <div>
-                    <span className="text-ink-muted block text-[11px]">Phối ngẫu (Vợ/Chồng)</span>
-                    <span className="font-semibold text-rose-700">{selectedMemberDetail.spouseName}</span>
-                  </div>
-                )}
+            {/* Thông tin chi tiết */}
+            <div className="space-y-3 text-xs sm:text-sm text-stone-800 font-serif leading-relaxed">
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-amber-700" />
+                <span>
+                  <strong>Năm sinh — Năm mất:</strong>{' '}
+                  {selectedMemberDetail.birthYear || 'Tích niên'} — {selectedMemberDetail.deathYear || (selectedMemberDetail.careerHonor ? 'Hiện diện' : 'Chưa rõ')}
+                </span>
               </div>
 
+              {selectedMemberDetail.spouseName && (
+                <div className="flex items-center space-x-2 text-rose-900 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                  <Heart className="w-4 h-4 text-rose-600" />
+                  <span>
+                    <strong>Chính thất / Phối ngẫu:</strong> {selectedMemberDetail.spouseName}
+                  </span>
+                </div>
+              )}
+
               {selectedMemberDetail.careerHonor && (
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900">
-                  <span className="font-bold block text-xs">Chức vị / Công đức:</span>
-                  <span>{selectedMemberDetail.careerHonor}</span>
+                <div className="p-3 rounded-xl bg-amber-100/80 border border-amber-300 space-y-1 text-red-950">
+                  <div className="flex items-center space-x-1.5 font-bold">
+                    <Award className="w-4 h-4 text-amber-700" />
+                    <span>Phẩm hàm / Công đức / Vinh danh:</span>
+                  </div>
+                  <p className="italic">{selectedMemberDetail.careerHonor}</p>
                 </div>
               )}
 
               {selectedMemberDetail.tombLocation && (
-                <div className="flex items-start space-x-1.5 text-ink-muted">
-                  <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span><strong>Mộ phần:</strong> {selectedMemberDetail.tombLocation}</span>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4 text-amber-700" />
+                  <span>
+                    <strong>Mộ phần tiên tổ:</strong> {selectedMemberDetail.tombLocation}
+                  </span>
                 </div>
               )}
 
               {selectedMemberDetail.biography && (
-                <div className="space-y-1 pt-2 border-t border-warmBorder">
-                  <span className="font-bold text-ink">Tiểu sử & Ghi chú:</span>
-                  <p className="text-ink-muted leading-relaxed">{selectedMemberDetail.biography}</p>
+                <div className="p-3.5 rounded-xl bg-white border border-amber-200 space-y-1">
+                  <strong>Hành trạng & Ký ức dòng tộc:</strong>
+                  <p className="text-stone-700 text-xs italic">{selectedMemberDetail.biography}</p>
                 </div>
               )}
             </div>
@@ -418,7 +506,7 @@ export const GenealogyPage = () => {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setSelectedMemberDetail(null)}
-                className="px-5 py-2 rounded-xl bg-primary text-surface text-xs font-semibold hover:bg-primary-dark"
+                className="px-5 py-2 rounded-xl bg-red-950 text-yellow-300 font-serif font-bold text-xs hover:bg-red-900 transition-all border border-amber-400"
               >
                 Đóng
               </button>
@@ -427,140 +515,146 @@ export const GenealogyPage = () => {
         </div>
       )}
 
-      {/* Add / Edit Member Modal (Admin) */}
+      {/* --- MODAL THÊM / SỬA THÀNH VIÊN GIA PHẢ --- */}
       {showMemberModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-surface rounded-3xl border border-warmBorder max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl my-8">
-            <div className="flex items-center justify-between border-b border-warmBorder pb-3">
-              <h3 className="font-bold text-lg text-ink">
-                {parentForNewChild ? `Thêm con cháu cụ ${parentForNewChild.fullName}` : 'Thêm Thành Viên Mới'}
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gradient-to-b from-[#FFFDF9] via-[#FAF5EE] to-[#F5EBE1] border-4 border-amber-600 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b-2 border-amber-300 pb-3">
+              <h3 className="text-lg font-serif font-black text-red-950">
+                {parentForNewChild
+                  ? `Khởi Tạo Hậu Duệ (Con của: ${parentForNewChild.fullName})`
+                  : 'Khởi Tạo Cụ Thủy Tổ / Tiên Khởi'}
               </h3>
               <button
                 onClick={() => setShowMemberModal(false)}
-                className="p-1 rounded-lg text-ink-muted hover:text-ink"
+                className="p-1.5 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveMember} className="space-y-3 text-xs sm:text-sm">
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-ink uppercase">
-                  Họ và tên <span className="text-red-500">*</span>
+            <form onSubmit={handleSaveMember} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-serif font-bold text-stone-800 mb-1">
+                  Họ và Tên Tiên Tổ / Thành viên *
                 </label>
                 <input
                   type="text"
                   required
                   value={memberForm.fullName}
                   onChange={(e) => setMemberForm({ ...memberForm, fullName: e.target.value })}
-                  placeholder="Ví dụ: Nguyễn Trọng An"
-                  className="w-full input-warm text-sm"
+                  placeholder="Ví dụ: Nguyễn Trọng Long, Cụ Nguyễn Trọng Văn..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-ink uppercase">Đời thứ</label>
+                <div>
+                  <label className="block font-serif font-bold text-stone-800 mb-1">Giới tính</label>
+                  <select
+                    value={memberForm.gender}
+                    onChange={(e) => setMemberForm({ ...memberForm, gender: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
+                  >
+                    <option value="male">Nam (Trai / Cụ Ông)</option>
+                    <option value="female">Nữ (Gái / Cụ Bà)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-serif font-bold text-stone-800 mb-1">Đời thứ</label>
                   <input
                     type="number"
                     min="1"
                     value={memberForm.generation}
-                    onChange={(e) => setMemberForm({ ...memberForm, generation: e.target.value })}
-                    className="w-full input-warm text-sm"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-ink uppercase">Chi phái / Nhánh</label>
-                  <input
-                    type="text"
-                    value={memberForm.branchName}
-                    onChange={(e) => setMemberForm({ ...memberForm, branchName: e.target.value })}
-                    placeholder="Ví dụ: Chi Trưởng"
-                    className="w-full input-warm text-sm"
+                    onChange={(e) => setMemberForm({ ...memberForm, generation: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-ink uppercase">Năm sinh</label>
+                <div>
+                  <label className="block font-serif font-bold text-stone-800 mb-1">Năm sinh</label>
                   <input
                     type="text"
                     value={memberForm.birthYear}
                     onChange={(e) => setMemberForm({ ...memberForm, birthYear: e.target.value })}
-                    placeholder="1950"
-                    className="w-full input-warm text-sm"
+                    placeholder="1945 hoặc để trống"
+                    className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-ink uppercase">Năm mất (nếu có)</label>
+
+                <div>
+                  <label className="block font-serif font-bold text-stone-800 mb-1">Năm mất (nếu có)</label>
                   <input
                     type="text"
                     value={memberForm.deathYear}
                     onChange={(e) => setMemberForm({ ...memberForm, deathYear: e.target.value })}
-                    placeholder="2020"
-                    className="w-full input-warm text-sm"
+                    placeholder="2010 hoặc để trống"
+                    className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-ink uppercase">Phối ngẫu (Vợ / Chồng)</label>
+              <div>
+                <label className="block font-serif font-bold text-stone-800 mb-1">Chi phái / Nhánh họ</label>
+                <input
+                  type="text"
+                  value={memberForm.branchName}
+                  onChange={(e) => setMemberForm({ ...memberForm, branchName: e.target.value })}
+                  placeholder="Chi Trưởng, Chi Thứ Hai, Nhánh Tây..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-serif font-bold text-stone-800 mb-1">Chính thất / Phối ngẫu</label>
                 <input
                   type="text"
                   value={memberForm.spouseName}
                   onChange={(e) => setMemberForm({ ...memberForm, spouseName: e.target.value })}
-                  placeholder="Ví dụ: Bà Trần Thị Mai"
-                  className="w-full input-warm text-sm"
+                  placeholder="Họ tên người phối ngẫu"
+                  className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-ink uppercase">Chức danh / Học vị / Công đức</label>
+              <div>
+                <label className="block font-serif font-bold text-stone-800 mb-1">Phẩm hàm / Công đức / Chức vị</label>
                 <input
                   type="text"
                   value={memberForm.careerHonor}
                   onChange={(e) => setMemberForm({ ...memberForm, careerHonor: e.target.value })}
-                  placeholder="Ví dụ: Hương sư, Cử nhân, Trưởng thôn..."
-                  className="w-full input-warm text-sm"
+                  placeholder="Hương sư, Cử nhân, Giáo viên, Bác sĩ..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-ink uppercase">Mộ phần</label>
+              <div>
+                <label className="block font-serif font-bold text-stone-800 mb-1">Mộ phần tiên tổ</label>
                 <input
                   type="text"
                   value={memberForm.tombLocation}
                   onChange={(e) => setMemberForm({ ...memberForm, tombLocation: e.target.value })}
-                  placeholder="Ví dụ: Khu nghĩa trang dòng họ tại Đồi Mả Cả"
-                  className="w-full input-warm text-sm"
+                  placeholder="Khu nghĩa trang Núi Hồng Lĩnh..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-stone-900 focus:border-red-800 outline-none"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-ink uppercase">Ghi chú tiểu sử</label>
-                <textarea
-                  rows={2}
-                  value={memberForm.biography}
-                  onChange={(e) => setMemberForm({ ...memberForm, biography: e.target.value })}
-                  className="w-full input-warm text-sm resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-3 border-t border-warmBorder">
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-amber-300">
                 <button
                   type="button"
                   onClick={() => setShowMemberModal(false)}
-                  className="px-4 py-2 rounded-xl border border-warmBorder text-xs text-ink font-semibold"
+                  className="px-4 py-2 rounded-xl bg-stone-200 text-stone-800 font-bold hover:bg-stone-300"
                 >
-                  Hủy
+                  Hủy Bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={submittingMember}
-                  className="px-5 py-2 rounded-xl bg-primary text-surface text-xs font-bold hover:bg-primary-dark disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-red-950 text-yellow-300 font-serif font-bold hover:bg-red-900 border border-amber-400 shadow-md disabled:opacity-50"
                 >
-                  {submittingMember ? 'Đang lưu...' : 'Lưu Thành Viên'}
+                  {submittingMember ? 'Đang Lưu...' : 'Lưu Vào Phả Hệ'}
                 </button>
               </div>
             </form>
