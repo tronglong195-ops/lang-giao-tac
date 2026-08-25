@@ -157,6 +157,12 @@ export const MapPage = () => {
                     {landmark.description}
                   </p>
 
+                  {landmark.plusCode && (
+                    <div className="text-[10px] text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-mono">
+                      Mã Google Maps: <strong>{landmark.plusCode}</strong>
+                    </div>
+                  )}
+
                   <div className="pt-1 flex items-center justify-between">
                     <span className="text-[10px] text-primary font-bold">
                       Tọa độ: {landmark.coords[0]}, {landmark.coords[1]}

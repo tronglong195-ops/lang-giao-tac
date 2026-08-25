@@ -33,11 +33,12 @@ export const VILLAGE_LANDMARKS = [
     name: 'Tạp Hóa Vân Thiên — Tiện Ích TDP 9',
     categoryGroup: 'dantric_tienich',
     category: 'Tiện ích Dân sinh & Mua sắm',
-    coords: [18.50882, 105.68845],
+    coords: [18.508128, 105.687127],
+    plusCode: 'GM5P+7VF Nam Hồng Lĩnh, Hà Tĩnh',
     iconType: 'store',
     imageUrl: '/images/village/487122810_9667039056688974_8593141678606100657_n.jpg',
     description:
-      'Cửa hàng tạp hóa Vân Thiên quen thuộc của bà con Làng Giao Tác (TDP 9 Thuận Lộc), cung cấp đầy đủ nhu yếu phẩm, bánh kẹo cu đơ, nước giải khát và hàng tiêu dùng hàng ngày.',
+      'Cửa hàng tạp hóa Vân Thiên (Mã vị trí Google Maps: GM5P+7VF) quen thuộc của bà con Làng Giao Tác (TDP 9 Thuận Lộc), cung cấp đầy đủ nhu yếu phẩm, bánh kẹo cu đơ, nước giải khát và hàng tiêu dùng hàng ngày.',
     address: 'Trục đường chính TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, Hà Tĩnh',
     phone: '0988123456',
   },
@@ -341,6 +342,12 @@ export const VillageMap = ({ onSelectLandmark, selectedId, filteredLandmarks = V
                     <MapPin className="w-3.5 h-3.5 text-primary shrink-0 mr-1" />
                     <span className="truncate">{landmark.address}</span>
                   </div>
+
+                  {landmark.plusCode && (
+                    <div className="text-[10px] text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-mono">
+                      Mã vị trí Google: <strong>{landmark.plusCode}</strong>
+                    </div>
+                  )}
 
                   {/* Nút chỉ đường qua Google Maps */}
                   <div className="pt-1">
