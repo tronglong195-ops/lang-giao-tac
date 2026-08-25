@@ -505,16 +505,16 @@ async function runAutoSeed(prisma) {
       console.warn('Lỗi kiểm tra cập nhật dòng họ Nguyễn Trọng:', e.message);
     }
 
-    // 8. Khởi tạo Chiến dịch Quỹ Quê Hương & Khuyến Học
+    // 8. Khởi tạo Chiến dịch Quỹ Quê Hương & Khuyến Học (Reset về 0đ và không có đóng góp ảo)
     const fundCount = await prisma.fundCampaign.count();
     if (fundCount === 0) {
-      const fund1 = await prisma.fundCampaign.create({
+      await prisma.fundCampaign.create({
         data: {
           title: 'Quỹ Khuyến Học & Tiếp Sức Tài Năng Làng Giao Tác 2026-2027',
           slug: 'quy-khuyen-hoc-2026',
           description: 'Trao học bổng cho các em học sinh đỗ Đại học, học sinh giỏi cấp Tỉnh/Quốc gia và tiếp sức cho các hoàn cảnh khó khăn vươn lên trong học tập.',
           targetAmount: 50000000,
-          raisedAmount: 18500000,
+          raisedAmount: 0,
           bankName: 'MBBANK',
           bankAccount: '0912345678',
           bankAccountName: 'BAN CAN SU TDP 9 THUAN LOC',
@@ -523,51 +523,13 @@ async function runAutoSeed(prisma) {
         },
       });
 
-      // Tạo một số khoản công đức mẫu minh bạch
-      await prisma.fundDonation.createMany({
-        data: [
-          {
-            campaignId: fund1.id,
-            donorName: 'Gia đình ông Nguyễn Trọng Hùng',
-            donorClan: 'Họ Nguyễn Trọng — Hà Nội',
-            amount: 5000000,
-            message: 'Chúc các cháu con em Làng Giao Tác học giỏi, thành tài làm rạng danh quê hương!',
-            isVerified: true,
-          },
-          {
-            campaignId: fund1.id,
-            donorName: 'Bà Phan Thị Mai',
-            donorClan: 'Họ Phan Sỹ — TP. Hồ Chí Minh',
-            amount: 3000000,
-            message: 'Ủng hộ các cháu hiếu học vượt khó.',
-            isVerified: true,
-          },
-          {
-            campaignId: fund1.id,
-            donorName: 'Hội đồng hương Giao Tác tại Đà Nẵng',
-            donorClan: 'Con em xa quê',
-            amount: 10000000,
-            message: 'Tiếp sức tài năng trẻ quê nhà Thuận Lộc.',
-            isVerified: true,
-          },
-          {
-            campaignId: fund1.id,
-            donorName: 'Bác Lê Văn Dũng',
-            donorClan: 'Họ Lê — TDP 9 Thuận Lộc',
-            amount: 500000,
-            message: 'Góp chút tấm lòng cho phong trào khuyến học.',
-            isVerified: true,
-          },
-        ],
-      });
-
       await prisma.fundCampaign.create({
         data: {
           title: 'Quỹ Tôn Tạo Cảnh Quan Đình Làng & Khu Thể Thao TDP 9',
           slug: 'quy-ton-tao-dinh-lang',
           description: 'Sửa sang sân đình, lắp đặt hệ thống đèn chiếu sáng năng lượng mặt trời và ghế đá quanh giếng cổ cho bà con sinh hoạt cộng đồng.',
           targetAmount: 80000000,
-          raisedAmount: 32000000,
+          raisedAmount: 0,
           bankName: 'MBBANK',
           bankAccount: '0912345678',
           bankAccountName: 'BAN CAN SU TDP 9 THUAN LOC',
@@ -575,6 +537,17 @@ async function runAutoSeed(prisma) {
           coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
         },
       });
+    }
+
+    // Xóa sạch các khoản đóng góp mẫu cũ và reset raisedAmount về 0
+    try {
+      await prisma.fundDonation.deleteMany({});
+      await prisma.fundCampaign.updateMany({
+        data: { raisedAmount: 0 },
+      });
+      console.log('✅ Đã reset toàn bộ Quỹ quê hương về 0đ và xóa sạch các khoản đóng mẫu.');
+    } catch (err) {
+      console.warn('Lỗi reset Quỹ:', err.message);
     }
 
     // 9. Khởi tạo Sản phẩm Chợ Quê & Đặc Sản OCOP Làng Giao Tác
@@ -630,45 +603,16 @@ async function runAutoSeed(prisma) {
       });
     }
 
-    // 10. Khởi tạo Sổ Tang & Cáo Phó Mẫu
-    const obitCount = await prisma.obituary.count();
-    if (obitCount === 0) {
-      const obit1 = await prisma.obituary.create({
-        data: {
-          deceasedName: 'Cụ Bà Nguyễn Thị Lương',
-          aliasName: 'Cụ Cố Lương (Thân mẫu ông Nguyễn Trọng Thành)',
-          age: 92,
-          clanName: 'Họ Nguyễn Trọng',
-          diedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 ngày trước
-          funeralTime: '07h00 ngày 15 tháng 07 năm 2026',
-          burialTime: '14h30 cùng ngày',
-          cemeteryPlace: 'Nghĩa trang xứ Đồng Làng Giao Tác — TDP 9 Thuận Lộc',
-          biography: 'Cụ bà Nguyễn Thị Lương trọn đời tận tụy vì gia đình, làng xóm, sống đức độ, hiền hậu, nuôi dạy con cháu thành đạt.',
-          coverImageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
-        },
-      });
-
-      await prisma.condolence.createMany({
-        data: [
-          {
-            obituaryId: obit1.id,
-            senderName: 'Hội đồng hương Giao Tác tại Hà Nội',
-            senderFrom: 'Hà Nội',
-            message: 'Xin thành kính dâng nén tâm nhang tiễn biệt Cụ về cõi vĩnh hằng và gửi lời chia buồn sâu sắc tới toàn thể tang quyến.',
-            incenseCount: 3,
-          },
-          {
-            obituaryId: obit1.id,
-            senderName: 'Gia đình cháu Phan Sỹ Đức',
-            senderFrom: 'TP. Hồ Chí Minh',
-            message: 'Vô cùng thương tiếc Cụ. Cầu mong linh hồn Cụ an nghỉ ngàn thu nơi cõi Phật.',
-            incenseCount: 1,
-          },
-        ],
-      });
+    // 10. Dọn sạch toàn bộ dữ liệu mẫu phần Sổ Tang & Cáo Phó (chờ thông tin thực tế từ bà con/Ban cán sự)
+    try {
+      await prisma.condolence.deleteMany({});
+      await prisma.obituary.deleteMany({});
+      console.log('✅ Đã xóa toàn bộ dữ liệu Sổ tang mẫu theo yêu cầu.');
+    } catch (err) {
+      console.warn('Lỗi xóa Sổ tang:', err.message);
     }
 
-    console.log('🎉 Hoàn tất đồng bộ toàn bộ dữ liệu mẫu 8 Dòng họ, Quỹ, Chợ Quê và Sổ Tang!');
+    console.log('🎉 Hoàn tất đồng bộ toàn bộ dữ liệu hệ thống!');
     return { seeded: true, message: 'Đã đồng bộ toàn bộ dữ liệu hệ thống thành công.' };
   } catch (err) {
     console.error('❌ Lỗi khi tự động khởi tạo dữ liệu:', err.message);

@@ -356,6 +356,32 @@ export const MemorialPage = () => {
             </div>
           </div>
         )}
+
+        {/* Right: Empty State when no obituary selected */}
+        {!selectedObituary && (
+          <div className="lg:col-span-2 bg-surface rounded-3xl border border-warmBorder p-8 sm:p-12 text-center space-y-4 shadow-warm">
+            <div className="w-16 h-16 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center mx-auto shadow-xs">
+              <Flame className="w-8 h-8 text-stone-400" />
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold font-serif text-ink">
+              Chưa Có Thông Báo Cáo Phó
+            </h3>
+            <p className="text-xs sm:text-sm text-ink-muted max-w-md mx-auto leading-relaxed">
+              Trang Sổ tang & Cáo phó là nơi lưu giữ thông tin tin buồn và để bà con, con em xa quê gửi lời chia buồn, thắp nén tâm nhang tri ân khi có người thân trong làng qua đời.
+            </p>
+            {isAdmin && (
+              <div className="pt-2">
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-stone-900 font-bold text-xs shadow-md transition-all"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Đăng Thông Báo Cáo Phó Đầu Tiên</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add Obituary Modal (Admin) */}
