@@ -216,7 +216,7 @@ export const HomePage = () => {
           {/* Grid Tin tức Phường */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {wardNews.length > 0 ? (
-              wardNews.map((item, idx) => (
+              wardNews.slice(0, 3).map((item, idx) => (
                 <article
                   key={idx}
                   className="bg-white rounded-2xl border-2 border-amber-300/80 hover:border-red-800 p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group space-y-3"
