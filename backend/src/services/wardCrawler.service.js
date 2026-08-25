@@ -17,9 +17,14 @@ function decodeHtmlEntities(text) {
     .trim();
 }
 
+// In-memory cache cho live ward news
+let cachedArticles = [];
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 1000 * 60 * 30; // 30 phút
+
 /**
  * Cào dữ liệu bài viết từ Cổng thông tin điện tử Phường Nam Hồng Lĩnh
- * URL: https://namhonglinh.hatinh.gov.vn/vi/chuyen-muc/tin-tuc---su-kien
+ * Hỗ trợ quét nhiều trang (page 1 đến page 7)
  */
 async function scrapeWardNewsPage(page = 1) {
   const targetUrl =
@@ -77,13 +82,15 @@ async function scrapeWardNewsPage(page = 1) {
         }
 
         const rawImg = imgMatch ? imgMatch[1] : '';
-        const imageUrl = rawImg ? `https://namhonglinh.hatinh.gov.vn${rawImg}` : '';
+        const imageUrl = rawImg
+          ? `https://namhonglinh.hatinh.gov.vn${rawImg}`
+          : '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
         const summary = contentMatch
           ? decodeHtmlEntities(contentMatch[1].replace(/<[^>]*>?/gm, ''))
-          : '';
+          : 'Tin tức sự kiện chính thức công bố tại Phường Nam Hồng Lĩnh, thị xã Hồng Lĩnh, tỉnh Hà Tĩnh.';
         const timeStr = timeMatch
           ? decodeHtmlEntities(timeMatch[1].replace(/<[^>]*>?/gm, ''))
-          : '';
+          : 'Tháng 8/2026';
 
         articles.push({
           title,
@@ -91,14 +98,96 @@ async function scrapeWardNewsPage(page = 1) {
           imageUrl,
           summary,
           timeStr,
+          source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+          page,
         });
       }
     }
 
     return articles;
   } catch (error) {
-    console.error('[WardCrawler] Lỗi cào tin tức trang phường:', error.message);
+    console.error(`[WardCrawler] Lỗi cào tin trang ${page}:`, error.message);
     return [];
+  }
+}
+
+/**
+ * Cào toàn bộ các bài viết qua nhiều trang và lưu bộ nhớ đệm
+ */
+async function getAllWardArticles(maxPages = 4, forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && cachedArticles.length > 0 && now - lastCacheTime < CACHE_TTL_MS) {
+    return cachedArticles;
+  }
+
+  const all = [];
+  for (let p = 1; p <= maxPages; p++) {
+    const pageArticles = await scrapeWardNewsPage(p);
+    for (const art of pageArticles) {
+      if (!all.some((x) => x.originalUrl === art.originalUrl || x.title === art.title)) {
+        all.push(art);
+      }
+    }
+  }
+
+  if (all.length > 0) {
+    cachedArticles = all;
+    lastCacheTime = now;
+  }
+
+  return cachedArticles;
+}
+
+/**
+ * Cào nội dung chi tiết bài viết (Full HTML, hình ảnh, trích đoạn)
+ */
+async function scrapeArticleDetail(articleUrl) {
+  try {
+    const res = await fetch(articleUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
+      },
+    });
+
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    const titleMatch =
+      html.match(/<h1[^>]*class="[^"]*title[^"]*"[^>]*>([\s\S]*?)<\/h1>/i) ||
+      html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) ||
+      html.match(/<title>([\s\S]*?)<\/title>/i);
+
+    const timeMatch = html.match(/<span[^>]*class="[^"]*time[^"]*"[^>]*>([\s\S]*?)<\/span>/i);
+
+    const bodyMatch =
+      html.match(/<div class="content-detail[^"]*"[^>]*>([\s\S]*?)<\/div>/i) ||
+      html.match(/<div class="detail-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+
+    let contentHtml = bodyMatch ? bodyMatch[1] : '';
+
+    // Chuẩn hóa tất cả đường dẫn ảnh relative thành absolute
+    contentHtml = contentHtml.replace(
+      /src=["'](\/namhonglinh\/[^"']+)["']/gi,
+      'src="https://namhonglinh.hatinh.gov.vn$1"'
+    );
+
+    const firstImgMatch = contentHtml.match(
+      /src=["'](https:\/\/namhonglinh\.hatinh\.gov\.vn\/[^"']+)["']/i
+    );
+    const coverImage = firstImgMatch ? firstImgMatch[1] : '';
+
+    return {
+      title: titleMatch ? decodeHtmlEntities(titleMatch[1].replace(/<[^>]+>/g, '')) : '',
+      timeStr: timeMatch ? decodeHtmlEntities(timeMatch[1].replace(/<[^>]+>/g, '')) : 'Tháng 8/2026',
+      contentHtml: decodeHtmlEntities(contentHtml),
+      coverImage,
+      originalUrl: articleUrl,
+      source: 'Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh',
+    };
+  } catch (err) {
+    console.warn(`[WardCrawler] Không thể tải chi tiết bài viết ${articleUrl}:`, err.message);
+    return null;
   }
 }
 
@@ -106,10 +195,9 @@ async function scrapeWardNewsPage(page = 1) {
  * Đồng bộ bài viết từ Cổng TTĐT Phường Nam Hồng Lĩnh vào cơ sở dữ liệu
  */
 async function syncWardNews(options = {}) {
-  const maxPages = options.maxPages || 2;
+  const maxPages = options.maxPages || 4;
   console.log(`[WardCrawler] Bắt đầu đồng bộ tin tức Phường Nam Hồng Lĩnh (tối đa ${maxPages} trang)...`);
 
-  // Tìm tài khoản Admin hoặc Ban cán sự để gán tác giả
   let author = await prisma.user.findFirst({
     where: { role: 'admin' },
   });
@@ -123,90 +211,100 @@ async function syncWardNews(options = {}) {
     return { success: false, message: 'Chưa có tài khoản admin.' };
   }
 
-  let totalCrawled = 0;
+  const articles = await getAllWardArticles(maxPages, true);
   let totalSaved = 0;
   const syncedArticles = [];
 
-  for (let p = 1; p <= maxPages; p++) {
-    const articles = await scrapeWardNewsPage(p);
-    totalCrawled += articles.length;
+  for (const item of articles) {
+    try {
+      const slug = createSlug(item.title);
 
-    for (const item of articles) {
-      try {
-        const slug = createSlug(item.title);
+      const existing = await prisma.news.findFirst({
+        where: {
+          OR: [{ slug }, { title: item.title }],
+        },
+      });
 
-        // Kiểm tra xem bài viết đã tồn tại chưa
-        const existing = await prisma.news.findFirst({
-          where: {
-            OR: [{ slug }, { title: item.title }],
-          },
-        });
-
-        // Tạo nội dung HTML hoàn chỉnh có ảnh, trích dẫn và link nguồn chính thức
-        const contentHtml = `
-          <div class="ward-news-article">
-            ${
-              item.imageUrl
-                ? `<div class="mb-4 text-center"><img src="${item.imageUrl}" alt="${item.title}" class="rounded-xl shadow-md max-h-96 mx-auto object-cover" /></div>`
-                : ''
-            }
-            ${item.summary ? `<p class="lead font-medium text-stone-700 italic mb-4">${item.summary}</p>` : ''}
-            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 mb-4 flex items-center justify-between">
-              <div>
-                <strong>Nguồn trích dẫn:</strong> Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh (Hà Tĩnh)<br />
-                <strong>Thời gian công bố:</strong> Tháng 8/2026
+      // Tạo cấu trúc bài viết chuẩn mực, đẹp mắt, có ảnh lớn và dẫn nguồn gốc
+      const contentHtml = `
+        <div class="ward-news-article space-y-6">
+          <div class="p-4 rounded-2xl bg-red-50 border-2 border-red-200 text-xs text-red-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div class="space-y-0.5">
+              <div class="font-bold text-red-900 flex items-center space-x-1.5">
+                <span>🏛️ NGUỒN CHÍNH THỐNG: CỔNG THÔNG TIN ĐIỆN TỬ PHƯỜNG NAM HỒNG LĨNH</span>
               </div>
-              <a href="${item.originalUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-red-800 text-yellow-200 font-bold text-xs hover:bg-red-900">
-                Xem Bài Gốc ↗
-              </a>
+              <p class="text-stone-600 text-[11px]">
+                Thời gian công bố: <strong>${item.timeStr || 'Tháng 8/2026'}</strong> | Thị xã Hồng Lĩnh, Hà Tĩnh
+              </p>
             </div>
-            <p class="text-sm text-stone-600 leading-relaxed">
-              Bản tin sự kiện chính thức được phát hành và thông tin rộng rãi đến toàn thể bà con nhân dân tại các Tổ dân phố trên địa bàn Phường Nam Hồng Lĩnh và Làng Giao Tác.
+            <a href="${item.originalUrl}" target="_blank" rel="noopener noreferrer" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-red-900 hover:bg-red-800 text-yellow-200 font-bold text-xs shadow-xs transition-colors flex items-center space-x-1">
+              <span>Xem Bài Gốc ↗</span>
+            </a>
+          </div>
+
+          ${
+            item.imageUrl
+              ? `<div class="rounded-2xl overflow-hidden shadow-warm border border-stone-200 max-h-[460px] bg-stone-100"><img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover" /></div>`
+              : ''
+          }
+
+          <div class="lead p-4 bg-amber-50/60 rounded-xl border-l-4 border-red-800 text-stone-800 font-medium text-sm sm:text-base leading-relaxed">
+            ${item.summary}
+          </div>
+
+          <div class="text-stone-700 leading-relaxed space-y-4 text-sm sm:text-base">
+            <p>
+              Bản tin chính thức được phát hành và thông tin rộng rãi đến toàn thể bà con nhân dân tại các Tổ dân phố trên địa bàn Phường Nam Hồng Lĩnh và Làng Giao Tác (TDP 9).
+            </p>
+            <p>
+              Để tra cứu văn bản gốc, các quyết định chỉ đạo và hồ sơ liên quan, bà con có thể truy cập trực tiếp bài viết gốc trên Cổng thông tin điện tử Phường Nam Hồng Lĩnh tại địa chỉ: 
+              <a href="${item.originalUrl}" target="_blank" rel="noopener noreferrer" class="text-red-900 font-bold underline break-all">${item.originalUrl}</a>.
             </p>
           </div>
-        `;
+        </div>
+      `;
 
-        if (!existing) {
-          const created = await prisma.news.create({
-            data: {
-              authorId: author.id,
-              title: item.title,
-              slug,
-              contentHtml,
-              source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
-              isOfficial: true,
-              publishedAt: new Date(),
-            },
-          });
-          totalSaved++;
-          syncedArticles.push(created);
-        } else {
-          // Cập nhật nội dung và nguồn nếu bài cũ chưa có
-          await prisma.news.update({
-            where: { id: existing.id },
-            data: {
-              contentHtml,
-              source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
-            },
-          });
-        }
-      } catch (err) {
-        console.warn(`[WardCrawler] Bỏ qua bài viết "${item.title}":`, err.message);
+      if (!existing) {
+        const created = await prisma.news.create({
+          data: {
+            authorId: author.id,
+            title: item.title,
+            slug,
+            contentHtml,
+            source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+            isOfficial: true,
+            publishedAt: new Date(),
+          },
+        });
+        totalSaved++;
+        syncedArticles.push(created);
+      } else {
+        await prisma.news.update({
+          where: { id: existing.id },
+          data: {
+            contentHtml,
+            source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+          },
+        });
       }
+    } catch (err) {
+      console.warn(`[WardCrawler] Bỏ qua bài viết "${item.title}":`, err.message);
     }
   }
 
-  console.log(`[WardCrawler] Hoàn tất: Cào được ${totalCrawled} bài, lưu mới ${totalSaved} bài.`);
+  console.log(`[WardCrawler] Hoàn tất: Tìm thấy ${articles.length} bài, lưu mới/cập nhật ${totalSaved} bài.`);
   return {
     success: true,
-    totalCrawled,
+    totalCrawled: articles.length,
     totalSaved,
     syncedArticles,
-    message: `Đã đồng bộ thành công ${totalSaved} bài viết mới từ Cổng TTĐT Phường Nam Hồng Lĩnh.`,
+    message: `Đã đồng bộ thành công ${articles.length} bài viết từ Cổng TTĐT Phường Nam Hồng Lĩnh!`,
   };
 }
 
 module.exports = {
   scrapeWardNewsPage,
+  getAllWardArticles,
+  scrapeArticleDetail,
   syncWardNews,
 };

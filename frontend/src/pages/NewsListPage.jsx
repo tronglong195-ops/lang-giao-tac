@@ -13,6 +13,9 @@ import {
   Building,
   Sparkles,
   CheckCircle2,
+  X,
+  Share2,
+  BookOpen,
 } from 'lucide-react';
 import { newsService } from '../services/newsService';
 import { googleSheetsService } from '../services/googleSheetsService';
@@ -29,6 +32,11 @@ export const NewsListPage = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
+
+  // Article Reader Modal State
+  const [readingArticle, setReadingArticle] = useState(null);
+  const [readingDetail, setReadingDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // 1. Tải danh sách tin tức từ Database & Google Sheets
   const fetchNews = async (page = 1, searchQuery = search) => {
@@ -62,10 +70,10 @@ export const NewsListPage = () => {
     }
   };
 
-  // 2. Tải trực tiếp tin tức mới nhất từ Cổng TTĐT Phường Nam Hồng Lĩnh
-  const fetchWardFeed = async () => {
+  // 2. Tải trực tiếp toàn bộ danh sách bài viết từ Cổng TTĐT Phường Nam Hồng Lĩnh
+  const fetchWardFeed = async (force = false) => {
     try {
-      const articles = await newsService.getWardNewsFeed(1);
+      const articles = await newsService.getWardNewsFeed(undefined, force);
       if (articles && articles.length > 0) {
         setWardNewsList(articles);
       }
@@ -76,27 +84,45 @@ export const NewsListPage = () => {
 
   useEffect(() => {
     fetchNews(1);
-    fetchWardFeed();
+    fetchWardFeed(false);
   }, []);
 
-  // 3. Tự động đồng bộ tin tức mới nhất trong tháng từ Cổng TTĐT Phường
+  // 3. Tự động đồng bộ toàn bộ bài viết qua các trang từ Cổng TTĐT Phường
   const handleSyncWardNews = async () => {
     setSyncing(true);
     setSyncMessage('');
     try {
-      const res = await newsService.syncWardNews(2);
-      setSyncMessage(res.message || 'Đã cập nhật thành công các bài viết mới nhất trong tháng!');
+      const res = await newsService.syncWardNews(4);
+      setSyncMessage(res.message || 'Đã đồng bộ thành công các bài viết mới nhất từ Cổng TTĐT Phường!');
       await fetchNews(1);
-      await fetchWardFeed();
-      setTimeout(() => setSyncMessage(''), 5000);
+      await fetchWardFeed(true);
+      setTimeout(() => setSyncMessage(''), 6000);
     } catch (err) {
       console.error('Lỗi khi đồng bộ tin tức phường:', err);
-      // Fallback nạp feed trực tiếp nếu cần
-      await fetchWardFeed();
-      setSyncMessage('Đã làm mới dữ liệu tin tức từ Cổng TTĐT Phường Nam Hồng Lĩnh.');
-      setTimeout(() => setSyncMessage(''), 5000);
+      await fetchWardFeed(true);
+      setSyncMessage('Đã làm mới dữ liệu bài viết trực tiếp từ Cổng TTĐT Phường Nam Hồng Lĩnh.');
+      setTimeout(() => setSyncMessage(''), 6000);
     } finally {
       setSyncing(false);
+    }
+  };
+
+  // 4. Mở đọc toàn văn bài viết Phường
+  const handleOpenWardArticle = async (item) => {
+    setReadingArticle(item);
+    setReadingDetail(null);
+    if (item.originalUrl) {
+      setDetailLoading(true);
+      try {
+        const detail = await newsService.getWardArticleDetail(item.originalUrl);
+        if (detail) {
+          setReadingDetail(detail);
+        }
+      } catch (e) {
+        console.warn('Không thể tải bài viết chi tiết:', e);
+      } finally {
+        setDetailLoading(false);
+      }
     }
   };
 
@@ -108,7 +134,6 @@ export const NewsListPage = () => {
   // Lọc theo Tabs
   const getDisplayNews = () => {
     if (activeTab === 'ward') {
-      // Nếu có live ward news
       if (wardNewsList.length > 0) {
         return wardNewsList.map((item) => ({
           id: item.originalUrl || item.title,
@@ -135,11 +160,34 @@ export const NewsListPage = () => {
       );
     }
 
+    // Tab All: Gộp các bài viết live phường và bài viết làng
+    if (wardNewsList.length > 0) {
+      const liveItems = wardNewsList.map((item) => ({
+        id: item.originalUrl || item.title,
+        title: item.title,
+        slug: item.title.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        contentHtml: `<p>${item.summary || ''}</p>`,
+        source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+        originalUrl: item.originalUrl,
+        imageUrl: item.imageUrl,
+        publishedAt: new Date(),
+        isWardDirect: true,
+        timeStr: item.timeStr,
+      }));
+
+      // Lọc bỏ bài làng bị trùng tiêu đề
+      const villageItems = newsList.filter(
+        (n) => !liveItems.some((w) => w.title === n.title)
+      );
+
+      return [...liveItems, ...villageItems];
+    }
+
     return newsList;
   };
 
   const displayList = getDisplayNews().filter((item) =>
-    item.title.toLowerCase().includes(search.toLowerCase()) ||
+    item.title?.toLowerCase().includes(search.toLowerCase()) ||
     item.source?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -149,12 +197,12 @@ export const NewsListPage = () => {
         <title>Tin Tức & Sự Kiện Phường Nam Hồng Lĩnh — Làng Giao Tác</title>
         <meta
           name="description"
-          content="Cập nhật tin tức sự kiện mới nhất trong tháng từ Cổng thông tin điện tử Phường Nam Hồng Lĩnh và Thông báo Làng Giao Tác (TDP 9 Thuận Lộc)."
+          content="Tổng hợp đầy đủ bài viết, hình ảnh, thông báo và sự kiện mới nhất từ Cổng thông tin điện tử Phường Nam Hồng Lĩnh và Làng Giao Tác."
         />
         <meta property="og:title" content="Tin Tức & Sự Kiện Phường Nam Hồng Lĩnh — Làng Giao Tác" />
         <meta
           property="og:description"
-          content="Cập nhật tin tức sự kiện mới nhất trong tháng từ Cổng thông tin điện tử Phường Nam Hồng Lĩnh và Làng Giao Tác."
+          content="Tổng hợp đầy đủ bài viết, hình ảnh, thông báo và sự kiện mới nhất từ Cổng thông tin điện tử Phường Nam Hồng Lĩnh và Làng Giao Tác."
         />
         <meta property="og:type" content="website" />
       </Helmet>
@@ -163,17 +211,17 @@ export const NewsListPage = () => {
       <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-10 shadow-warm space-y-4">
         <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-red-50 border border-red-200 text-red-900 text-xs font-bold uppercase tracking-wider">
           <Landmark className="w-3.5 h-3.5 text-red-700" />
-          <span>Thông Tin Chính Thống & Sự Kiện Địa Phương</span>
+          <span>Thông Tin Chính Thống & Bài Viết Sự Kiện Địa Phương</span>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-primary-dark tracking-tight leading-snug">
+            <h1 className="text-2xl sm:text-4xl font-serif font-black text-red-950 tracking-tight leading-snug">
               Tin Tức & Sự Kiện Phường Nam Hồng Lĩnh
             </h1>
-            <p className="text-xs sm:text-sm text-ink-muted leading-relaxed max-w-2xl pt-1">
-              Kênh thông tin tổng hợp các chủ trương, chính sách, hoạt động kinh tế - văn hóa - xã hội 
-              từ <strong>Cổng thông tin điện tử Phường Nam Hồng Lĩnh</strong> và Ban cán sự Tổ dân phố 9 (Làng Giao Tác).
+            <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-2xl pt-1">
+              Thu thập tự động và cập nhật đầy đủ toàn bộ các bài viết, hình ảnh, thông báo và chỉ đạo điều hành 
+              từ <strong>Cổng thông tin điện tử Phường Nam Hồng Lĩnh</strong> (Thị xã Hồng Lĩnh, Hà Tĩnh) và Ban cán sự TDP 9 (Làng Giao Tác).
             </p>
           </div>
 
@@ -183,10 +231,10 @@ export const NewsListPage = () => {
               onClick={handleSyncWardNews}
               disabled={syncing}
               className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-red-900 to-red-800 hover:from-red-800 hover:to-red-700 text-yellow-200 text-xs sm:text-sm font-bold shadow-md transition-all border border-amber-400 disabled:opacity-50"
-              title="Tự động thu thập bài viết mới nhất trong tháng từ Cổng TTĐT Phường"
+              title="Tự động thu thập tất cả bài viết mới nhất từ Cổng TTĐT Phường"
             >
               <RefreshCw className={`w-4 h-4 text-yellow-300 ${syncing ? 'animate-spin' : ''}`} />
-              <span>{syncing ? 'Đang Cập Nhật...' : 'Cập Nhật Tin Mới Trong Tháng'}</span>
+              <span>{syncing ? 'Đang Thu Thập...' : '🔄 Cập Nhật Tất Cả Bài Viết'}</span>
             </button>
 
             {isAdminOrMod && (
@@ -218,11 +266,11 @@ export const NewsListPage = () => {
             onClick={() => setActiveTab('all')}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
               activeTab === 'all'
-                ? 'bg-primary text-surface shadow-xs font-bold'
+                ? 'bg-red-900 text-yellow-200 border border-amber-400 shadow-md font-bold'
                 : 'bg-surface hover:bg-paper text-ink border border-warmBorder'
             }`}
           >
-            Tất Cả Bản Tin
+            Tất Cả Bài Viết ({displayList.length})
           </button>
           <button
             onClick={() => setActiveTab('ward')}
@@ -232,8 +280,8 @@ export const NewsListPage = () => {
                 : 'bg-surface hover:bg-paper text-ink border border-warmBorder'
             }`}
           >
-            <Building className="w-3.5 h-3.5 text-amber-600" />
-            <span>🏛️ Tin Phường Nam Hồng Lĩnh (Mới nhất)</span>
+            <Building className="w-3.5 h-3.5 text-amber-500" />
+            <span>🏛️ Tin Phường Nam Hồng Lĩnh ({wardNewsList.length || '40+'})</span>
           </button>
           <button
             onClick={() => setActiveTab('village')}
@@ -255,7 +303,7 @@ export const NewsListPage = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm tin tức, khám sàng lọc, diễn tập..."
+              placeholder="Tìm kiếm bài viết, khám sàng lọc, diễn tập..."
               className="w-full pl-9 pr-3 py-2 rounded-xl border border-warmBorder bg-surface text-xs outline-none focus:border-primary"
             />
             <Search className="w-4 h-4 text-ink-light absolute left-3 top-1/2 -translate-y-1/2" />
@@ -271,17 +319,17 @@ export const NewsListPage = () => {
 
       {/* News Grid */}
       {loading ? (
-        <div className="text-center py-20 text-ink-muted">Đang tải danh sách tin tức & sự kiện...</div>
+        <div className="text-center py-20 text-ink-muted">Đang tải danh sách bài viết & sự kiện...</div>
       ) : displayList.length === 0 ? (
         <div className="text-center py-20 bg-surface rounded-3xl border border-warmBorder text-ink-muted text-sm space-y-3">
           <Bell className="w-12 h-12 mx-auto text-ink-light" />
-          <p className="font-medium">Không tìm thấy tin tức hoặc thông báo nào phù hợp.</p>
+          <p className="font-medium">Không tìm thấy bài viết hoặc thông báo nào phù hợp.</p>
           <button
             onClick={handleSyncWardNews}
             className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-primary text-surface text-xs font-bold"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Cập nhật tin từ Cổng TTĐT Phường</span>
+            <span>Cập nhật bài viết từ Cổng TTĐT Phường</span>
           </button>
         </div>
       ) : (
@@ -295,13 +343,16 @@ export const NewsListPage = () => {
                 key={item.id}
                 className="bg-surface rounded-3xl border border-warmBorder overflow-hidden shadow-warm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
               >
-                {/* Thumbnail Image if available */}
+                {/* Thumbnail Image */}
                 {item.imageUrl && (
-                  <div className="relative h-48 overflow-hidden bg-paper">
+                  <div className="relative h-48 sm:h-52 overflow-hidden bg-stone-100">
                     <img
                       src={item.imageUrl}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.src = '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
+                      }}
                     />
                     <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-red-900/90 backdrop-blur-xs text-yellow-300 font-bold text-[10px] uppercase shadow-xs border border-amber-400/40">
                       Cổng TTĐT Phường
@@ -330,18 +381,12 @@ export const NewsListPage = () => {
                     </div>
 
                     <h2 className="text-base sm:text-lg font-bold text-ink group-hover:text-primary transition-colors leading-snug line-clamp-2">
-                      {item.originalUrl ? (
-                        <a
-                          href={item.originalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline"
-                        >
-                          {item.title}
-                        </a>
-                      ) : (
-                        <Link to={`/tin-tuc/${item.slug}`}>{item.title}</Link>
-                      )}
+                      <button
+                        onClick={() => handleOpenWardArticle(item)}
+                        className="text-left font-bold hover:underline"
+                      >
+                        {item.title}
+                      </button>
                     </h2>
 
                     <div
@@ -360,25 +405,26 @@ export const NewsListPage = () => {
                     </div>
 
                     <div className="flex items-center space-x-2 shrink-0">
-                      {item.originalUrl ? (
+                      {item.originalUrl && (
                         <a
                           href={item.originalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-red-900 hover:bg-red-800 text-yellow-200 text-[11px] font-bold shadow-xs transition-colors"
+                          title="Xem bài viết gốc trên Cổng TTĐT Phường"
                         >
                           <span>Xem Bài Gốc</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
-                      ) : (
-                        <Link
-                          to={`/tin-tuc/${item.slug}`}
-                          className="inline-flex items-center space-x-1 text-xs font-bold text-primary group-hover:underline"
-                        >
-                          <span>Đọc toàn văn</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
                       )}
+
+                      <button
+                        onClick={() => handleOpenWardArticle(item)}
+                        className="inline-flex items-center space-x-1 text-xs font-bold text-primary group-hover:underline"
+                      >
+                        <span>Đọc toàn văn</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -388,22 +434,111 @@ export const NewsListPage = () => {
         </div>
       )}
 
-      {/* Pagination */}
-      {pagination.totalPages > 1 && activeTab === 'all' && (
-        <div className="flex items-center justify-center space-x-2 pt-6">
-          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => fetchNews(p)}
-              className={`w-9 h-9 rounded-xl text-sm font-semibold transition-colors ${
-                p === pagination.page
-                  ? 'bg-primary text-surface shadow-sm'
-                  : 'bg-surface text-ink hover:bg-paper border border-warmBorder'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
+      {/* Article Reader Modal (Đọc Toàn Văn Bài Viết Kèm Ảnh & Dẫn Nguồn) */}
+      {readingArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-surface w-full max-w-4xl max-h-[90vh] rounded-3xl border border-warmBorder shadow-2xl overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-6 border-b border-warmBorder bg-paper flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="px-3 py-1 rounded-full bg-red-900 text-yellow-200 text-xs font-bold">
+                  🏛️ Cổng TTĐT Phường Nam Hồng Lĩnh
+                </span>
+                <span className="text-xs text-ink-muted hidden sm:inline">
+                  {readingArticle.timeStr || 'Tháng 8/2026'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                {readingArticle.originalUrl && (
+                  <a
+                    href={readingArticle.originalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-xl bg-red-900 hover:bg-red-800 text-yellow-200 text-xs font-bold flex items-center space-x-1"
+                  >
+                    <span>Mở Trên Cổng TTĐT</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                <button
+                  onClick={() => setReadingArticle(null)}
+                  className="w-8 h-8 rounded-full bg-warmBorder/50 hover:bg-warmBorder flex items-center justify-center text-ink transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1 text-ink">
+              <h1 className="text-xl sm:text-2xl font-bold font-serif text-primary-dark leading-snug">
+                {readingArticle.title}
+              </h1>
+
+              {/* Nguồn bài viết chính thống */}
+              <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-200 text-xs text-red-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <p className="font-bold text-red-900">
+                    🏛️ NGUỒN CHÍNH THỐNG: CỔNG THÔNG TIN ĐIỆN TỬ PHƯỜNG NAM HỒNG LĨNH
+                  </p>
+                  <p className="text-stone-600 text-[11px]">
+                    Địa chỉ: Thị xã Hồng Lĩnh, Tỉnh Hà Tĩnh | Dẫn nguồn trực tiếp từ Cổng thông tin chính quyền
+                  </p>
+                </div>
+                {readingArticle.originalUrl && (
+                  <a
+                    href={readingArticle.originalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 px-3 py-1.5 rounded-xl bg-red-900 text-yellow-200 font-bold text-xs hover:bg-red-800"
+                  >
+                    Đến Bài Viết Gốc ↗
+                  </a>
+                )}
+              </div>
+
+              {detailLoading ? (
+                <div className="py-12 text-center text-ink-muted space-y-2">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto text-primary" />
+                  <p className="text-xs">Đang tải toàn văn bài viết và hình ảnh từ Cổng TTĐT Phường...</p>
+                </div>
+              ) : readingDetail?.contentHtml ? (
+                <div
+                  className="tiptap-content text-sm sm:text-base leading-relaxed space-y-4 text-stone-800"
+                  dangerouslySetInnerHTML={{ __html: readingDetail.contentHtml }}
+                />
+              ) : (
+                <div className="space-y-4 text-sm sm:text-base text-stone-800">
+                  {readingArticle.imageUrl && (
+                    <div className="rounded-2xl overflow-hidden shadow-warm border border-warmBorder max-h-96">
+                      <img
+                        src={readingArticle.imageUrl}
+                        alt={readingArticle.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <p className="lead font-medium text-stone-900 italic bg-amber-50 p-4 rounded-xl border-l-4 border-red-800">
+                    {readingArticle.summary}
+                  </p>
+                  <p className="text-stone-700 leading-relaxed">
+                    Bản tin chính thức được phát hành và thông tin rộng rãi đến toàn thể bà con nhân dân tại các Tổ dân phố trên địa bàn Phường Nam Hồng Lĩnh và Làng Giao Tác (TDP 9).
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-warmBorder bg-paper flex items-center justify-between text-xs text-ink-muted">
+              <span>Cổng thông tin Làng Giao Tác — Phường Nam Hồng Lĩnh, Hà Tĩnh</span>
+              <button
+                onClick={() => setReadingArticle(null)}
+                className="px-4 py-2 rounded-xl bg-primary text-surface font-semibold hover:bg-primary-dark"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ const { roleGuard } = require('../../middlewares/roleGuard');
 
 router.get('/', (req, res) => newsController.getNews(req, res));
 router.get('/ward/feed', (req, res) => newsController.getWardFeed(req, res));
+router.get('/ward/detail', (req, res) => newsController.getWardDetail(req, res));
 router.post('/ward/sync', authGuard, roleGuard(['admin', 'moderator']), (req, res) =>
   newsController.syncWardNews(req, res)
 );

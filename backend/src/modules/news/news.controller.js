@@ -104,12 +104,19 @@ class NewsController {
 
   async getWardFeed(req, res) {
     try {
-      const { page = 1 } = req.query;
-      const { scrapeWardNewsPage } = require('../../services/wardCrawler.service');
-      const articles = await scrapeWardNewsPage(Number(page) || 1);
+      const { page, forceRefresh } = req.query;
+      const { getAllWardArticles, scrapeWardNewsPage } = require('../../services/wardCrawler.service');
+      
+      let articles = [];
+      if (page) {
+        articles = await scrapeWardNewsPage(Number(page));
+      } else {
+        articles = await getAllWardArticles(4, forceRefresh === 'true');
+      }
+
       return res.status(200).json({
         success: true,
-        data: { articles },
+        data: { articles, total: articles.length },
       });
     } catch (error) {
       return res.status(500).json({
@@ -119,11 +126,34 @@ class NewsController {
     }
   }
 
+  async getWardDetail(req, res) {
+    try {
+      const { url } = req.query;
+      if (!url) {
+        return res.status(400).json({ success: false, message: 'Thiếu url bài viết.' });
+      }
+      const { scrapeArticleDetail } = require('../../services/wardCrawler.service');
+      const article = await scrapeArticleDetail(url);
+      if (!article) {
+        return res.status(404).json({ success: false, message: 'Không thể lấy nội dung chi tiết bài viết.' });
+      }
+      return res.status(200).json({
+        success: true,
+        data: { article },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Lỗi khi tải chi tiết bài viết phường.',
+      });
+    }
+  }
+
   async syncWardNews(req, res) {
     try {
-      const { maxPages = 2 } = req.body || {};
+      const { maxPages = 4 } = req.body || {};
       const { syncWardNews } = require('../../services/wardCrawler.service');
-      const result = await syncWardNews({ maxPages: Number(maxPages) || 2 });
+      const result = await syncWardNews({ maxPages: Number(maxPages) || 4 });
       return res.status(200).json(result);
     } catch (error) {
       return res.status(500).json({

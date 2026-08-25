@@ -26,12 +26,17 @@ export const newsService = {
     return res.data;
   },
 
-  async getWardNewsFeed(page = 1) {
-    const res = await api.get('/news/ward/feed', { params: { page } });
+  async getWardNewsFeed(page, forceRefresh = false) {
+    const res = await api.get('/news/ward/feed', { params: { page, forceRefresh } });
     return res.data?.data?.articles || [];
   },
 
-  async syncWardNews(maxPages = 2) {
+  async getWardArticleDetail(url) {
+    const res = await api.get('/news/ward/detail', { params: { url } });
+    return res.data?.data?.article;
+  },
+
+  async syncWardNews(maxPages = 4) {
     const res = await api.post('/news/ward/sync', { maxPages });
     return res.data;
   },

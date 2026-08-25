@@ -89,9 +89,9 @@ export const HomePage = () => {
 
   const fetchWardNews = async () => {
     try {
-      const articles = await newsService.getWardNewsFeed(1);
+      const articles = await newsService.getWardNewsFeed();
       if (articles && articles.length > 0) {
-        setWardNews(articles.slice(0, 3));
+        setWardNews(articles.slice(0, 6));
       }
     } catch (err) {
       console.warn('Lỗi tải tin phường trên trang chủ:', err);
@@ -220,18 +220,19 @@ export const HomePage = () => {
                   key={idx}
                   className="bg-white rounded-2xl border-2 border-amber-300/80 hover:border-red-800 p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group space-y-3"
                 >
-                  {item.imageUrl && (
-                    <div className="h-44 rounded-xl overflow-hidden bg-paper relative">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-red-900 text-yellow-300 text-[10px] font-bold shadow-xs">
-                        Cổng TTĐT Phường
-                      </span>
-                    </div>
-                  )}
+                  <div className="h-44 rounded-xl overflow-hidden bg-paper relative">
+                    <img
+                      src={item.imageUrl || '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg'}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.src = '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
+                      }}
+                    />
+                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-red-900 text-yellow-300 text-[10px] font-bold shadow-xs">
+                      Cổng TTĐT Phường
+                    </span>
+                  </div>
 
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center justify-between text-[11px] text-stone-500 font-mono">
