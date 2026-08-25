@@ -115,12 +115,15 @@ lang-giao-tac/
 ### 1. Cấu hình Môi Trường (`.env`)
 
 #### Backend (`backend/.env`):
+> ⚠️ **Cảnh báo bảo mật quan trọng**: Tuyệt đối không bao giờ commit các chuỗi bí mật (Secret Keys), Token hoặc Mật khẩu thật vào kho mã nguồn Git.
+
 ```env
 PORT=5000
 NODE_ENV=development
 DATABASE_URL="postgresql://postgres:password@localhost:5432/lang_giao_tac?schema=public"
-JWT_ACCESS_SECRET="giao_tac_access_token_secret_key_super_secure_2026"
-JWT_REFRESH_SECRET="giao_tac_refresh_token_secret_key_super_secure_2026"
+JWT_ACCESS_SECRET="<dán-secret-ngẫu-nhiên-của-bạn-tại-đây>"
+JWT_REFRESH_SECRET="<dán-secret-ngẫu-nhiên-của-bạn-tại-đây>"
+ADMIN_INITIAL_PASSWORD="<mật-khẩu-khởi-tạo-admin-production>"
 GOOGLE_CLIENT_ID="17339925701-s0tiajuplhl8e5h0o4epke98ksm3g00r.apps.googleusercontent.com"
 FRONTEND_URL="http://localhost:5173"
 ```
@@ -169,9 +172,11 @@ flutter build apk --release
 
 ---
 
-## 👥 TÀI KHOẢN MẪU ĐỂ TRẢI NGHIỆM
+## 👥 TÀI KHOẢN MẪU ĐỂ TRẢI NGHIỆM (CHỈ ÁP DỤNG LOCAL DEV)
 
-| Vai trò | Email | Mật khẩu | Chức năng |
+> 📌 **Lưu ý**: Bảng tài khoản mẫu này chỉ được khởi tạo tự động ở môi trường phát triển nội bộ (Local Dev `NODE_ENV !== 'production'`). Trên máy chủ Production, hệ thống yêu cầu cấu hình mật khẩu riêng qua biến môi trường `ADMIN_INITIAL_PASSWORD`.
+
+| Vai trò | Email | Mật khẩu (Local Dev) | Chức năng |
 | :--- | :--- | :--- | :--- |
 | **Quản trị viên (Admin)** | `admin@langgiaotac.vn` | `123456` | Toàn quyền duyệt bài, duyệt ảnh, quản lý thành viên, CRUD tin tức & lịch sử |
 | **Điều hành viên (Mod)** | `mod@langgiaotac.vn` | `123456` | Duyệt bài viết và kiểm duyệt hình ảnh của dân làng tải lên |

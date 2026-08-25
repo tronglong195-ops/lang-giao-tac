@@ -1,5 +1,6 @@
 const prisma = require('../../config/db');
 const emailService = require('../../services/email.service');
+const zaloService = require('../../services/zalo.service');
 const notificationService = require('../notifications/notification.service');
 
 class AdminService {
@@ -116,6 +117,14 @@ class AdminService {
         post,
         author: updated.author,
       }).catch(err => console.error('Lỗi gửi email duyệt bài:', err.message));
+
+      if (updated.author?.phone) {
+        zaloService.sendPostApprovedZNS({
+          phone: updated.author.phone,
+          postTitle: post.title,
+          authorName: updated.author.fullName,
+        }).catch(err => console.error('Lỗi gửi Zalo ZNS duyệt bài:', err.message));
+      }
     } else if (status === 'rejected') {
       notificationService.createNotification({
         userId: post.authorId,

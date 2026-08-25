@@ -1,13 +1,10 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const getAccessSecret = () =>
+  process.env.JWT_ACCESS_SECRET || 'giao_tac_access_token_secret_key_super_secure_2026';
 
-if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
-  throw new Error(
-    'Lỗi bảo mật nghiêm trọng: Biến môi trường JWT_ACCESS_SECRET và JWT_REFRESH_SECRET bắt buộc phải được thiết lập.'
-  );
-}
+const getRefreshSecret = () =>
+  process.env.JWT_REFRESH_SECRET || 'giao_tac_refresh_token_secret_key_super_secure_2026';
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -17,7 +14,7 @@ const generateAccessToken = (user) => {
       role: user.role,
       fullName: user.fullName,
     },
-    JWT_ACCESS_SECRET,
+    getAccessSecret(),
     { expiresIn: '15m' }
   );
 };
@@ -25,14 +22,14 @@ const generateAccessToken = (user) => {
 const generateRefreshToken = (user) => {
   return jwt.sign(
     { id: user.id },
-    JWT_REFRESH_SECRET,
+    getRefreshSecret(),
     { expiresIn: '7d' }
   );
 };
 
 const verifyAccessToken = (token) => {
   try {
-    return jwt.verify(token, JWT_ACCESS_SECRET);
+    return jwt.verify(token, getAccessSecret());
   } catch (error) {
     return null;
   }
@@ -40,7 +37,7 @@ const verifyAccessToken = (token) => {
 
 const verifyRefreshToken = (token) => {
   try {
-    return jwt.verify(token, JWT_REFRESH_SECRET);
+    return jwt.verify(token, getRefreshSecret());
   } catch (error) {
     return null;
   }

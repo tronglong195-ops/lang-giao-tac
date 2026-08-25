@@ -23,7 +23,11 @@ async function main() {
   await prisma.historyTimeline.deleteMany();
   await prisma.user.deleteMany();
 
-  const passwordHash = await bcrypt.hash('123456', 10);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const adminPassword = (isProduction && process.env.ADMIN_INITIAL_PASSWORD)
+    ? process.env.ADMIN_INITIAL_PASSWORD.trim()
+    : '123456';
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
 
   // 1. Tạo Users (Admin: Nguyễn Trọng Long)
   const adminUser = await prisma.user.create({
@@ -33,8 +37,8 @@ async function main() {
       passwordHash,
       role: 'admin',
       hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
-      currentLocation: 'TDP 9 Thuận Lộc, TX Hồng Lĩnh, Hà Tĩnh',
-      bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, TX Hồng Lĩnh. SĐT: 0832991002',
+      currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
+      bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
       avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
       isVerified: true,
     },

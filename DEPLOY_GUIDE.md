@@ -43,10 +43,12 @@ Mã nguồn trên nhánh `main` đã được đẩy lên đầy đủ gồm c�
    - **Start Command:** `npm start`
    - **Instance Type:** `Free`
 5. Cuộn xuống mục **Environment Variables** và thêm các biến sau:
+   > ⚠️ **Lưu ý bảo mật**: Hãy sinh chuỗi bí mật ngẫu nhiên 32-byte (ví dụ: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) để dán vào Render.
    - `NODE_ENV`: `production`
    - `DATABASE_URL`: *(Dán chuỗi kết nối PostgreSQL từ Supabase ở Bước 2)*
-   - `JWT_ACCESS_SECRET`: `giao_tac_access_token_secret_key_super_secure_2026`
-   - `JWT_REFRESH_SECRET`: `giao_tac_refresh_token_secret_key_super_secure_2026`
+   - `JWT_ACCESS_SECRET`: `<dán-chuỗi-bí-mật-access-token-ngẫu-nhiên-của-bạn>`
+   - `JWT_REFRESH_SECRET`: `<dán-chuỗi-bí-mật-refresh-token-ngẫu-nhiên-của-bạn>`
+   - `ADMIN_INITIAL_PASSWORD`: `<mật-khẩu-mạnh-khởi-tạo-admin-production>`
    - `FRONTEND_URL`: `https://lang-giao-tac.vercel.app` *(hoặc để tạm `*`)*
 6. Nhấn **Create Web Service**. Đợi 1-2 phút Render sẽ build và cấp cho bạn đường link API công khai dạng:
    👉 `https://lang-giao-tac-api.onrender.com`

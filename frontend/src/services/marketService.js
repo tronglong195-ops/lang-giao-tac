@@ -1,10 +1,16 @@
 import api from './api';
 
 export const marketService = {
-  // Lấy danh sách sản phẩm Chợ Quê
-  getAllProducts: async (category = 'all') => {
+  // Lấy danh sách sản phẩm Chợ Quê (hỗ trợ category và search)
+  getAllProducts: async (params = {}) => {
+    const category = typeof params === 'string' ? params : params.category;
+    const search = typeof params === 'object' ? params.search : undefined;
+
     const res = await api.get('/market', {
-      params: { category: category !== 'all' ? category : undefined },
+      params: {
+        category: category && category !== 'all' ? category : undefined,
+        search: search && search.trim() ? search.trim() : undefined,
+      },
     });
     return res.data?.data?.products || [];
   },

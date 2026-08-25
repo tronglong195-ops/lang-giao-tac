@@ -83,6 +83,81 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Endpoint sinh động sitemap.xml cho SEO
+const generateSitemap = async (req, res) => {
+  try {
+    const prisma = require('./config/db');
+    const baseUrl = (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'))
+      ? process.env.FRONTEND_URL.split(',')[0].trim().replace(/\/$/, '')
+      : 'https://lang-giao-tac-1.onrender.com';
+
+    const [posts, news, clans] = await Promise.all([
+      prisma.post.findMany({
+        where: { status: 'published' },
+        select: { slug: true, updatedAt: true, createdAt: true },
+        take: 1000,
+      }),
+      prisma.news.findMany({
+        select: { slug: true, publishedAt: true, createdAt: true },
+        take: 1000,
+      }),
+      prisma.clan.findMany({
+        select: { slug: true, updatedAt: true },
+      }),
+    ]);
+
+    const staticRoutes = [
+      '',
+      '/lich-su',
+      '/gia-pha',
+      '/quy-que-huong',
+      '/cho-que',
+      '/so-tang',
+      '/tham-quan-360',
+      '/thu-vien-anh',
+      '/dong-huong',
+      '/ban-do',
+      '/su-kien',
+      '/bai-viet',
+      '/tin-tuc',
+    ];
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+    // Static Pages
+    for (const route of staticRoutes) {
+      xml += `  <url>\n    <loc>${baseUrl}${route}</loc>\n    <changefreq>daily</changefreq>\n    <priority>${route === '' ? '1.0' : '0.8'}</priority>\n  </url>\n`;
+    }
+
+    // Dynamic Clans
+    for (const clan of clans) {
+      xml += `  <url>\n    <loc>${baseUrl}/gia-pha/${clan.slug}</loc>\n    <lastmod>${new Date(clan.updatedAt).toISOString().split('T')[0]}</lastmod>\n    <priority>0.8</priority>\n  </url>\n`;
+    }
+
+    // Dynamic Posts
+    for (const post of posts) {
+      xml += `  <url>\n    <loc>${baseUrl}/bai-viet/${post.slug}</loc>\n    <lastmod>${new Date(post.updatedAt || post.createdAt).toISOString().split('T')[0]}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
+    }
+
+    // Dynamic News
+    for (const item of news) {
+      xml += `  <url>\n    <loc>${baseUrl}/tin-tuc/${item.slug}</loc>\n    <lastmod>${new Date(item.publishedAt || item.createdAt).toISOString().split('T')[0]}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
+    }
+
+    xml += '</urlset>';
+
+    res.header('Content-Type', 'application/xml; charset=utf-8');
+    res.status(200).send(xml);
+  } catch (err) {
+    console.error('Lỗi khi sinh sitemap.xml:', err);
+    res.status(500).send('Error generating sitemap');
+  }
+};
+
+app.get('/sitemap.xml', generateSitemap);
+app.get('/api/sitemap.xml', generateSitemap);
+
 // Endpoint kiểm tra và test gửi email thông báo tới tronglong195@gmail.com
 app.get('/api/health/test-email', async (req, res) => {
   try {

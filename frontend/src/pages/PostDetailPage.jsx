@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { postService } from '../services/postService';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import { ShareModal } from '../components/common/ShareModal';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 
@@ -129,8 +130,23 @@ export const PostDetailPage = () => {
   const isAuthorOrAdmin =
     user && (user.id === post?.authorId || user.role === 'admin' || user.role === 'moderator');
 
+  const rawDescription = post?.contentHtml
+    ? post.contentHtml.replace(/<[^>]+>/g, '').slice(0, 160)
+    : 'Bài viết chia sẻ ký ức và văn hóa quê hương Làng Giao Tác — TDP 9 Thuận Lộc.';
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      {post && (
+        <Helmet>
+          <title>{`${post.title} — Làng Giao Tác`}</title>
+          <meta name="description" content={rawDescription} />
+          <meta property="og:title" content={post.title} />
+          <meta property="og:description" content={rawDescription} />
+          {post.coverImageUrl && <meta property="og:image" content={post.coverImageUrl} />}
+          <meta property="og:type" content="article" />
+        </Helmet>
+      )}
+
       {/* Top Back & Share / Edit / Delete Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button

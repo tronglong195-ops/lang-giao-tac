@@ -1,7 +1,22 @@
 const prisma = require('../../config/db');
 
-const getAllProducts = async (category) => {
-  const where = category && category !== 'all' ? { category } : {};
+const getAllProducts = async (params = {}) => {
+  const category = typeof params === 'string' ? params : params.category;
+  const search = typeof params === 'object' ? params.search : null;
+
+  const where = {};
+  if (category && category !== 'all') {
+    where.category = category;
+  }
+
+  if (search && search.trim()) {
+    where.OR = [
+      { title: { contains: search.trim(), mode: 'insensitive' } },
+      { description: { contains: search.trim(), mode: 'insensitive' } },
+      { sellerName: { contains: search.trim(), mode: 'insensitive' } },
+    ];
+  }
+
   return await prisma.marketProduct.findMany({
     where,
     orderBy: { createdAt: 'desc' },

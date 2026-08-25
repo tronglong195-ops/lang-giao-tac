@@ -4,33 +4,68 @@ async function runAutoSeed(prisma) {
   try {
     console.log('🌾 Đang đồng bộ toàn diện dữ liệu mẫu Làng Giao Tác (TDP 9 Thuận Lộc)...');
 
-    const passwordHash = await bcrypt.hash('123456', 10);
+    const isProduction = process.env.NODE_ENV === 'production';
+    let adminUser = null;
 
-    // 1. Đảm bảo tài khoản Admin (Nguyễn Trọng Long) luôn tồn tại
-    const adminUser = await prisma.user.upsert({
-      where: { email: 'admin@langgiaotac.vn' },
-      update: {
-        fullName: 'Nguyễn Trọng Long',
-        passwordHash,
-        role: 'admin',
-        hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
-        currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
-        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
-        avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
-        isVerified: true,
-      },
-      create: {
-        fullName: 'Nguyễn Trọng Long',
-        email: 'admin@langgiaotac.vn',
-        passwordHash,
-        role: 'admin',
-        hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
-        currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
-        bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
-        avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
-        isVerified: true,
-      },
-    });
+    if (isProduction) {
+      // TRÊN MÔI TRƯỜNG PRODUCTION:
+      // 1. Kiểm tra xem đã có tài khoản Admin nào trong hệ thống chưa
+      adminUser = await prisma.user.findFirst({
+        where: { role: 'admin' },
+      });
+
+      if (!adminUser) {
+        const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+        if (!initialPassword || initialPassword.trim().length < 6) {
+          console.warn('⚠️ [PRODUCTION SECURITY WARNING] Chưa có tài khoản Admin trong hệ thống và chưa cấu hình biến môi trường ADMIN_INITIAL_PASSWORD (hoặc mật khẩu quá ngắn)!');
+          console.warn('👉 Hãy thiết lập ADMIN_INITIAL_PASSWORD trong Render Environment Variables để khởi tạo tài khoản Admin an toàn.');
+        } else {
+          const prodPasswordHash = await bcrypt.hash(initialPassword.trim(), 10);
+          adminUser = await prisma.user.create({
+            data: {
+              fullName: 'Nguyễn Trọng Long',
+              email: 'admin@langgiaotac.vn',
+              passwordHash: prodPasswordHash,
+              role: 'admin',
+              hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
+              currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
+              bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
+              avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+              isVerified: true,
+            },
+          });
+          console.log('✅ [PRODUCTION] Đã khởi tạo tài khoản Admin an toàn từ biến môi trường ADMIN_INITIAL_PASSWORD.');
+        }
+      } else {
+        console.log('🔒 [PRODUCTION] Đã tìm thấy tài khoản Admin hiện có. Giữ nguyên mật khẩu và dữ liệu.');
+      }
+    } else {
+      // TRÊN MÔI TRƯỜNG LOCAL DEV:
+      const devPasswordHash = await bcrypt.hash('123456', 10);
+      adminUser = await prisma.user.upsert({
+        where: { email: 'admin@langgiaotac.vn' },
+        update: {
+          fullName: 'Nguyễn Trọng Long',
+          role: 'admin',
+          hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
+          currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
+          bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
+          avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+          isVerified: true,
+        },
+        create: {
+          fullName: 'Nguyễn Trọng Long',
+          email: 'admin@langgiaotac.vn',
+          passwordHash: devPasswordHash,
+          role: 'admin',
+          hometownGroup: 'TDP 9 Thuận Lộc (Làng Giao Tác)',
+          currentLocation: 'TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh',
+          bio: 'Quản trị viên Cổng thông tin Làng Giao Tác — Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh. SĐT: 0832991002',
+          avatarUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+          isVerified: true,
+        },
+      });
+    }
 
     // 2. Mốc Lịch sử (HistoryTimeline)
     const historyCount = await prisma.historyTimeline.count();

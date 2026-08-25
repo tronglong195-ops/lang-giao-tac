@@ -58,10 +58,26 @@ const createCampaign = async (req, res, next) => {
   }
 };
 
+const verifyDonation = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { txCode } = req.body;
+    const donation = await fundService.verifyDonation(id, txCode);
+    res.status(200).json({
+      success: true,
+      message: 'Đã xác nhận khoản đóng góp thành công.',
+      data: { donation },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllCampaigns,
   getCampaignDetail,
   getVietQR,
   donate,
+  verifyDonation,
   createCampaign,
 };

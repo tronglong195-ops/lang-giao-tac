@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lang-giao-tac-1.onrender.com/sitemap.xml
+Sitemap: https://lang-giao-tac.vercel.app/sitemap.xml

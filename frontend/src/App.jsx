@@ -29,6 +29,7 @@ import { FundPage } from './pages/FundPage';
 import { MarketPage } from './pages/MarketPage';
 import { MemorialPage } from './pages/MemorialPage';
 import { VirtualTourPage } from './pages/VirtualTourPage';
+import { SearchResultsPage } from './pages/SearchResultsPage';
 
 function App() {
   return (
@@ -40,6 +41,9 @@ function App() {
             <Routes>
               {/* Trang chủ */}
               <Route path="/" element={<HomePage />} />
+
+              {/* Tìm kiếm toàn site */}
+              <Route path="/tim-kiem" element={<SearchResultsPage />} />
 
               {/* Lịch sử làng */}
               <Route path="/lich-su" element={<HistoryPage />} />

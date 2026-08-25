@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { genealogyService } from '../services/genealogyService';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import { FamilyTreeCanvas } from '../components/genealogy/FamilyTreeCanvas';
 
 export const GenealogyPage = () => {
@@ -148,8 +149,23 @@ export const GenealogyPage = () => {
     m.careerHonor?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
+  const clanTitle = selectedClan
+    ? `Gia Phả ${selectedClan.name} — Cội Nguồn Làng Giao Tác`
+    : 'Gia Phả & Cội Nguồn 8 Dòng Họ — Làng Giao Tác';
+
+  const clanDesc = selectedClan?.description ||
+    'Phả hệ số, danh sách tiên tổ, chi phái và lịch giỗ tổ của 8 dòng họ Làng Giao Tác — TDP 9 Thuận Lộc, Hà Tĩnh.';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <Helmet>
+        <title>{`${clanTitle}`}</title>
+        <meta name="description" content={clanDesc.slice(0, 160)} />
+        <meta property="og:title" content={clanTitle} />
+        <meta property="og:description" content={clanDesc.slice(0, 160)} />
+        <meta property="og:type" content="website" />
+      </Helmet>
+
       {/* Hero Banner Header */}
       <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-10 shadow-warm space-y-4">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-subtle text-primary text-xs font-bold uppercase tracking-wider">
@@ -294,6 +310,7 @@ export const GenealogyPage = () => {
           {activeTab === 'tree' && (
             <FamilyTreeCanvas
               tree={selectedClan.tree || []}
+              clanName={selectedClan.name}
               onSelectMember={(member) => setSelectedMemberDetail(member)}
               onAddChild={handleOpenAddChild}
               isAdmin={isAdmin}

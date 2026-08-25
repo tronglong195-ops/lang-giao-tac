@@ -17,6 +17,17 @@
 
     <!-- Google Identity Services SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Plausible Analytics (Tự động tải khi chạy trên Production / Tên miền thật) -->
+    <script>
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const script = document.createElement('script');
+        script.defer = true;
+        script.setAttribute('data-domain', window.location.hostname);
+        script.src = 'https://plausible.io/js/script.js';
+        document.head.appendChild(script);
+      }
+    </script>
   </head>
   <body class="bg-paper text-ink font-sans antialiased selection:bg-secondary-light selection:text-ink">
     <div id="root"></div>

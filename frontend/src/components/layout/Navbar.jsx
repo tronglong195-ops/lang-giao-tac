@@ -24,6 +24,7 @@ import {
   Flame,
   Compass,
   QrCode,
+  Search,
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -33,10 +34,22 @@ export const Navbar = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Dropdown states for grouped desktop menus
   const [activeDropdown, setActiveDropdown] = useState(null); // 'heritage' | 'community' | null
   const dropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/tim-kiem?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setMobileMenuOpen(false);
+    }
+  };
 
   // Close dropdowns on route change
   useEffect(() => {
@@ -347,6 +360,20 @@ export const Navbar = () => {
 
           {/* User & Action Buttons (Desktop) */}
           <div className="hidden lg:flex items-center space-x-1.5 xl:space-x-2.5 shrink-0">
+            {/* Thanh Tìm Kiếm Toàn Site (Desktop) */}
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm..."
+                className="w-28 xl:w-40 focus:w-56 pl-8 pr-2.5 py-1.5 rounded-xl bg-paper border border-warmBorder focus:outline-none focus:ring-1 focus:ring-primary focus:bg-surface text-xs text-ink placeholder-ink-muted/60 transition-all duration-200"
+              />
+              <button type="submit" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-primary">
+                <Search className="w-3.5 h-3.5" />
+              </button>
+            </form>
+
             {user ? (
               <div className="flex items-center space-x-1.5 xl:space-x-2.5 shrink-0">
                 {/* Nút Viết bài */}
@@ -420,8 +447,12 @@ export const Navbar = () => {
                       )}
 
                       <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center space-x-2.5 px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 transition-colors text-left"
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          logout();
+                          navigate('/');
+                        }}
+                        className="w-full flex items-center space-x-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-warmBorder mt-1"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Đăng xuất</span>
@@ -450,6 +481,16 @@ export const Navbar = () => {
 
           {/* Mobile Hamburger & Actions */}
           <div className="flex items-center lg:hidden space-x-1.5 shrink-0">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(true);
+                setTimeout(() => searchInputRef.current?.focus(), 150);
+              }}
+              className="p-2 rounded-xl text-ink hover:bg-paper border border-warmBorder focus:outline-none shrink-0"
+              aria-label="Tìm kiếm"
+            >
+              <Search className="w-4 h-4 text-ink-muted" />
+            </button>
             {user && <NotificationBell />}
             {user && (
               <Link
@@ -474,6 +515,25 @@ export const Navbar = () => {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-warmBorder bg-surface/98 backdrop-blur-xl animate-in slide-in-from-top-4 duration-300 max-h-[85vh] overflow-y-auto p-4 space-y-6">
+          {/* Ô tìm kiếm trên Mobile Drawer */}
+          <form onSubmit={handleSearch} className="relative">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm kiếm bài viết, tin tức, dòng họ..."
+              className="w-full pl-10 pr-20 py-2.5 rounded-xl bg-paper border border-warmBorder focus:outline-none focus:ring-2 focus:ring-primary text-sm text-ink placeholder-ink-muted/60"
+            />
+            <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <button
+              type="submit"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-primary text-surface text-xs font-semibold"
+            >
+              Tìm
+            </button>
+          </form>
+
           {/* User Info (Mobile) */}
           {user ? (
             <div className="p-4 rounded-2xl bg-paper border border-warmBorder flex items-center justify-between">

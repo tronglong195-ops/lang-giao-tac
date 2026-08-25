@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { marketService } from '../services/marketService';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 const CATEGORIES = [
   { id: 'all', name: 'Tất cả đặc sản' },
@@ -96,6 +97,20 @@ export const MarketPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <Helmet>
+        <title>Chợ Quê & Đặc Sản OCOP — Làng Giao Tác</title>
+        <meta
+          name="description"
+          content="Gian hàng nông sản và đặc sản Làng Giao Tác — TDP 9 Thuận Lộc. Kết nối trực tiếp nhà vườn: kẹo cu đơ, cam bù, mật mía, rượu quê."
+        />
+        <meta property="og:title" content="Chợ Quê & Đặc Sản OCOP — Làng Giao Tác" />
+        <meta
+          property="og:description"
+          content="Gian hàng nông sản và đặc sản Làng Giao Tác — TDP 9 Thuận Lộc. Kết nối trực tiếp nhà vườn."
+        />
+        <meta property="og:type" content="website" />
+      </Helmet>
+
       {/* Hero Header */}
       <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-10 shadow-warm space-y-4">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider">

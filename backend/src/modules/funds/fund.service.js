@@ -43,9 +43,11 @@ const generateVietQRUrl = ({ bankName = 'MBBANK', bankAccount = '0912345678', ba
 
 /**
  * Gửi thông tin ủng hộ (Online hoặc Đã chuyển khoản)
+ * Mặc định isVerified = false cho tới khi Webhook hoặc Admin xác nhận
  */
-const createDonation = async (data) => {
+const createDonation = async (data, isAdmin = false) => {
   const { campaignId, donorName, donorClan, amount, message, txCode } = data;
+  const verified = isAdmin === true && data.isVerified === true;
 
   const donation = await prisma.fundDonation.create({
     data: {
@@ -54,22 +56,61 @@ const createDonation = async (data) => {
       donorClan: donorClan || 'Con em quê hương Giao Tác',
       amount: Number(amount) || 0,
       message,
-      txCode,
-      isVerified: true, // Mặc định ghi nhận
+      txCode: txCode || null,
+      isVerified: verified,
+    },
+  });
+
+  // Chỉ cộng dồn số tiền khi đã được xác thực
+  if (verified) {
+    await prisma.fundCampaign.update({
+      where: { id: campaignId },
+      data: {
+        raisedAmount: {
+          increment: Number(amount) || 0,
+        },
+      },
+    });
+  }
+
+  return donation;
+};
+
+/**
+ * Xác nhận khoản đóng góp (qua Webhook hoặc Admin duyệt tay)
+ */
+const verifyDonation = async (donationId, txCode = null) => {
+  const donation = await prisma.fundDonation.findUnique({
+    where: { id: donationId },
+  });
+
+  if (!donation) {
+    throw new Error('Không tìm thấy khoản ủng hộ.');
+  }
+
+  if (donation.isVerified) {
+    return donation; // Đã xác thực trước đó
+  }
+
+  const updatedDonation = await prisma.fundDonation.update({
+    where: { id: donationId },
+    data: {
+      isVerified: true,
+      txCode: txCode || donation.txCode,
     },
   });
 
   // Cập nhật tổng số tiền đã nhận của chiến dịch
   await prisma.fundCampaign.update({
-    where: { id: campaignId },
+    where: { id: donation.campaignId },
     data: {
       raisedAmount: {
-        increment: Number(amount) || 0,
+        increment: donation.amount,
       },
     },
   });
 
-  return donation;
+  return updatedDonation;
 };
 
 /**
@@ -110,5 +151,6 @@ module.exports = {
   getCampaignBySlug,
   generateVietQRUrl,
   createDonation,
+  verifyDonation,
   createCampaign,
 };

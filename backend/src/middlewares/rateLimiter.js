@@ -38,7 +38,7 @@ const rateLimiter = (windowMs = 60 * 1000, max = 30, message = 'Bạn thao tác 
 };
 
 // Dọn dẹp bộ đệm định kỳ mỗi 5 phút để tránh rò rỉ bộ nhớ
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, val] of rateLimitMap.entries()) {
     if (now > val.resetTime) {
@@ -46,5 +46,9 @@ setInterval(() => {
     }
   }
 }, 5 * 60 * 1000);
+
+if (cleanupTimer.unref) {
+  cleanupTimer.unref();
+}
 
 module.exports = { rateLimiter };

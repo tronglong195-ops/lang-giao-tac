@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Compass,
   MapPin,
@@ -6,10 +6,14 @@ import {
   Info,
   Maximize2,
   Sparkles,
-  Volume2,
-  VolumeX,
   Layers,
+  Play,
+  Pause,
+  RotateCw,
 } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import { Viewer } from '@photo-sphere-viewer/core';
+import '@photo-sphere-viewer/core/index.css';
 
 const PANORAMA_LOCATIONS = [
   {
@@ -67,10 +71,92 @@ const PANORAMA_LOCATIONS = [
 
 export const VirtualTourPage = () => {
   const [selectedLoc, setSelectedLoc] = useState(PANORAMA_LOCATIONS[0]);
-  const [isRotating, setIsRotating] = useState(true);
+  const [isAutoRotate, setIsAutoRotate] = useState(true);
+  const viewerContainerRef = useRef(null);
+  const viewerInstanceRef = useRef(null);
+
+  useEffect(() => {
+    if (!viewerContainerRef.current) return;
+
+    let viewer;
+    try {
+      viewer = new Viewer({
+        container: viewerContainerRef.current,
+        panorama: selectedLoc.imageUrl,
+        caption: selectedLoc.name,
+        touchmoveTwoFingers: false,
+        mousewheelCtrlKey: false,
+        defaultZoomLvl: 40,
+        navbar: ['autorotate', 'zoom', 'move', 'fullscreen'],
+      });
+
+      viewerInstanceRef.current = viewer;
+
+      if (isAutoRotate) {
+        viewer.addEventListener('ready', () => {
+          try {
+            viewer.startAutorotate();
+          } catch (e) {
+            // Ignore if autorotate plugin not attached
+          }
+        }, { once: true });
+      }
+    } catch (err) {
+      console.warn('Lỗi khởi tạo PhotoSphereViewer:', err);
+    }
+
+    return () => {
+      if (viewer) {
+        try {
+          viewer.destroy();
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+  }, [selectedLoc.imageUrl]);
+
+  const toggleAutoRotate = () => {
+    if (viewerInstanceRef.current) {
+      try {
+        if (isAutoRotate) {
+          viewerInstanceRef.current.stopAutorotate();
+        } else {
+          viewerInstanceRef.current.startAutorotate();
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    setIsAutoRotate(!isAutoRotate);
+  };
+
+  const handleFullscreen = () => {
+    if (viewerInstanceRef.current) {
+      try {
+        viewerInstanceRef.current.enterFullscreen();
+      } catch (e) {
+        // ignore
+      }
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <Helmet>
+        <title>Tour Thực Tế Ảo 360° — Làng Giao Tác</title>
+        <meta
+          name="description"
+          content="Trải nghiệm không gian thực tế ảo 360 độ ngắm nhìn Đình làng Giao Tác, Giếng Cổ, Đường hoa và Cánh đồng quê hương dưới chân núi Hồng Lĩnh."
+        />
+        <meta property="og:title" content="Tour Thực Tế Ảo 360° — Làng Giao Tác" />
+        <meta
+          property="og:description"
+          content="Trải nghiệm không gian thực tế ảo 360 độ ngắm nhìn cảnh sắc Làng Giao Tác — TDP 9 Thuận Lộc."
+        />
+        <meta property="og:image" content={selectedLoc.imageUrl} />
+      </Helmet>
+
       {/* Hero Header */}
       <div className="bg-surface rounded-3xl border border-warmBorder p-6 sm:p-10 shadow-warm space-y-4">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-subtle text-primary text-xs font-bold uppercase tracking-wider">
@@ -90,85 +176,140 @@ export const VirtualTourPage = () => {
 
       {/* Panorama Viewer Box */}
       <div className="bg-surface rounded-3xl border border-warmBorder overflow-hidden shadow-warm space-y-4 p-4 sm:p-6">
-        <div className="relative w-full h-[400px] sm:h-[550px] rounded-2xl overflow-hidden bg-black group">
-          <img
-            src={selectedLoc.imageUrl}
-            alt={selectedLoc.name}
-            className={`w-full h-full object-cover transition-all duration-1000 ${
-              isRotating ? 'scale-105' : 'scale-100'
-            }`}
+        <div className="relative w-full h-[420px] sm:h-[580px] rounded-2xl overflow-hidden bg-black group">
+          {/* PhotoSphere Container */}
+          <div
+            ref={viewerContainerRef}
+            className="w-full h-full"
+            style={{ width: '100%', height: '100%' }}
           />
 
-          {/* Overlay Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-
-          {/* Location Title on Viewer */}
-          <div className="absolute top-4 left-4 right-4 flex items-center justify-between text-white">
-            <div className="space-y-0.5">
-              <span className="px-2.5 py-0.5 rounded-full bg-primary/90 text-surface text-[10px] font-bold uppercase tracking-wider">
-                {selectedLoc.category}
-              </span>
-              <h3 className="font-bold text-base sm:text-xl drop-shadow-md">{selectedLoc.name}</h3>
-            </div>
-
+          {/* Quick Overlay Controls */}
+          <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
             <button
-              onClick={() => setIsRotating(!isRotating)}
-              className="p-2 rounded-xl bg-black/50 backdrop-blur-sm text-white hover:bg-black/80 text-xs flex items-center space-x-1 border border-white/20"
+              onClick={toggleAutoRotate}
+              className="p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all shadow-md"
+              title={isAutoRotate ? 'Tạm dừng xoay' : 'Tự động xoay 360°'}
             >
-              <Eye className="w-4 h-4" />
-              <span className="hidden sm:inline">{isRotating ? 'Dừng góc nhìn' : 'Tự động xoay'}</span>
+              {isAutoRotate ? <Pause className="w-4 h-4 text-emerald-400" /> : <Play className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={handleFullscreen}
+              className="p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all shadow-md"
+              title="Toàn màn hình"
+            >
+              <Maximize2 className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Hotspots Info on Bottom */}
-          <div className="absolute bottom-4 left-4 right-4 text-white space-y-2">
-            <p className="text-xs sm:text-sm text-paper/90 max-w-2xl drop-shadow-sm leading-relaxed">
-              {selectedLoc.description}
-            </p>
+          {/* Location Badge on Top Left */}
+          <div className="absolute top-4 left-4 z-10">
+            <div className="bg-black/70 backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl border border-white/20 text-xs font-semibold flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>{selectedLoc.name}</span>
+            </div>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              {selectedLoc.hotspots.map((hs, i) => (
-                <div
-                  key={i}
-                  className="px-3 py-1 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-[11px] font-medium text-paper flex items-center space-x-1"
-                >
-                  <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
-                  <span><strong>{hs.title}:</strong> {hs.desc}</span>
-                </div>
-              ))}
+          {/* Helper Hint at Bottom Center */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+            <div className="bg-black/60 backdrop-blur-md text-white/90 text-[11px] px-3 py-1 rounded-full border border-white/10 flex items-center space-x-1.5 shadow-sm">
+              <RotateCw className="w-3 h-3 text-emerald-400 animate-spin" style={{ animationDuration: '8s' }} />
+              <span>Nhấn giữ chuột & kéo để quay góc nhìn 360°</span>
             </div>
           </div>
         </div>
 
-        {/* Location Selector Carousel */}
-        <div className="space-y-2 pt-2">
-          <span className="text-xs font-bold text-ink uppercase tracking-wider block">
-            Chọn Điểm Tham Quan (5 Địa Điểm Nổi Bật)
-          </span>
+        {/* Location Info & Hotspots */}
+        <div className="p-4 sm:p-6 bg-paper rounded-2xl border border-warmBorder space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-warmBorder pb-4">
+            <div>
+              <span className="text-xs font-bold text-accent uppercase tracking-wider">
+                {selectedLoc.category}
+              </span>
+              <h2 className="text-lg sm:text-xl font-bold text-ink">{selectedLoc.name}</h2>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {PANORAMA_LOCATIONS.map((loc) => {
-              const isSelected = selectedLoc.id === loc.id;
-              return (
-                <button
-                  key={loc.id}
-                  onClick={() => setSelectedLoc(loc)}
-                  className={`p-2.5 rounded-2xl border text-left transition-all space-y-1.5 ${
-                    isSelected
-                      ? 'bg-primary text-surface border-primary shadow-warm scale-102 ring-2 ring-primary/40'
-                      : 'bg-paper hover:bg-surface text-ink border-warmBorder'
-                  }`}
-                >
+          <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+            {selectedLoc.description}
+          </p>
+
+          {/* Hotspots Highlights */}
+          {selectedLoc.hotspots && selectedLoc.hotspots.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <h3 className="text-xs font-bold text-ink uppercase tracking-wider flex items-center space-x-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <span>Điểm nhấn tiêu biểu</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {selectedLoc.hotspots.map((hs, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-surface p-3 rounded-xl border border-warmBorder space-y-1 shadow-2xs"
+                  >
+                    <h4 className="text-xs font-bold text-primary">{hs.title}</h4>
+                    <p className="text-[11px] text-ink-muted">{hs.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Select Panorama Locations List */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Layers className="w-5 h-5 text-primary" />
+          <h2 className="text-lg sm:text-xl font-bold text-ink">Danh Mục Địa Điểm Trải Nghiệm</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {PANORAMA_LOCATIONS.map((loc) => {
+            const isSelected = selectedLoc.id === loc.id;
+            return (
+              <div
+                key={loc.id}
+                onClick={() => setSelectedLoc(loc)}
+                className={`group cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-surface flex flex-col ${
+                  isSelected
+                    ? 'border-primary ring-4 ring-primary-subtle shadow-md'
+                    : 'border-warmBorder hover:border-primary/50 shadow-xs'
+                }`}
+              >
+                <div className="relative h-40 overflow-hidden bg-black/10">
                   <img
                     src={loc.imageUrl}
                     alt={loc.name}
-                    className="w-full h-20 sm:h-24 object-cover rounded-xl"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <p className="font-bold text-xs line-clamp-1">{loc.name}</p>
-                </button>
-              );
-            })}
-          </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                      {loc.category}
+                    </span>
+                    <h3 className="text-xs sm:text-sm font-bold line-clamp-1">{loc.name}</h3>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold shadow-xs">
+                      Đang xem
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+                  <p className="text-[11px] text-ink-muted line-clamp-2">{loc.description}</p>
+                  <div className="pt-2 flex items-center justify-between text-[11px] text-primary font-semibold border-t border-warmBorder/60">
+                    <span className="flex items-center space-x-1">
+                      <Eye className="w-3 h-3" />
+                      <span>Xem góc nhìn 360°</span>
+                    </span>
+                    <MapPin className="w-3 h-3 text-ink-light" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

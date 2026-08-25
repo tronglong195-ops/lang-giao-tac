@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bell, Calendar, User, ArrowLeft, Share2, Landmark } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { newsService } from '../services/newsService';
 
 export const NewsDetailPage = () => {
@@ -73,8 +74,21 @@ export const NewsDetailPage = () => {
     );
   }
 
+  const rawDescription = newsItem.summary || (newsItem.contentHtml
+    ? newsItem.contentHtml.replace(/<[^>]+>/g, '').slice(0, 160)
+    : 'Bản tin thông báo chính quyền Làng Giao Tác — TDP 9 Thuận Lộc.');
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <Helmet>
+        <title>{`${newsItem.title} — Tin tức Làng Giao Tác`}</title>
+        <meta name="description" content={rawDescription} />
+        <meta property="og:title" content={newsItem.title} />
+        <meta property="og:description" content={rawDescription} />
+        {newsItem.coverImageUrl && <meta property="og:image" content={newsItem.coverImageUrl} />}
+        <meta property="og:type" content="article" />
+      </Helmet>
+
       {/* Breadcrumb & Back */}
       <div className="flex items-center justify-between">
         <button
