@@ -150,6 +150,80 @@ async function runAutoSeed(prisma) {
       },
     });
 
+    // Các tin tức sự kiện tháng 8 từ Cổng TTĐT Phường Nam Hồng Lĩnh
+    const wardNewsSeedData = [
+      {
+        slug: 'khai-mac-dien-tap-chien-dau-phuong-nam-hong-linh-trong-khu-vuc-phong-thu-nam-2026',
+        title: 'Khai mạc diễn tập chiến đấu Phường Nam Hồng Lĩnh trong khu vực phòng thủ năm 2026',
+        contentHtml: `<p class="lead">Sáng nay 24/8, Ban Tổ chức diễn tập phường Nam Hồng Lĩnh đã tổ chức khai mạc diễn tập chiến đấu phường trong khu vực phòng thủ năm 2026.</p>
+        <p>Cuộc diễn tập nhằm nâng cao năng lực lãnh đạo, chỉ đạo điều hành của cấp ủy, chính quyền địa phương, trình độ tổ chức chỉ huy, hiệp đồng tác chiến của các lực lượng trong trạng thái sẵn sàng chiến đấu và các tình huống khẩn cấp.</p>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs"><strong>Nguồn chính thức:</strong> Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh</div>`,
+        source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+        publishedAt: new Date('2026-08-24T08:00:00Z'),
+      },
+      {
+        slug: 'phuong-nam-hong-linh-to-chuc-kham-sang-loc-mien-phi-cho-nguoi-dan',
+        title: 'Phường Nam Hồng Lĩnh tổ chức khám sàng lọc miễn phí cho người dân',
+        contentHtml: `<p class="lead">Phường Nam Hồng Lĩnh phối hợp với các đơn vị y tế tổ chức chương trình khám sàng lọc sức khỏe tổng quát, tư vấn và cấp phát thuốc miễn phí cho bà con nhân dân và người cao tuổi.</p>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs"><strong>Nguồn chính thức:</strong> Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh</div>`,
+        source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+        publishedAt: new Date('2026-08-22T08:00:00Z'),
+      },
+      {
+        slug: 'gian-hang-phuong-nam-hong-linh-quang-ba-ruou-phuc-hoi-tai-hoi-cho-trien-lam-san-pham-cnnt-tieu-bieu-khu-vuc-mien-trung---tay-nguyen-nam-2026',
+        title: 'Gian hàng phường Nam Hồng Lĩnh quảng bá rượu Phúc hồi tại hội chợ triển lãm sản phẩm CNNT tiêu biểu khu vực miền Trung - Tây Nguyên năm 2026',
+        contentHtml: `<p class="lead">Gian hàng trưng bày, giới thiệu sản phẩm rượu Phúc Hồi truyền thống và các đặc sản OCOP tiêu biểu của Phường Nam Hồng Lĩnh thu hút đông đảo du khách và đối tác tham quan, kết nối tiêu thụ.</p>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs"><strong>Nguồn chính thức:</strong> Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh</div>`,
+        source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+        publishedAt: new Date('2026-08-21T09:00:00Z'),
+      },
+      {
+        slug: 'hdnd-phuong-nam-hong-linh-tang-cuong-giam-sat-don-doc-giai-quyet-kien-nghi-cu-tri',
+        title: 'HĐND phường Nam Hồng Lĩnh: tăng cường giám sát, đôn đốc giải quyết kiến nghị cử tri',
+        contentHtml: `<p class="lead">Sáng nay 20/8, Thường trực HĐND phường Nam Hồng Lĩnh tổ chức phiên họp thường kỳ tháng 8, đánh giá kết quả hoạt động tháng 8, triển khai nhiệm vụ trọng tâm tháng 9/2026 và giải quyết thấu đáo các kiến nghị của cử tri.</p>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs"><strong>Nguồn chính thức:</strong> Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh</div>`,
+        source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+        publishedAt: new Date('2026-08-20T08:00:00Z'),
+      },
+      {
+        slug: 'thong-bao-ve-viec-dieu-tiet-xa-nuoc-qua-tran-ho-chua-nuoc-da-bac-030011277',
+        title: 'Thông báo về việc điều tiết xả nước qua tràn Hồ chứa nước Đá bạc',
+        contentHtml: `<p class="lead">Do ảnh hưởng của mưa lớn, UBND Phường Nam Hồng Lĩnh thông báo phương án điều tiết xả nước qua tràn Hồ chứa nước Đá Bạc để đảm bảo an toàn công trình và vùng hạ du.</p>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs"><strong>Nguồn chính thức:</strong> Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh</div>`,
+        source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+        publishedAt: new Date('2026-08-20T07:00:00Z'),
+      },
+      {
+        slug: 'ubnd-phuong-nam-hong-thong-bao-thoi-gian-nghi-le-quoc-khanh-nam-2026',
+        title: 'UBND phường Nam Hồng Lĩnh thông báo thời gian nghỉ lễ Quốc khánh năm 2026',
+        contentHtml: `<p class="lead">UBND phường Nam Hồng Lĩnh thông báo lịch nghỉ Lễ Quốc khánh 2/9 năm 2026 đối với cán bộ, công chức, viên chức và người lao động, đồng thời phân công lịch trực đảm bảo an ninh trật tự trên địa bàn.</p>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs"><strong>Nguồn chính thức:</strong> Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh</div>`,
+        source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+        publishedAt: new Date('2026-08-18T08:00:00Z'),
+      },
+    ];
+
+    for (const item of wardNewsSeedData) {
+      await prisma.news.upsert({
+        where: { slug: item.slug },
+        update: {
+          title: item.title,
+          contentHtml: item.contentHtml,
+          source: item.source,
+          publishedAt: item.publishedAt,
+        },
+        create: {
+          authorId: adminUser.id,
+          title: item.title,
+          slug: item.slug,
+          contentHtml: item.contentHtml,
+          source: item.source,
+          isOfficial: true,
+          publishedAt: item.publishedAt,
+        },
+      });
+    }
+
     // 4. Bài viết cộng đồng (Posts) — Dùng UPSERT đảm bảo luôn xuất bản
     await prisma.post.upsert({
       where: { slug: 'video-gioi-thieu-dinh-lang-giao-tac-di-tich-lich-su-van-hoa' },

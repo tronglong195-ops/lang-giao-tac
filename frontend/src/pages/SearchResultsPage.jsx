@@ -45,16 +45,49 @@ export const SearchResultsPage = () => {
     const fetchAllSearchResults = async () => {
       setLoading(true);
       try {
-        const [postsRes, newsRes, villagersRes, productsRes] = await Promise.all([
+        const [postsRes, newsRes, villagersRes, productsRes, wardFeed] = await Promise.all([
           postService.getPosts({ search: query.trim(), limit: 12 }).catch(() => ({ posts: [] })),
           newsService.getNews({ search: query.trim(), limit: 12 }).catch(() => ({ news: [] })),
           villagerService.getVillagers({ search: query.trim(), limit: 12 }).catch(() => ({ villagers: [] })),
           marketService.getAllProducts({ search: query.trim() }).catch(() => []),
+          newsService.getWardNewsFeed(1).catch(() => []),
         ]);
+
+        const rawQuery = query.trim().toLowerCase();
+        let matchedWardNews = [];
+        if (Array.isArray(wardFeed) && wardFeed.length > 0) {
+          matchedWardNews = wardFeed
+            .filter(
+              (item) =>
+                item.title?.toLowerCase().includes(rawQuery) ||
+                item.summary?.toLowerCase().includes(rawQuery)
+            )
+            .map((item) => ({
+              id: item.originalUrl || item.title,
+              title: item.title,
+              slug: item.title.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+              summary: item.summary,
+              contentHtml: `<p>${item.summary || ''}</p>`,
+              source: 'Cổng TTĐT Phường Nam Hồng Lĩnh',
+              originalUrl: item.originalUrl,
+              imageUrl: item.imageUrl,
+              publishedAt: new Date(),
+              isWardDirect: true,
+            }));
+        }
+
+        const existingNews = newsRes?.news || [];
+        // Gộp kết quả tin tức và tránh trùng lặp
+        const combinedNews = [...existingNews];
+        for (const wn of matchedWardNews) {
+          if (!combinedNews.some((cn) => cn.title === wn.title || cn.slug === wn.slug)) {
+            combinedNews.unshift(wn);
+          }
+        }
 
         setResults({
           posts: postsRes?.posts || [],
-          news: newsRes?.news || [],
+          news: combinedNews,
           villagers: villagersRes?.villagers || [],
           products: Array.isArray(productsRes) ? productsRes : [],
         });
@@ -281,27 +314,44 @@ export const SearchResultsPage = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       {results.news.map((item) => (
-                        <Link
+                        <div
                           key={item.id}
-                          to={`/tin-tuc/${item.slug}`}
                           className="group bg-surface rounded-2xl border border-warmBorder hover:border-accent/40 hover:shadow-warm transition-all duration-200 p-4 sm:p-5 flex flex-col justify-between space-y-3"
                         >
                           <div className="space-y-2">
                             <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold">
-                              {item.source || 'Thông báo chính quyền'}
+                              🏛️ {item.source || 'Thông báo chính quyền'}
                             </span>
                             <h3 className="text-sm sm:text-base font-bold text-ink group-hover:text-accent transition-colors line-clamp-2">
-                              {item.title}
+                              {item.originalUrl ? (
+                                <a href={item.originalUrl} target="_blank" rel="noopener noreferrer">
+                                  {item.title}
+                                </a>
+                              ) : (
+                                <Link to={`/tin-tuc/${item.slug}`}>{item.title}</Link>
+                              )}
                             </h3>
                             <p className="text-xs text-ink-muted line-clamp-2 font-normal">
                               {item.summary || item.contentHtml?.replace(/<[^>]+>/g, '').slice(0, 100)}
                             </p>
                           </div>
-                          <div className="text-[11px] text-ink-muted flex items-center space-x-1 border-t border-warmBorder/60 pt-2.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{new Date(item.publishedAt || item.createdAt).toLocaleDateString('vi-VN')}</span>
+                          <div className="text-[11px] text-ink-muted flex items-center justify-between border-t border-warmBorder/60 pt-2.5">
+                            <span className="flex items-center space-x-1">
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>{new Date(item.publishedAt || item.createdAt).toLocaleDateString('vi-VN')}</span>
+                            </span>
+                            {item.originalUrl && (
+                              <a
+                                href={item.originalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-red-900 hover:underline font-bold text-[11px]"
+                              >
+                                Xem bài gốc ↗
+                              </a>
+                            )}
                           </div>
-                        </Link>
+                        </div>
                       ))}
                     </div>
                   </div>

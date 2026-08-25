@@ -76,21 +76,50 @@ const DEFAULT_HERO_SLIDES = [
 export const HomePage = () => {
   const [heroSlides, setHeroSlides] = useState(DEFAULT_HERO_SLIDES);
   const [latestNews, setLatestNews] = useState([]);
+  const [wardNews, setWardNews] = useState([]);
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [featuredPhotos, setFeaturedPhotos] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncingWard, setSyncingWard] = useState(false);
 
   // Lightbox modal state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const fetchWardNews = async () => {
+    try {
+      const articles = await newsService.getWardNewsFeed(1);
+      if (articles && articles.length > 0) {
+        setWardNews(articles.slice(0, 3));
+      }
+    } catch (err) {
+      console.warn('Lỗi tải tin phường trên trang chủ:', err);
+    }
+  };
+
+  const handleSyncWardFromHome = async () => {
+    setSyncingWard(true);
+    try {
+      await newsService.syncWardNews(2);
+      await fetchWardNews();
+      const newsRes = await newsService.getNews({ limit: 6, isOfficial: true });
+      if (newsRes?.news) setLatestNews(newsRes.news);
+      alert('Đã cập nhật các bài viết mới nhất trong tháng từ Cổng TTĐT Phường Nam Hồng Lĩnh!');
+    } catch (err) {
+      console.error('Lỗi cập nhật tin phường:', err);
+      await fetchWardNews();
+    } finally {
+      setSyncingWard(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [slidesRes, newsRes, postsRes, photosRes, eventsRes] = await Promise.all([
           api.get('/hero-slides'),
-          newsService.getNews({ limit: 3, isOfficial: true }),
+          newsService.getNews({ limit: 6, isOfficial: true }),
           postService.getPosts({ limit: 3, status: 'published' }),
           photoService.getFeaturedPhotos(6),
           eventService.getEvents({ limit: 3, timeFilter: 'upcoming' }),
@@ -122,6 +151,9 @@ export const HomePage = () => {
         if (eventsRes?.events) {
           setUpcomingEvents(eventsRes.events);
         }
+
+        // Tải tin tức trực tiếp từ Cổng TTĐT Phường Nam Hồng Lĩnh
+        await fetchWardNews();
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu trang chủ:', error);
       } finally {
@@ -144,16 +176,133 @@ export const HomePage = () => {
         <HeroSlider slides={heroSlides} />
       </section>
 
-      {/* 2. Tin Nổi Bật & Thông Báo Chính Quyền */}
+      {/* 2. CHUYÊN TRANG: TIN TỨC & SỰ KIỆN PHƯỜNG NAM HỒNG LĨNH (THÁNG 8 & MỚI NHẤT) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-gradient-to-b from-[#FFFDF9] via-[#FAF5EE] to-[#F5EBE1] border-2 border-red-900/30 p-6 sm:p-10 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-300/80 pb-6">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-red-900 text-yellow-300 text-xs font-bold uppercase tracking-wider border border-amber-400">
+                <Landmark className="w-3.5 h-3.5 text-yellow-300" />
+                <span>Cổng Thông Tin Điện Tử Phường Nam Hồng Lĩnh</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-red-950">
+                Tin Tức & Sự Kiện Phường Nam Hồng Lĩnh
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-600 max-w-2xl font-sans leading-relaxed">
+                Các sự kiện, diễn tập quốc phòng, chính sách dân sinh, y tế và phát triển kinh tế mới nhất trong tháng 8/2026 được cập nhật trực tiếp từ chính quyền phường.
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3 shrink-0">
+              <button
+                onClick={handleSyncWardFromHome}
+                disabled={syncingWard}
+                className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-red-900 hover:bg-red-800 text-yellow-200 font-bold text-xs shadow-md transition-all border border-amber-400 disabled:opacity-50"
+                title="Cập nhật tin mới nhất trong tháng từ Cổng TTĐT Phường"
+              >
+                <span>{syncingWard ? 'Đang cập nhật...' : '🔄 Cập nhật tin mới'}</span>
+              </button>
+              <Link
+                to="/tin-tuc"
+                className="inline-flex items-center space-x-1 px-4 py-2.5 rounded-xl bg-surface hover:bg-paper text-red-950 font-bold text-xs border border-amber-300 shadow-xs"
+              >
+                <span>Xem tất cả</span>
+                <ChevronRight className="w-3.5 h-3.5 text-red-700" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Grid Tin tức Phường */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {wardNews.length > 0 ? (
+              wardNews.map((item, idx) => (
+                <article
+                  key={idx}
+                  className="bg-white rounded-2xl border-2 border-amber-300/80 hover:border-red-800 p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group space-y-3"
+                >
+                  {item.imageUrl && (
+                    <div className="h-44 rounded-xl overflow-hidden bg-paper relative">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-red-900 text-yellow-300 text-[10px] font-bold shadow-xs">
+                        Cổng TTĐT Phường
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center justify-between text-[11px] text-stone-500 font-mono">
+                      <span className="text-red-900 font-bold font-sans">🏛️ Phường Nam Hồng Lĩnh</span>
+                      <span>{item.timeStr || 'Tháng 8/2026'}</span>
+                    </div>
+
+                    <h3 className="font-bold text-sm sm:text-base text-stone-900 group-hover:text-red-900 transition-colors leading-snug line-clamp-2">
+                      <a href={item.originalUrl} target="_blank" rel="noopener noreferrer">
+                        {item.title}
+                      </a>
+                    </h3>
+
+                    {item.summary && (
+                      <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                        {item.summary}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-amber-200 flex items-center justify-between">
+                    <a
+                      href={item.originalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-red-900 hover:text-red-700 inline-flex items-center space-x-1"
+                    >
+                      <span>Xem bài gốc trên Cổng TTĐT</span>
+                      <span>↗</span>
+                    </a>
+                  </div>
+                </article>
+              ))
+            ) : (
+              latestNews.slice(0, 3).map((item) => (
+                <article
+                  key={item.id}
+                  className="bg-white rounded-2xl border border-warmBorder p-5 shadow-sm hover:shadow-warm transition-all flex flex-col justify-between group space-y-3"
+                >
+                  <div className="space-y-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-900 text-[10px] font-bold">
+                      {item.source || 'Thông báo chính thức'}
+                    </span>
+                    <h3 className="font-bold text-sm text-ink group-hover:text-primary transition-colors line-clamp-2">
+                      <Link to={`/tin-tuc/${item.slug}`}>{item.title}</Link>
+                    </h3>
+                  </div>
+                  <Link
+                    to={`/tin-tuc/${item.slug}`}
+                    className="text-xs font-bold text-primary group-hover:underline flex items-center space-x-1"
+                  >
+                    <span>Xem chi tiết</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </article>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 2.5. Thông Báo & Tin Tức Làng Giao Tác (TDP 9) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-4 border-b border-warmBorder">
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-secondary/15 text-accent text-xs font-semibold uppercase tracking-wider mb-2">
               <Bell className="w-3.5 h-3.5 text-secondary-dark" />
-              <span>Thông tin từ Ban Quản Lý</span>
+              <span>Ban Cán Sự Tổ Dân Phố 9</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-primary-dark tracking-tight">
-              Tin Tức & Thông Báo Làng Quê
+              Thông Báo & Tin Tức Làng Giao Tác
             </h2>
           </div>
           <Link
@@ -167,7 +316,7 @@ export const HomePage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {latestNews.length > 0 ? (
-            latestNews.map((item) => (
+            latestNews.slice(0, 3).map((item) => (
               <article
                 key={item.id}
                 className="bg-surface rounded-2xl border border-warmBorder p-6 shadow-warm hover:shadow-warmHover transition-all duration-300 flex flex-col justify-between group"
@@ -185,7 +334,7 @@ export const HomePage = () => {
                   <div
                     className="text-xs text-ink-muted line-clamp-3 leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: item.contentHtml.replace(/<[^>]*>?/gm, ''),
+                      __html: item.contentHtml ? item.contentHtml.replace(/<[^>]*>?/gm, '') : '',
                     }}
                   />
                 </div>
@@ -203,7 +352,7 @@ export const HomePage = () => {
             ))
           ) : (
             <div className="col-span-3 text-center py-10 text-ink-muted text-sm bg-surface rounded-2xl border border-warmBorder">
-              Đang cập nhật tin tức mới nhất từ Ban Quản lý Thôn...
+              Đang cập nhật thông báo mới nhất từ Ban Quản lý TDP 9...
             </div>
           )}
         </div>
