@@ -36,6 +36,20 @@ const createProduct = async (req, res, next) => {
   }
 };
 
+const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await marketService.updateProduct(id, req.body);
+    res.status(200).json({
+      success: true,
+      message: 'Cập nhật đặc sản thành công.',
+      data: { product },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -50,5 +64,6 @@ module.exports = {
   getAllProducts,
   getProductDetail,
   createProduct,
+  updateProduct,
   deleteProduct,
 };

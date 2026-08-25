@@ -27,6 +27,12 @@ export const marketService = {
     return res.data;
   },
 
+  // Cập nhật thông tin sản phẩm
+  updateProduct: async (id, productData) => {
+    const res = await api.put(`/market/${id}`, productData);
+    return res.data;
+  },
+
   // Xóa sản phẩm
   deleteProduct: async (id) => {
     const res = await api.delete(`/market/${id}`);

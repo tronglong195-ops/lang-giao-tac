@@ -45,6 +45,24 @@ const createProduct = async (data) => {
   });
 };
 
+const updateProduct = async (id, data) => {
+  return await prisma.marketProduct.update({
+    where: { id },
+    data: {
+      title: data.title,
+      category: data.category,
+      price: data.price,
+      description: data.description,
+      imageUrl: data.imageUrl,
+      sellerName: data.sellerName,
+      sellerPhone: data.sellerPhone,
+      sellerZalo: data.sellerZalo || data.sellerPhone,
+      address: data.address,
+      isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
+    },
+  });
+};
+
 const deleteProduct = async (id) => {
   return await prisma.marketProduct.delete({
     where: { id },
@@ -55,5 +73,6 @@ module.exports = {
   getAllProducts,
   getProductById,
   createProduct,
+  updateProduct,
   deleteProduct,
 };

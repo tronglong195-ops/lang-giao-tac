@@ -8,8 +8,9 @@ const { roleGuard } = require('../../middlewares/roleGuard');
 router.get('/', marketController.getAllProducts);
 router.get('/:id', marketController.getProductDetail);
 
-// Protected (Admin / Member đăng bài bán nông sản)
+// Protected (Admin / Moderator / Thành viên)
 router.post('/', authGuard, marketController.createProduct);
+router.put('/:id', authGuard, roleGuard(['admin', 'moderator']), marketController.updateProduct);
 router.delete('/:id', authGuard, roleGuard(['admin', 'moderator']), marketController.deleteProduct);
 
 module.exports = router;
