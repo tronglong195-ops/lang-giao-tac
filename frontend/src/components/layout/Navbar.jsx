@@ -101,6 +101,13 @@ export const Navbar = () => {
       color: 'bg-amber-50 text-amber-700 border-amber-200',
     },
     {
+      name: 'Ban cán sự TDP 9',
+      path: '/ban-can-su',
+      icon: ShieldCheck,
+      desc: 'Bí thư Chi bộ, Tổ trưởng TDP, Trưởng ban CTMT',
+      color: 'bg-red-50 text-red-900 border-red-200',
+    },
+    {
       name: 'Bản đồ di tích',
       path: '/ban-do',
       icon: MapPin,

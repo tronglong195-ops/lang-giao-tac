@@ -359,6 +359,104 @@ export const HomePage = () => {
         </div>
       </section>
 
+      {/* 2.8. BAN CÁN SỰ & LÃNH ĐẠO TỔ DÂN PHỐ 9 THUẬN LỘC (LÀNG GIAO TÁC) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-surface border-2 border-red-900/30 p-6 sm:p-10 shadow-warm space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-warmBorder pb-4">
+            <div>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-red-900 text-yellow-300 text-xs font-bold uppercase tracking-wider mb-1">
+                <Landmark className="w-3.5 h-3.5" />
+                <span>Hệ Thống Chính Trị Cơ Sở</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-red-950">
+                Ban Cán Sự Tổ Dân Phố 9 Thuận Lộc
+              </h2>
+              <p className="text-xs sm:text-sm text-ink-muted">
+                Thường trực Chi bộ, Ban cán sự và Ban Công tác Mặt trận Làng Giao Tác (TDP 9)
+              </p>
+            </div>
+            <Link
+              to="/ban-can-su"
+              className="inline-flex items-center space-x-1 px-4 py-2.5 rounded-xl bg-red-900 hover:bg-red-800 text-yellow-200 font-bold text-xs shadow-xs transition-colors shrink-0"
+            >
+              <span>Xem Cơ Cấu Chi Tiết</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            {/* Ảnh Hội nghị trao quyết định */}
+            <div className="lg:col-span-6 rounded-2xl overflow-hidden shadow-warm border border-warmBorder bg-paper group">
+              <img
+                src="/images/leadership/hoi_nghi_sap_xep_tdp.jpg"
+                alt="Hội nghị công bố nghị quyết quyết định sắp xếp tổ dân phố"
+                className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="p-3 text-center text-xs text-ink-muted bg-paper border-t border-warmBorder font-medium">
+                Hội nghị công bố các Nghị quyết, Quyết định về sắp xếp Tổ dân phố (01/7/2026)
+              </div>
+            </div>
+
+            {/* 3 Lãnh đạo chủ chốt */}
+            <div className="lg:col-span-6 space-y-3.5">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-red-50 to-amber-50/50 border border-red-200 flex items-center justify-between shadow-xs">
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-red-800 text-white font-bold flex items-center justify-center shadow-xs">
+                    <User className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-red-800 tracking-wider">
+                      Bí Thư Chi Bộ
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold text-ink">Lê Văn Tiến</h3>
+                    <p className="text-xs text-ink-muted">Phụ trách chung công tác Đảng & định hướng phát triển TDP 9</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-red-900 text-yellow-300 text-[10px] font-bold uppercase shrink-0">
+                  Chi bộ
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-red-50 to-amber-50/50 border border-red-200 flex items-center justify-between shadow-xs">
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-700 to-red-900 text-white font-bold flex items-center justify-center shadow-xs">
+                    <User className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-red-800 tracking-wider">
+                      Tổ Trưởng TDP
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold text-ink">Nguyễn Thanh Hiệp</h3>
+                    <p className="text-xs text-ink-muted">Quản lý hành chính, trật tự trị an & đời sống nhân dân TDP 9</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-red-800 text-white text-[10px] font-bold uppercase shrink-0">
+                  Hành chính
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-50/50 border border-amber-200 flex items-center justify-between shadow-xs">
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold flex items-center justify-center shadow-xs">
+                    <User className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-amber-800 tracking-wider">
+                      Trưởng Ban CTMT
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold text-ink">Nguyễn Huy Hòa</h3>
+                    <p className="text-xs text-ink-muted">Chủ trì Mặt trận Tổ quốc, khối đại đoàn kết & an sinh xã hội</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-amber-500 text-white text-[10px] font-bold uppercase shrink-0">
+                  Mặt trận
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Decorative Wave */}
       <SectionDivider variant="tiles" fill="#FFFDF7" bg="#FBF6EC" />
 

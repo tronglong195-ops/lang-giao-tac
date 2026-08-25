@@ -30,6 +30,7 @@ import { MarketPage } from './pages/MarketPage';
 import { MemorialPage } from './pages/MemorialPage';
 import { VirtualTourPage } from './pages/VirtualTourPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
+import { LeadershipPage } from './pages/LeadershipPage';
 
 function App() {
   return (
@@ -41,6 +42,10 @@ function App() {
             <Routes>
               {/* Trang chủ */}
               <Route path="/" element={<HomePage />} />
+
+              {/* Ban Cán Sự & Lãnh Đạo TDP 9 */}
+              <Route path="/ban-can-su" element={<LeadershipPage />} />
+              <Route path="/ban-chap-hanh" element={<LeadershipPage />} />
 
               {/* Tìm kiếm toàn site */}
               <Route path="/tim-kiem" element={<SearchResultsPage />} />
