@@ -92,7 +92,7 @@ export const HomePage = () => {
     try {
       const articles = await newsService.getWardNewsFeed();
       if (articles && articles.length > 0) {
-        setWardNews(articles.slice(0, 6));
+        setWardNews(articles.slice(0, 3));
       }
     } catch (err) {
       console.warn('Lỗi tải tin phường trên trang chủ:', err);
@@ -291,6 +291,17 @@ export const HomePage = () => {
                 </article>
               ))
             )}
+          </div>
+
+          {/* Nút Xem Thêm Tin Tức Phường */}
+          <div className="pt-2 text-center">
+            <Link
+              to="/tin-tuc"
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-2xl bg-red-900 hover:bg-red-800 text-yellow-200 font-bold text-xs sm:text-sm shadow-md transition-all border border-amber-400 group"
+            >
+              <span>Xem Thêm Tin Tức Phường Nam Hồng Lĩnh (40+ Bài Viết)</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
         </div>
       </section>
