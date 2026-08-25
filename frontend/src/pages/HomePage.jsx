@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   Landmark,
   MapPin,
+  User,
   Users,
   ChevronRight,
   ArrowRight,
