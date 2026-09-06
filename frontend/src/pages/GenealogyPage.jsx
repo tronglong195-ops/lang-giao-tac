@@ -336,8 +336,8 @@ export const GenealogyPage = () => {
           )}
 
           {/* Chuyển Đổi Chế Độ Xem */}
-          <div className="flex items-center justify-between border-b-2 border-amber-300/80 pb-3 pt-2">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-amber-300/80 pb-3 pt-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setActiveTab('tree')}
                 className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-serif font-bold transition-all shadow-xs ${
@@ -348,6 +348,18 @@ export const GenealogyPage = () => {
               >
                 🌳 Sơ Đồ Cây Phả Hệ
               </button>
+
+              <button
+                onClick={() => setActiveTab('panorama')}
+                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-serif font-bold transition-all shadow-xs ${
+                  activeTab === 'panorama'
+                    ? 'bg-gradient-to-r from-red-950 via-red-900 to-red-950 text-yellow-300 border border-amber-400 shadow-md'
+                    : 'text-stone-700 hover:bg-amber-100/60 border border-amber-200'
+                }`}
+              >
+                🏛️ Toàn Cảnh 11 Đời (Bảng Gốc)
+              </button>
+
               <button
                 onClick={() => setActiveTab('members')}
                 className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-serif font-bold transition-all shadow-xs ${
@@ -357,6 +369,17 @@ export const GenealogyPage = () => {
                 }`}
               >
                 📖 Danh Mục Phả Tộc ({selectedClan.members?.length || 0})
+              </button>
+
+              <button
+                onClick={() => setActiveTab('document')}
+                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-serif font-bold transition-all shadow-xs ${
+                  activeTab === 'document'
+                    ? 'bg-gradient-to-r from-red-950 via-red-900 to-red-950 text-yellow-300 border border-amber-400 shadow-md'
+                    : 'text-stone-700 hover:bg-amber-100/60 border border-amber-200'
+                }`}
+              >
+                🖼️ Bản Đồ Gốc & Tải PDF
               </button>
             </div>
 
@@ -385,47 +408,220 @@ export const GenealogyPage = () => {
             />
           )}
 
-          {/* Tab 2: Danh Mục Tra Cứu Bài Vị */}
+          {/* Tab 2: Toàn Cảnh 11 Đời Phả Hệ (Bảng Gốc 11 Cột) */}
+          {activeTab === 'panorama' && (
+            <div className="space-y-4">
+              {/* Chú giải bảng gốc */}
+              <div className="p-4 rounded-2xl bg-amber-100/80 border-2 border-amber-400/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex flex-wrap items-center gap-3 font-serif">
+                  <span className="flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-amber-300 text-stone-900 font-bold border border-amber-500 shadow-xs">
+                    <span>🟡 Ô Nền Vàng: Tộc Trưởng Đời</span>
+                  </span>
+                  <span className="flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-white text-stone-900 border-2 border-dashed border-amber-600 font-medium">
+                    <span>▫️ Viền Nét Đứt: Quan hệ cần đối chiếu lại bảng gốc</span>
+                  </span>
+                  <span className="flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-red-900 text-yellow-200 font-bold border border-amber-400">
+                    <span>👑 Thủy Tổ: Nguyễn Trọng Chất (Vũ Thị Mai)</span>
+                  </span>
+                </div>
+                <span className="text-[11px] text-amber-900 italic font-mono">
+                  Tổng 153 người • 11 đời • Nguồn: Bảng gia phả lập tháng 6/2022 (Nhâm Dần)
+                </span>
+              </div>
+
+              {/* Bảng 11 Cột Cuộn Ngang */}
+              <div className="overflow-x-auto pb-4 scrollbar-thin rounded-2xl border-2 border-amber-400 bg-[#2A0808] p-4 shadow-2xl">
+                <div className="inline-flex gap-4 min-w-max items-start">
+                  {[
+                    { gen: 1, title: 'ĐỜI Thủy tổ', count: 1 },
+                    { gen: 2, title: 'ĐỜI I', count: 3 },
+                    { gen: 3, title: 'ĐỜI II', count: 2 },
+                    { gen: 4, title: 'ĐỜI III', count: 2 },
+                    { gen: 5, title: 'ĐỜI IV', count: 3 },
+                    { gen: 6, title: 'ĐỜI V', count: 6 },
+                    { gen: 7, title: 'ĐỜI VI', count: 10 },
+                    { gen: 8, title: 'ĐỜI VII', count: 29 },
+                    { gen: 9, title: 'ĐỜI VIII', count: 50 },
+                    { gen: 10, title: 'ĐỜI IX', count: 42 },
+                    { gen: 11, title: 'ĐỜI X', count: 5 },
+                  ].map((col) => {
+                    const colMembers = (selectedClan.members || []).filter((m) => m.generation === col.gen);
+                    return (
+                      <div
+                        key={col.gen}
+                        className="w-56 shrink-0 bg-black/30 backdrop-blur-xs rounded-2xl border border-amber-500/40 p-3 space-y-3 flex flex-col"
+                      >
+                        {/* Header Cột Đời */}
+                        <div className="text-center py-2 px-3 rounded-xl bg-gradient-to-r from-red-900 to-red-950 border border-amber-400 shadow-md">
+                          <h4 className="font-serif font-black text-yellow-300 text-xs sm:text-sm tracking-wider uppercase">
+                            {col.title}
+                          </h4>
+                          <span className="text-[10px] text-amber-200/80 font-mono">
+                            {colMembers.length} vị
+                          </span>
+                        </div>
+
+                        {/* Danh sách thành viên trong đời */}
+                        <div className="space-y-2.5">
+                          {colMembers.map((m) => {
+                            const isPatriarch = m.isPatriarch || m.careerHonor === 'Tộc Trưởng Đời';
+                            const isDashed = m.isDashed;
+                            return (
+                              <div
+                                key={m.id}
+                                onClick={() => setSelectedMemberDetail(m)}
+                                className={`p-3 rounded-xl border transition-all cursor-pointer select-none text-center space-y-1 shadow-md hover:scale-102 ${
+                                  isPatriarch
+                                    ? 'bg-gradient-to-b from-[#B45309] via-[#D97706] to-[#78350F] text-yellow-50 border-amber-300 ring-2 ring-yellow-400/70 shadow-lg'
+                                    : col.gen === 1
+                                    ? 'bg-gradient-to-b from-red-900 to-red-950 text-yellow-200 border-amber-400 ring-2 ring-amber-400/40'
+                                    : 'bg-[#450A0A] hover:bg-[#5B1313] text-amber-100 border-amber-700/60 hover:border-amber-400'
+                                } ${isDashed ? 'border-dashed border-2 border-amber-300/90' : ''}`}
+                              >
+                                {isPatriarch && (
+                                  <span className="inline-block px-2 py-0.5 rounded bg-yellow-400 text-red-950 text-[9px] font-black uppercase tracking-wider mb-0.5 shadow-xs">
+                                    👑 Tộc trưởng đời
+                                  </span>
+                                )}
+
+                                <div className="font-serif font-bold text-xs sm:text-sm text-yellow-100 leading-tight">
+                                  {m.fullName}
+                                </div>
+
+                                {m.spouseName && (
+                                  <div className="text-[10px] text-rose-200 font-serif italic truncate">
+                                    ({m.spouseName})
+                                  </div>
+                                )}
+
+                                {m.parentName && (
+                                  <div className="text-[9px] text-amber-300/70 font-sans truncate">
+                                    Cha: {m.parentName}
+                                  </div>
+                                )}
+
+                                {isDashed && (
+                                  <span className="text-[8px] text-amber-300/80 italic block pt-0.5">
+                                    (Cần đối chiếu gốc)
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 3: Danh Mục Tra Cứu Bài Vị */}
           {activeTab === 'members' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredMembers.map((member) => (
-                <div
-                  key={member.id}
-                  onClick={() => setSelectedMemberDetail(member)}
-                  className="p-4 rounded-2xl bg-gradient-to-b from-[#FFFDF9] to-[#FDF8F0] hover:to-[#FAF0E1] border-2 border-amber-400/80 hover:border-red-700 shadow-md cursor-pointer space-y-2 transition-all hover:scale-101"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-red-900 text-yellow-300 text-[10px] font-serif font-bold uppercase">
-                      Đời Thứ {member.generation}
-                    </span>
-                    {member.branchName && (
-                      <span className="text-[11px] text-amber-900 font-serif font-semibold">{member.branchName}</span>
+              {filteredMembers.map((member) => {
+                const isPatriarch = member.isPatriarch || member.careerHonor === 'Tộc Trưởng Đời';
+                const isDashed = member.isDashed;
+                return (
+                  <div
+                    key={member.id}
+                    onClick={() => setSelectedMemberDetail(member)}
+                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-2 hover:scale-101 shadow-md ${
+                      isPatriarch
+                        ? 'bg-gradient-to-b from-[#FFFDF0] to-[#FEF3C7] border-amber-500 hover:border-amber-600'
+                        : 'bg-gradient-to-b from-[#FFFDF9] to-[#FDF8F0] hover:to-[#FAF0E1] border-amber-400/80 hover:border-red-700'
+                    } ${isDashed ? 'border-dashed border-amber-500' : ''}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-0.5 rounded-full bg-red-900 text-yellow-300 text-[10px] font-serif font-bold uppercase">
+                        {member.genLabel || `Đời Thứ ${member.generation}`}
+                      </span>
+                      {isPatriarch && (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-400 text-stone-950 text-[10px] font-bold">
+                          👑 Tộc Trưởng
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 className="font-serif font-bold text-base text-red-950 flex items-center justify-between">
+                      <span>{member.fullName}</span>
+                      {member.parentName && (
+                        <span className="text-[11px] font-sans font-normal text-stone-500">
+                          (Cha: {member.parentName})
+                        </span>
+                      )}
+                    </h4>
+
+                    {member.spouseName && (
+                      <div className="text-[11px] text-rose-800 flex items-center space-x-1 pt-0.5 truncate">
+                        <Heart className="w-3 h-3 text-rose-600 shrink-0" />
+                        <span className="truncate">Chính thất / Phối ngẫu: {member.spouseName}</span>
+                      </div>
+                    )}
+
+                    {isDashed && (
+                      <p className="text-[10px] text-amber-800 italic bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                        ⚠️ Viền nét đứt: Quan hệ cha–con cần đối chiếu lại bảng gốc
+                      </p>
                     )}
                   </div>
+                );
+              })}
+            </div>
+          )}
 
-                  <h4 className="font-serif font-bold text-base text-red-950">{member.fullName}</h4>
-
-                  <div className="text-xs text-stone-600 flex items-center space-x-1.5 font-mono">
-                    <Calendar className="w-3.5 h-3.5 text-amber-700" />
-                    <span>
-                      {member.birthYear || '?'} — {member.deathYear || (member.careerHonor ? 'Hiện diện' : '?')}
-                    </span>
-                  </div>
-
-                  {member.careerHonor && (
-                    <div className="text-[11px] text-red-900 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300 font-serif italic truncate">
-                      {member.careerHonor}
-                    </div>
-                  )}
-
-                  {member.spouseName && (
-                    <div className="text-[11px] text-rose-800 flex items-center space-x-1 pt-1 truncate">
-                      <Heart className="w-3 h-3 text-rose-600 shrink-0" />
-                      <span className="truncate">Phối ngẫu: {member.spouseName}</span>
-                    </div>
-                  )}
+          {/* Tab 4: Bản Đồ Gốc & Tải File PDF */}
+          {activeTab === 'document' && (
+            <div className="rounded-3xl bg-surface border-2 border-amber-500/80 p-6 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-300 pb-4">
+                <div>
+                  <span className="px-3 py-0.5 rounded-full bg-red-900 text-yellow-300 text-xs font-serif font-bold uppercase">
+                    Tư Liệu Gốc Của Dòng Tộc
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-serif font-black text-red-950 mt-1">
+                    Bản Đồ Gia Phả Chi Họ Nguyễn Trọng Chất (Tháng 6/2022)
+                  </h3>
+                  <p className="text-xs text-stone-600 mt-0.5">
+                    Bản đồ phả hệ đầy đủ 11 đời (từ Cụ Thủy Tổ đến Đời X) gồm 153 vị đinh nam.
+                  </p>
                 </div>
-              ))}
+
+                <div className="flex items-center space-x-3 shrink-0">
+                  <a
+                    href="/images/genealogy/gia-pha-ho-nguyen-trong-chat.pdf"
+                    download="Gia-Pha-Dong-Toc-Ho-Nguyen-Trong-Chat-6-2022.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-red-900 hover:bg-red-800 text-yellow-200 font-serif font-bold text-xs shadow-md transition-all border border-amber-400"
+                  >
+                    <span>📥 Tải File PDF Vector Gốc</span>
+                  </a>
+                  <a
+                    href="/images/genealogy/gia-pha-ho-nguyen-trong-chat.png"
+                    download="Gia-Pha-Ho-Nguyen-Trong-Chat-4K.png"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 font-serif font-bold text-xs border border-amber-400 shadow-xs"
+                  >
+                    <span>🖼️ Tải Ảnh 4K (3945 x 5184)</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Khung Xem Ảnh Sắc Nét */}
+              <div className="rounded-2xl overflow-hidden border-2 border-amber-300 bg-stone-100 shadow-inner group relative">
+                <img
+                  src="/images/genealogy/gia-pha-ho-nguyen-trong-chat.png"
+                  alt="Bản đồ gia phả dòng tộc họ Nguyễn Trọng — Chi họ Nguyễn Trọng Chất"
+                  className="w-full h-auto object-contain cursor-zoom-in group-hover:scale-[1.01] transition-transform duration-300"
+                  onClick={() => window.open('/images/genealogy/gia-pha-ho-nguyen-trong-chat.png', '_blank')}
+                  title="Nhấp để xem ảnh kích thước đầy đủ trong tab mới"
+                />
+                <div className="p-3 text-center text-xs text-stone-500 bg-paper border-t border-warmBorder italic font-sans">
+                  Nhấp vào ảnh để mở xem toàn cảnh độ phân giải cao (3945 x 5184 px)
+                </div>
+              </div>
             </div>
           )}
         </div>

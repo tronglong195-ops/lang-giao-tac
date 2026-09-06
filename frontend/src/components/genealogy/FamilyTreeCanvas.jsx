@@ -80,6 +80,8 @@ const TreeNode = ({ node, onSelectMember, onAddChild, isAdmin, searchQuery }) =>
   const [collapsed, setCollapsed] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
   const isRoot = node.generation === 1;
+  const isPatriarch = node.isPatriarch || node.careerHonor === 'Tộc Trưởng Đời';
+  const isDashed = node.isDashed;
 
   const isMatched =
     searchQuery &&
@@ -96,13 +98,15 @@ const TreeNode = ({ node, onSelectMember, onAddChild, isAdmin, searchQuery }) =>
         className={`relative group p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-300 w-60 sm:w-72 text-center cursor-pointer select-none shadow-md ${
           isRoot
             ? 'bg-gradient-to-b from-[#7F1D1D] via-[#991B1B] to-[#581C87]/90 border-amber-400 text-amber-100 ring-4 ring-amber-400/40 shadow-xl'
+            : isPatriarch
+            ? 'bg-gradient-to-b from-[#9A3412] via-[#B45309] to-[#78350F] border-amber-300 text-yellow-100 ring-4 ring-yellow-400/80 shadow-2xl scale-102'
             : isMatched
             ? 'bg-gradient-to-b from-amber-900 to-amber-950 border-amber-300 text-amber-50 ring-4 ring-amber-400 shadow-2xl scale-105'
             : 'bg-gradient-to-b from-[#831843] via-[#7F1D1D] to-[#450A0A] border-amber-600/80 hover:border-amber-400 text-amber-50 shadow-lg hover:shadow-2xl'
-        }`}
+        } ${isDashed ? 'border-dashed border-amber-300/90' : ''}`}
         style={{
-          boxShadow: isRoot
-            ? '0 10px 25px -5px rgba(180, 83, 9, 0.4), 0 8px 10px -6px rgba(180, 83, 9, 0.4)'
+          boxShadow: isRoot || isPatriarch
+            ? '0 10px 25px -5px rgba(180, 83, 9, 0.5), 0 8px 10px -6px rgba(180, 83, 9, 0.5)'
             : '0 8px 20px -4px rgba(0, 0, 0, 0.3)',
         }}
       >
@@ -110,22 +114,35 @@ const TreeNode = ({ node, onSelectMember, onAddChild, isAdmin, searchQuery }) =>
         <AncestralTabletHeader isRoot={isRoot} generation={node.generation} />
 
         {/* Khung viền chỉ vàng kép kiểu Cung Đình */}
-        <div className="border border-amber-400/40 rounded-lg p-2.5 bg-black/20 backdrop-blur-xs relative space-y-1.5">
+        <div className={`border rounded-lg p-2.5 bg-black/20 backdrop-blur-xs relative space-y-1.5 ${isDashed ? 'border-dashed border-amber-300/80' : 'border-amber-400/40'}`}>
           {/* Góc triện cổ 4 phía */}
           <div className="absolute top-1 left-1 w-2 h-2 border-t-2 border-l-2 border-amber-400/80" />
           <div className="absolute top-1 right-1 w-2 h-2 border-t-2 border-r-2 border-amber-400/80" />
           <div className="absolute bottom-1 left-1 w-2 h-2 border-b-2 border-l-2 border-amber-400/80" />
           <div className="absolute bottom-1 right-1 w-2 h-2 border-b-2 border-r-2 border-amber-400/80" />
 
-          {/* Huy hiệu thế hệ */}
-          <div className="inline-flex items-center space-x-1 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-stone-900 font-extrabold text-[10px] uppercase tracking-widest shadow-xs border border-amber-200">
-            <span>{isRoot ? 'Cụ Thủy Tổ • Tiên Khởi' : `Thế Hệ Đời Thứ ${getGenerationRoman(node.generation)}`}</span>
+          {/* Huy hiệu thế hệ & Tộc trưởng */}
+          <div className="flex flex-col items-center gap-1">
+            {isPatriarch && (
+              <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-yellow-400 text-red-950 font-black text-[10px] uppercase tracking-wider shadow-md border border-yellow-200 animate-pulse">
+                <span>👑 TỘC TRƯỞNG ĐỜI</span>
+              </div>
+            )}
+            <div className="inline-flex items-center space-x-1 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-stone-900 font-extrabold text-[10px] uppercase tracking-widest shadow-xs border border-amber-200">
+              <span>{isRoot ? 'Cụ Thủy Tổ • Tiên Khởi' : `Thế Hệ ${node.genLabel || 'Đời ' + getGenerationRoman(node.generation)}`}</span>
+            </div>
           </div>
 
           {isMatched && (
             <div className="absolute -top-3 right-1 px-2 py-0.5 rounded-md bg-amber-400 text-red-950 text-[10px] font-black tracking-wider flex items-center space-x-1 shadow-md animate-pulse">
               <Sparkles className="w-3 h-3" />
               <span>Khớp</span>
+            </div>
+          )}
+
+          {isDashed && (
+            <div className="text-[9px] font-serif italic text-amber-300/90 pt-0.5">
+              (Viền nét đứt: Cần đối chiếu lại bảng gốc)
             </div>
           )}
 

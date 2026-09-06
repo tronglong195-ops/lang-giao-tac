@@ -459,46 +459,52 @@ async function runAutoSeed(prisma) {
       }
     }
 
-    // Đảm bảo Họ Nguyễn Trọng luôn có đúng 'Ông Tổ: Nguyễn Trọng' và chỉ giữ lại một mình Ông Tổ
+    // Đảm bảo Họ Nguyễn Trọng có đầy đủ 153 thành viên 11 đời theo bản đồ gia phả tháng 6/2022
     try {
       const nguyenTrongClan = await prisma.clan.findUnique({ where: { slug: 'ho-nguyen-trong' } });
       if (nguyenTrongClan) {
         await prisma.clan.update({
           where: { id: nguyenTrongClan.id },
-          data: { ancestorName: 'Ông Tổ: Nguyễn Trọng' },
+          data: {
+            ancestorName: 'Cụ Thủy Tổ: Nguyễn Trọng Chất (Chánh thất: Vũ Thị Mai)',
+            originStory:
+              'Dòng họ Nguyễn Trọng — Chi họ Nguyễn Trọng Chất là một trong những cội nguồn lâu đời tại Làng Giao Tác (nay là Tổ dân phố 9 Thuận Lộc, Phường Nam Hồng Lĩnh, tỉnh Hà Tĩnh). Trải qua 11 đời hưng thịnh với 153 đinh nam, con cháu đời đời phát huy truyền thống hiếu học, đoàn kết, trung hiếu và phụng sự quê hương đất nước.',
+            leaderName: 'Ông Nguyễn Trọng Long & Ban Khánh Tiết Dòng Họ',
+            leaderPhone: '0832991002',
+            coverImageUrl: '/images/genealogy/gia-pha-ho-nguyen-trong-chat.png',
+          },
         });
 
-        const existingMembers = await prisma.genealogyMember.findMany({
+        const currentMemberCount = await prisma.genealogyMember.count({
           where: { clanId: nguyenTrongClan.id },
         });
 
-        const isOldSeed = existingMembers.some(
-          (m) =>
-            m.fullName.includes('Đại Lang') ||
-            m.fullName.includes('Chi Trưởng') ||
-            m.fullName.includes('Chi Thứ')
-        );
-
-        if (isOldSeed) {
-          // Xóa các node con cháu mẫu cũ để chỉ để lại duy nhất Ông Tổ: Nguyễn Trọng
+        if (currentMemberCount < 100) {
           await prisma.genealogyMember.deleteMany({ where: { clanId: nguyenTrongClan.id } });
-          await prisma.genealogyMember.create({
-            data: {
-              clanId: nguyenTrongClan.id,
-              fullName: 'Ông Tổ: Nguyễn Trọng',
-              gender: 'male',
-              generation: 1,
-              branchName: 'Thủy Tổ / Khởi Tổ',
-              birthYear: '1660',
-              deathYear: '',
-              spouseName: '',
-              tombLocation: 'Núi Hồng Lĩnh, TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh',
-              careerHonor: 'Cụ Thủy Tổ Tiền Khai Khẩn Dòng Họ Nguyễn Trọng',
-              biography: 'Cụ Thủy Tổ tiền khai canh lập nghiệp, khởi dựng cơ đồ dòng họ Nguyễn Trọng tại Làng Giao Tác.',
-              orderIndex: 1,
-            },
-          });
-          console.log('✅ Đã cập nhật dòng họ Nguyễn Trọng chỉ giữ lại một mình Ông Tổ: Nguyễn Trọng.');
+          const seedMembers = require('./nguyenTrongSeed.json');
+          const idToDbId = {};
+
+          for (const item of seedMembers) {
+            const created = await prisma.genealogyMember.create({
+              data: {
+                clanId: nguyenTrongClan.id,
+                parentId: item.parentId ? idToDbId[item.parentId] || null : null,
+                fullName: item.fullName,
+                gender: item.gender || 'male',
+                generation: item.generation,
+                branchName: item.branchName,
+                birthYear: item.birthYear || null,
+                deathYear: item.deathYear || null,
+                spouseName: item.spouseName || null,
+                tombLocation: item.tombLocation || null,
+                careerHonor: item.careerHonor || null,
+                biography: item.biography || null,
+                orderIndex: item.orderIndex || 0,
+              },
+            });
+            idToDbId[item.id] = created.id;
+          }
+          console.log(`✅ Đã nạp thành công toàn bộ ${seedMembers.length} thành viên 11 đời Chi Họ Nguyễn Trọng Chất!`);
         }
       }
     } catch (e) {
