@@ -1,22 +1,22 @@
 @echo off
-chcp 65001 >nul
+title Trien khai Website Lang Giao Tac
 echo ========================================================
-echo   TRIỂN KHAI WEBSITE LÀNG GIAO TÁC LÊN FIREBASE HOSTING
+echo   DANG XUAT BAN WEBSITE LEN FIREBASE HOSTING
 echo ========================================================
 echo.
-echo 1. Kiểm tra đăng nhập Firebase...
-call npx firebase-tools login
+echo [1/3] Kiem tra va dang nhap Firebase...
+call npx -y firebase-tools login
 echo.
-echo 2. Tiến hành đóng gói (Build) bản mới nhất của Frontend...
-cd frontend
+echo [2/3] Dong goi Frontend (Build)...
+cd /d "%~dp0frontend"
 call npm run build
-cd ..
+cd /d "%~dp0"
 echo.
-echo 3. Tiến hành xuất bản lên Firebase Hosting...
-call npx firebase-tools deploy --only hosting
+echo [3/3] Tai len Firebase Hosting...
+call npx -y firebase-tools deploy --only hosting
 echo.
 echo ========================================================
-echo   🎉 ĐÃ TRIỂN KHAI THÀNH CÔNG!
-echo   👉 Địa chỉ website chính thức: https://lang-giao-tac-tdp9.web.app
+echo   HOAN TAT XUAT BAN!
+echo   Website: https://lang-giao-tac-tdp9.web.app
 echo ========================================================
 pause
