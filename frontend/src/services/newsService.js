@@ -53,8 +53,13 @@ export const newsService = {
       }
     }
 
-    const res = await api.get('/news', { params });
-    return res.data?.data;
+    try {
+      const res = await api.get('/news', { params });
+      return res.data?.data;
+    } catch (e) {
+      console.warn('Lỗi tải tin tức từ API:', e);
+      return { news: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 1 } };
+    }
   },
 
   async getNewsBySlug(slug) {
@@ -63,8 +68,13 @@ export const newsService = {
       if (item) return item;
     }
 
-    const res = await api.get(`/news/${slug}`);
-    return res.data?.data?.news;
+    try {
+      const res = await api.get(`/news/${slug}`);
+      return res.data?.data?.news;
+    } catch (e) {
+      console.warn('Lỗi tải tin tức chi tiết từ API:', e);
+      return null;
+    }
   },
 
   async createNews(data) {

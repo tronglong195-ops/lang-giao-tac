@@ -74,12 +74,21 @@ const DEFAULT_HERO_SLIDES = [
   },
 ];
 
+const DEFAULT_FEATURED_PHOTOS = [
+  { id: 'photo_default_1', imageUrl: '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg', caption: 'Toàn cảnh không gian văn hóa Đình Làng Giao Tác — TDP 9 Thuận Lộc', takenYear: 2025 },
+  { id: 'photo_default_2', imageUrl: '/images/village/476468343_1020712713424436_7762543762157463751_n.jpg', caption: 'Bà con tề tựu trong ngày hội văn hóa truyền thống làng quê', takenYear: 2025 },
+  { id: 'photo_default_3', imageUrl: '/images/village/476776564_1020712773424430_8938770403532008026_n.jpg', caption: 'Tuyến đường hoa sáng - xanh - sạch - đẹp TDP 9 Thuận Lộc', takenYear: 2024 },
+  { id: 'photo_default_4', imageUrl: '/images/village/480212312_1025661522929555_8709853623689778697_n.jpg', caption: 'Cánh đồng trù phú và cảnh sắc thanh bình dưới chân núi Hồng Lĩnh', takenYear: 2024 },
+  { id: 'photo_default_5', imageUrl: '/images/village/474096867_1006185811543793_8014259646970075430_n.jpg', caption: 'Khu vực Giếng cổ và cây xanh rợp bóng mát đầu làng', takenYear: 2024 },
+  { id: 'photo_default_6', imageUrl: '/images/village/486669654_9667039090022304_8533644671297434351_n.jpg', caption: 'Giải đấu bóng chuyền phong trào sôi nổi giữa các cụm dân cư', takenYear: 2025 },
+];
+
 export const HomePage = () => {
   const [heroSlides, setHeroSlides] = useState(DEFAULT_HERO_SLIDES);
   const [latestNews, setLatestNews] = useState([]);
   const [wardNews, setWardNews] = useState([]);
   const [featuredPosts, setFeaturedPosts] = useState([]);
-  const [featuredPhotos, setFeaturedPhotos] = useState([]);
+  const [featuredPhotos, setFeaturedPhotos] = useState(DEFAULT_FEATURED_PHOTOS);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncingWard, setSyncingWard] = useState(false);
@@ -117,18 +126,21 @@ export const HomePage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const [slidesRes, newsRes, postsRes, photosRes, eventsRes] = await Promise.all([
-          api.get('/hero-slides'),
-          newsService.getNews({ limit: 6, isOfficial: true }),
-          postService.getPosts({ limit: 3, status: 'published' }),
-          photoService.getFeaturedPhotos(6),
-          eventService.getEvents({ limit: 3, timeFilter: 'upcoming' }),
-        ]);
+      setLoading(true);
 
+      // 1. Tải hero slides nếu có backend cấu hình
+      try {
+        const slidesRes = await api.get('/hero-slides').catch(() => null);
+        if (slidesRes?.data?.data?.slides?.length > 0) {
+          setHeroSlides(slidesRes.data.data.slides);
+        }
+      } catch (e) {}
+
+      // 2. Tải tin tức chính quyền làng
+      try {
+        const newsRes = await newsService.getNews({ limit: 6, isOfficial: true });
         let finalNews = newsRes?.news || [];
 
-        // Kiểm tra xem có cấu hình Google Sheets không
         try {
           const syncConfig = JSON.parse(localStorage.getItem('giaotac_google_sync_settings') || '{}');
           if (syncConfig.enabled && syncConfig.syncNews && syncConfig.sheetUrl) {
@@ -142,24 +154,47 @@ export const HomePage = () => {
           console.warn('Lỗi đọc Google Sheets trên Trang chủ:', e);
         }
 
-        setLatestNews(finalNews);
-        if (postsRes?.posts) {
+        if (finalNews.length > 0) {
+          setLatestNews(finalNews);
+        }
+      } catch (err) {
+        console.warn('Lỗi tải tin tức trang chủ:', err);
+      }
+
+      // 3. Tải bài viết cộng đồng
+      try {
+        const postsRes = await postService.getPosts({ limit: 3, status: 'published' });
+        if (postsRes?.posts?.length > 0) {
           setFeaturedPosts(postsRes.posts);
         }
-        if (photosRes) {
+      } catch (err) {
+        console.warn('Lỗi tải bài viết cộng đồng:', err);
+      }
+
+      // 4. Tải ảnh thư viện nổi bật
+      try {
+        const photosRes = await photoService.getFeaturedPhotos(6);
+        if (photosRes && photosRes.length > 0) {
           setFeaturedPhotos(photosRes);
         }
-        if (eventsRes?.events) {
+      } catch (err) {
+        console.warn('Lỗi tải ảnh nổi bật:', err);
+      }
+
+      // 5. Tải sự kiện
+      try {
+        const eventsRes = await eventService.getEvents({ limit: 3, timeFilter: 'upcoming' });
+        if (eventsRes?.events?.length > 0) {
           setUpcomingEvents(eventsRes.events);
         }
-
-        // Tải tin tức trực tiếp từ Cổng TTĐT Phường Nam Hồng Lĩnh
-        await fetchWardNews();
-      } catch (error) {
-        console.error('Lỗi khi tải dữ liệu trang chủ:', error);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.warn('Lỗi tải sự kiện:', err);
       }
+
+      // 6. Tải tin tức Phường Nam Hồng Lĩnh
+      await fetchWardNews();
+
+      setLoading(false);
     };
 
     fetchData();
@@ -668,22 +703,22 @@ export const HomePage = () => {
 
                 <div className="pt-4 border-t border-warmBorder flex items-center justify-between text-xs text-ink-light">
                   <div className="flex items-center space-x-2">
-                    {post.author.avatarUrl ? (
+                    {post.author?.avatarUrl ? (
                       <img
                         src={post.author.avatarUrl}
-                        alt={post.author.fullName}
+                        alt={post.author?.fullName || 'Tác giả'}
                         className="w-6 h-6 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-primary-subtle text-primary flex items-center justify-center font-bold text-[10px]">
-                        {post.author.fullName.charAt(0)}
+                        {(post.author?.fullName || 'B').charAt(0)}
                       </div>
                     )}
                     <span className="font-medium text-ink truncate max-w-[120px]">
-                      {post.author.fullName}
+                      {post.author?.fullName || 'Ban Cán sự TDP 9'}
                     </span>
                   </div>
-                  <span>{new Date(post.createdAt).toLocaleDateString('vi-VN')}</span>
+                  <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString('vi-VN')}</span>
                 </div>
               </div>
             </article>

@@ -46,9 +46,9 @@ export const GalleryPage = () => {
     try {
       const data = await photoService.getAlbums({ page, limit: 12 });
       if (data) {
-        setAlbums(data.albums);
-        setPagination(data.pagination);
-        if (data.albums.length > 0 && !targetAlbumId) {
+        setAlbums(data.albums || []);
+        setPagination(data.pagination || { page: 1, totalPages: 1 });
+        if (data.albums?.length > 0 && !targetAlbumId) {
           setTargetAlbumId(data.albums[0].id);
         }
       }

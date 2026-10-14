@@ -184,22 +184,22 @@ export const PostListPage = () => {
                 <div className="pt-4 border-t border-warmBorder space-y-2">
                   <div className="flex items-center justify-between text-xs text-ink-light">
                     <div className="flex items-center space-x-2">
-                      {post.author.avatarUrl ? (
+                      {post.author?.avatarUrl ? (
                         <img
                           src={post.author.avatarUrl}
-                          alt={post.author.fullName}
+                          alt={post.author?.fullName || 'Tác giả'}
                           className="w-6 h-6 rounded-full object-cover"
                         />
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-primary text-surface flex items-center justify-center font-bold text-[10px]">
-                          {post.author.fullName.charAt(0)}
+                          {(post.author?.fullName || 'B').charAt(0)}
                         </div>
                       )}
                       <div>
                         <p className="font-medium text-ink truncate max-w-[120px]">
-                          {post.author.fullName}
+                          {post.author?.fullName || 'Ban Cán sự TDP 9'}
                         </p>
-                        {post.author.hometownGroup && (
+                        {post.author?.hometownGroup && (
                           <p className="text-[10px] text-accent truncate">
                             {post.author.hometownGroup}
                           </p>

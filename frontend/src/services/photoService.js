@@ -38,16 +38,24 @@ export const photoService = {
       }
     }
 
-    const res = await api.get('/albums', { params });
-    return res.data?.data;
+    try {
+      const res = await api.get('/albums', { params });
+      return res.data?.data;
+    } catch (e) {
+      console.warn('Lỗi tải albums từ API:', e);
+      return { albums: [], pagination: { page: 1, limit: 12, total: 0, totalPages: 1 } };
+    }
   },
 
   async getAlbumById(id) {
     if (firestoreDb.isAvailable()) {
-      const album = await firestoreDb.getById('albums', id);
+      let album = await firestoreDb.getById('albums', id);
+      if (!album) {
+        album = await firestoreDb.getOneByField('albums', 'id', id);
+      }
       if (album) {
         const allPhotos = await firestoreDb.getAll('photos');
-        const photos = allPhotos.filter((p) => p.albumId === id);
+        const photos = allPhotos.filter((p) => p.albumId === id || p.albumId === album.id);
         return {
           ...album,
           photos,
@@ -56,8 +64,13 @@ export const photoService = {
       }
     }
 
-    const res = await api.get(`/albums/${id}`);
-    return res.data?.data?.album;
+    try {
+      const res = await api.get(`/albums/${id}`);
+      return res.data?.data?.album;
+    } catch (e) {
+      console.warn('Lỗi tải album từ API:', e);
+      return null;
+    }
   },
 
   async createAlbum(data) {
@@ -134,8 +147,13 @@ export const photoService = {
       return { photos };
     }
 
-    const res = await api.get('/photos/my/photos', { params });
-    return res.data?.data;
+    try {
+      const res = await api.get('/photos/my/photos', { params });
+      return res.data?.data;
+    } catch (e) {
+      console.warn('Lỗi tải ảnh của tôi từ API:', e);
+      return { photos: [] };
+    }
   },
 
   async getFeaturedPhotos(limitCount = 8) {
@@ -146,8 +164,13 @@ export const photoService = {
       }
     }
 
-    const res = await api.get('/photos/featured', { params: { limit: limitCount } });
-    return res.data?.data?.photos;
+    try {
+      const res = await api.get('/photos/featured', { params: { limit: limitCount } });
+      return res.data?.data?.photos || [];
+    } catch (e) {
+      console.warn('Lỗi tải ảnh nổi bật từ API:', e);
+      return [];
+    }
   },
 
   async updatePhoto(id, data) {

@@ -15,8 +15,13 @@ export const eventService = {
       }
     }
 
-    const res = await api.get('/events', { params });
-    return res.data?.data;
+    try {
+      const res = await api.get('/events', { params });
+      return res.data?.data;
+    } catch (e) {
+      console.warn('Lỗi tải sự kiện từ API:', e);
+      return { events: [] };
+    }
   },
 
   async getEventById(id) {
@@ -24,8 +29,13 @@ export const eventService = {
       return await firestoreDb.getById('events', id);
     }
 
-    const res = await api.get(`/events/${id}`);
-    return res.data?.data?.event;
+    try {
+      const res = await api.get(`/events/${id}`);
+      return res.data?.data?.event;
+    } catch (e) {
+      console.warn('Lỗi tải chi tiết sự kiện từ API:', e);
+      return null;
+    }
   },
 
   async createEvent(data) {

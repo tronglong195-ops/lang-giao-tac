@@ -34,6 +34,18 @@ export const postService = {
           maxLimit: params.limit ? Number(params.limit) : 20,
         });
 
+        posts = posts.map((p) => ({
+          ...p,
+          author: p.author || {
+            id: p.authorId || 'admin_default',
+            fullName: p.authorName || 'Ban Cán sự TDP 9 Thuận Lộc',
+            avatarUrl: p.authorAvatar || '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+            hometownGroup: 'TDP 9 Thuận Lộc',
+            currentLocation: 'Hà Tĩnh',
+            bio: 'Ban Cán sự TDP 9 Thuận Lộc',
+          },
+        }));
+
         if (params.search) {
           const q = params.search.toLowerCase();
           posts = posts.filter(
@@ -57,8 +69,13 @@ export const postService = {
       }
     }
 
-    const res = await api.get('/posts', { params });
-    return res.data?.data;
+    try {
+      const res = await api.get('/posts', { params });
+      return res.data?.data;
+    } catch (e) {
+      console.warn('Lỗi tải bài viết từ API:', e);
+      return { posts: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 1 } };
+    }
   },
 
   async getPostBySlug(slug) {
@@ -71,12 +88,28 @@ export const postService = {
           orderField: 'createdAt',
           orderDir: 'asc',
         });
-        return { ...post, comments };
+        return {
+          ...post,
+          author: post.author || {
+            id: post.authorId || 'admin_default',
+            fullName: post.authorName || 'Ban Cán sự TDP 9 Thuận Lộc',
+            avatarUrl: post.authorAvatar || '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg',
+            hometownGroup: 'TDP 9 Thuận Lộc',
+            currentLocation: 'Hà Tĩnh',
+            bio: 'Ban Cán sự TDP 9 Thuận Lộc',
+          },
+          comments,
+        };
       }
     }
 
-    const res = await api.get(`/posts/${slug}`);
-    return res.data?.data?.post;
+    try {
+      const res = await api.get(`/posts/${slug}`);
+      return res.data?.data?.post;
+    } catch (e) {
+      console.warn('Lỗi tải bài viết chi tiết từ API:', e);
+      return null;
+    }
   },
 
   async createPost(data) {
@@ -126,8 +159,13 @@ export const postService = {
       return { posts, pagination: { total: posts.length } };
     }
 
-    const res = await api.get('/posts/my/posts', { params });
-    return res.data?.data;
+    try {
+      const res = await api.get('/posts/my/posts', { params });
+      return res.data?.data;
+    } catch (e) {
+      console.warn('Lỗi tải bài viết của tôi từ API:', e);
+      return { posts: [] };
+    }
   },
 
   async addComment(postId, content, user = {}) {

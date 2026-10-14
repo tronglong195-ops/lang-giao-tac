@@ -214,22 +214,22 @@ export const PostDetailPage = () => {
 
           {/* Author Meta Header */}
           <div className="flex items-center space-x-3 pt-2">
-            {post.author.avatarUrl ? (
+            {post.author?.avatarUrl ? (
               <img
                 src={post.author.avatarUrl}
-                alt={post.author.fullName}
+                alt={post.author?.fullName || 'Tác giả'}
                 className="w-10 h-10 rounded-full object-cover border border-primary/20"
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-primary text-surface flex items-center justify-center font-bold text-sm">
-                {post.author.fullName.charAt(0)}
+                {(post.author?.fullName || 'B').charAt(0)}
               </div>
             )}
             <div>
-              <p className="text-sm font-bold text-ink">{post.author.fullName}</p>
+              <p className="text-sm font-bold text-ink">{post.author?.fullName || 'Ban Cán sự TDP 9'}</p>
               <div className="flex items-center space-x-2 text-xs text-accent">
-                {post.author.hometownGroup && <span>{post.author.hometownGroup}</span>}
-                {post.author.currentLocation && (
+                {post.author?.hometownGroup && <span>{post.author.hometownGroup}</span>}
+                {post.author?.currentLocation && (
                   <>
                     <span>•</span>
                     <span>Đang ở: {post.author.currentLocation}</span>
@@ -259,29 +259,29 @@ export const PostDetailPage = () => {
 
         {/* Author Bio Card */}
         <div className="mt-10 p-6 rounded-2xl bg-paper border border-warmBorder flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          {post.author.avatarUrl ? (
+          {post.author?.avatarUrl ? (
             <img
               src={post.author.avatarUrl}
-              alt={post.author.fullName}
+              alt={post.author?.fullName || 'Tác giả'}
               className="w-14 h-14 rounded-2xl object-cover shrink-0"
             />
           ) : (
             <div className="w-14 h-14 rounded-2xl bg-primary text-surface flex items-center justify-center font-bold text-xl shrink-0">
-              {post.author.fullName.charAt(0)}
+              {(post.author?.fullName || 'B').charAt(0)}
             </div>
           )}
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <h4 className="font-bold text-base text-ink">{post.author.fullName}</h4>
+              <h4 className="font-bold text-base text-ink">{post.author?.fullName || 'Ban Cán sự TDP 9'}</h4>
               <span className="text-xs text-primary bg-primary-subtle px-2 py-0.5 rounded-full font-medium">
                 Tác giả
               </span>
             </div>
-            {post.author.bio && (
+            {post.author?.bio && (
               <p className="text-xs text-ink-muted leading-relaxed">{post.author.bio}</p>
             )}
             <p className="text-xs text-accent">
-              Quê quán: {post.author.hometownGroup || 'Làng Giao Tác (Hà Tĩnh)'}
+              Quê quán: {post.author?.hometownGroup || 'Làng Giao Tác (Hà Tĩnh)'}
             </p>
           </div>
         </div>
