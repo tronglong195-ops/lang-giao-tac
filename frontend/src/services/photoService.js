@@ -5,11 +5,34 @@ export const photoService = {
   async getAlbums(params = {}) {
     if (firestoreDb.isAvailable()) {
       try {
-        const albums = await firestoreDb.getAll('albums', {
-          orderField: 'createdAt',
-          orderDir: 'desc',
+        let albums = await firestoreDb.getAll('albums');
+
+        // Tải toàn bộ ảnh để gán đúng ảnh bìa và đếm số lượng cho từng Album
+        const allPhotos = await firestoreDb.getAll('photos');
+
+        albums = albums.map((album) => {
+          const albumPhotos = allPhotos.filter((p) => p.albumId === album.id);
+          const firstImg =
+            albumPhotos[0]?.imageUrl ||
+            album.coverPhotoUrl ||
+            '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
+
+          return {
+            ...album,
+            photos: albumPhotos.length > 0 ? albumPhotos : [{ imageUrl: firstImg, caption: album.title }],
+            _count: { photos: albumPhotos.length },
+          };
         });
-        return { albums };
+
+        return {
+          albums,
+          pagination: {
+            page: Number(params.page || 1),
+            limit: Number(params.limit || 12),
+            total: albums.length,
+            totalPages: Math.ceil(albums.length / (params.limit || 12)) || 1,
+          },
+        };
       } catch (err) {
         console.warn('Lỗi Firestore getAlbums:', err.message);
       }
@@ -23,12 +46,13 @@ export const photoService = {
     if (firestoreDb.isAvailable()) {
       const album = await firestoreDb.getById('albums', id);
       if (album) {
-        const photos = await firestoreDb.getAll('photos', {
-          conditions: [['albumId', '==', id]],
-          orderField: 'createdAt',
-          orderDir: 'desc',
-        });
-        return { ...album, photos };
+        const allPhotos = await firestoreDb.getAll('photos');
+        const photos = allPhotos.filter((p) => p.albumId === id);
+        return {
+          ...album,
+          photos,
+          _count: { photos: photos.length },
+        };
       }
     }
 
@@ -86,11 +110,12 @@ export const photoService = {
       for (const p of photos) {
         const item = await firestoreDb.create('photos', {
           albumId,
-          uploaderId,
+          uploaderId: uploaderId || 'admin_default',
           imageUrl: p.imageUrl,
+          thumbnailUrl: p.imageUrl,
           caption: p.caption || '',
           takenYear: p.takenYear || null,
-          status: 'pending',
+          status: 'approved',
         });
         createdPhotos.push(item);
       }
@@ -105,8 +130,6 @@ export const photoService = {
     if (firestoreDb.isAvailable() && params.uploaderId) {
       const photos = await firestoreDb.getAll('photos', {
         conditions: [['uploaderId', '==', params.uploaderId]],
-        orderField: 'createdAt',
-        orderDir: 'desc',
       });
       return { photos };
     }
@@ -117,13 +140,10 @@ export const photoService = {
 
   async getFeaturedPhotos(limitCount = 8) {
     if (firestoreDb.isAvailable()) {
-      const photos = await firestoreDb.getAll('photos', {
-        conditions: [['status', '==', 'approved']],
-        orderField: 'createdAt',
-        orderDir: 'desc',
-        maxLimit: limitCount,
-      });
-      if (photos.length > 0) return photos;
+      const allPhotos = await firestoreDb.getAll('photos');
+      if (allPhotos.length > 0) {
+        return allPhotos.slice(0, limitCount);
+      }
     }
 
     const res = await api.get('/photos/featured', { params: { limit: limitCount } });
