@@ -26,6 +26,7 @@ import {
   Sparkles,
   FileSpreadsheet,
   Flame,
+  Mail,
 } from 'lucide-react';
 import { adminService } from '../services/adminService';
 import { newsService } from '../services/newsService';
@@ -36,6 +37,7 @@ import { StatusBadge } from '../components/common/StatusBadge';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { GoogleSyncSettings } from '../components/admin/GoogleSyncSettings';
 import { FirebaseSyncSettings } from '../components/admin/FirebaseSyncSettings';
+import { EmailAlertSettings } from '../components/admin/EmailAlertSettings';
 
 export const AdminDashboardPage = () => {
   const { user, isAdmin } = useAuth();
@@ -597,6 +599,20 @@ export const AdminDashboardPage = () => {
           >
             <Flame className="w-4 h-4 text-amber-600" />
             <span>Cấu hình & Đồng bộ Firebase</span>
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            onClick={() => setTab('emailalerts')}
+            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'emailalerts'
+                ? 'bg-blue-600 text-surface shadow-sm'
+                : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-300'
+            }`}
+          >
+            <Mail className="w-4 h-4 text-blue-600" />
+            <span>Thông báo Email</span>
           </button>
         )}
       </div>
@@ -1758,6 +1774,11 @@ export const AdminDashboardPage = () => {
       {/* Tab 8: Firebase Serverless Sync */}
       {activeTab === 'firebase' && (
         <FirebaseSyncSettings />
+      )}
+
+      {/* Tab 9: Email Alerts */}
+      {activeTab === 'emailalerts' && (
+        <EmailAlertSettings />
       )}
 
       {/* Global Confirm Modal */}

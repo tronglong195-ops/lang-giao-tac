@@ -135,5 +135,22 @@ service cloud.firestore {
       allow create: if true;
       allow delete: if isAdmin();
     }
+
+    // 12. Nhật ký & Thông báo Email (activity_logs, admin_alerts, mail)
+    match /activity_logs/{logId} {
+      allow read: if true;
+      allow create: if true;
+      allow delete: if isAdmin();
+    }
+
+    match /admin_alerts/{alertId} {
+      allow read: if true;
+      allow create: if true;
+      allow delete: if isAdmin();
+    }
+
+    match /mail/{mailId} {
+      allow read, write: if true;
+    }
   }
 }

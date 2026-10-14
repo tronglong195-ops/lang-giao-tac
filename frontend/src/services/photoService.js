@@ -1,5 +1,6 @@
 import api from './api';
 import { firestoreDb } from './firestoreDb';
+import { emailAlertService } from './emailAlertService';
 
 export const photoService = {
   async getAlbums(params = {}) {
@@ -109,6 +110,13 @@ export const photoService = {
         ...data,
         status: data.status || 'pending',
       });
+
+      emailAlertService.sendNewPhotoAlert({
+        photoCount: 1,
+        albumTitle: data.albumTitle || 'Kho Ảnh Quê Hương',
+        uploader: { fullName: data.uploaderName || 'Bà con Làng' },
+      }).catch((err) => console.warn('Lỗi gửi email alert ảnh mới:', err));
+
       return { status: 'success', data: { photo: created } };
     }
 
@@ -132,6 +140,13 @@ export const photoService = {
         });
         createdPhotos.push(item);
       }
+
+      emailAlertService.sendNewPhotoAlert({
+        photoCount: photos.length,
+        albumTitle: data.albumTitle || 'Thư Viện Ảnh Làng',
+        uploader: { fullName: data.uploaderName || 'Bà con Làng' },
+      }).catch((err) => console.warn('Lỗi gửi email alert batch ảnh:', err));
+
       return { status: 'success', data: { photos: createdPhotos } };
     }
 

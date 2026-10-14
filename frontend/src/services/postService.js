@@ -1,5 +1,6 @@
 import api from './api';
 import { firestoreDb } from './firestoreDb';
+import { emailAlertService } from './emailAlertService';
 
 const slugify = (str) => {
   if (!str) return '';
@@ -122,6 +123,16 @@ export const postService = {
         viewCount: 0,
       };
       const created = await firestoreDb.create('posts', payload);
+
+      // Gửi email cảnh báo bài viết mới chờ duyệt
+      emailAlertService.sendNewPostAlert({
+        post: { ...payload, id: created.id },
+        author: {
+          fullName: data.authorName || data.author?.fullName || 'Bà con Làng',
+          email: data.authorEmail || data.author?.email || '',
+        },
+      }).catch((err) => console.warn('Lỗi gửi email alert bài viết mới:', err));
+
       return { status: 'success', data: { post: created } };
     }
 

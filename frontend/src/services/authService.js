@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db, googleProvider, isFirebaseConfigured } from '../config/firebase';
 import api, { setAccessToken } from './api';
+import { emailAlertService } from './emailAlertService';
 
 // Helper: Lấy hoặc tạo hồ sơ người dùng trong Firestore
 export const syncUserDoc = async (firebaseUser, additionalData = {}) => {
@@ -74,6 +75,13 @@ export const authService = {
         hometownGroup: data.hometownGroup,
         currentLocation: data.currentLocation,
       });
+
+      // Tự động gửi email cảnh báo thành viên mới đăng ký
+      emailAlertService.sendRegisterAlert({
+        user: userDoc,
+        registrationMethod: 'Form Đăng Ký',
+      }).catch((err) => console.warn('Lỗi gửi email alert đăng ký:', err));
+
       return { status: 'success', data: { user: userDoc } };
     }
 
@@ -93,6 +101,13 @@ export const authService = {
         credentials.password
       );
       const userDoc = await syncUserDoc(userCredential.user);
+
+      // Tự động gửi email cảnh báo khi có người đăng nhập
+      emailAlertService.sendLoginAlert({
+        user: userDoc,
+        loginMethod: 'Email & Mật khẩu',
+      }).catch((err) => console.warn('Lỗi gửi email alert đăng nhập:', err));
+
       return { status: 'success', data: { user: userDoc } };
     }
 
@@ -108,6 +123,13 @@ export const authService = {
     if (isFirebaseConfigured && auth && db) {
       const result = await signInWithPopup(auth, googleProvider);
       const userDoc = await syncUserDoc(result.user);
+
+      // Tự động gửi email cảnh báo khi đăng nhập Google
+      emailAlertService.sendLoginAlert({
+        user: userDoc,
+        loginMethod: 'Google OAuth',
+      }).catch((err) => console.warn('Lỗi gửi email alert Google:', err));
+
       return { status: 'success', data: { user: userDoc } };
     }
 
