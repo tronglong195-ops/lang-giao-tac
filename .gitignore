@@ -11,5 +11,6 @@ dev.db-journal
 *.crdownload
 *.pdf
 *.bak
+.firebase/
 
 

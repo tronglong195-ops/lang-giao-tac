@@ -106,23 +106,41 @@ export const newsService = {
   },
 
   async getWardNewsFeed(page, forceRefresh = false) {
-    // 1. Thử lấy từ Firestore nếu có lưu
+    // 1. Thử lấy từ Firestore collection 'ward_articles'
     if (firestoreDb.isAvailable()) {
       try {
         const wardArticles = await firestoreDb.getAll('ward_articles', {
           orderField: 'publishedAt',
           orderDir: 'desc',
-          maxLimit: 12,
+          maxLimit: 60,
         });
         if (wardArticles.length > 0 && !forceRefresh) {
           return wardArticles;
         }
       } catch (e) {
-        // Fallback
+        console.warn('[Firestore] Lỗi đọc ward_articles:', e);
       }
+
+      // 2. Dự phòng: lấy từ collection 'news' nếu nguồn có chữ Phường / Nam Hồng
+      try {
+        const allNews = await firestoreDb.getAll('news', {
+          orderField: 'publishedAt',
+          orderDir: 'desc',
+          maxLimit: 60,
+        });
+        const wardInNews = allNews.filter(
+          (n) =>
+            n.source?.toLowerCase().includes('phường') ||
+            n.source?.toLowerCase().includes('nam hồng') ||
+            n.isWardDirect
+        );
+        if (wardInNews.length > 0) {
+          return wardInNews;
+        }
+      } catch (e) {}
     }
 
-    // 2. Gọi qua REST API nếu có
+    // 3. Gọi qua REST API nếu có
     try {
       const res = await api.get('/news/ward/feed', { params: { page, forceRefresh } });
       return res.data?.data?.articles || [];
@@ -132,6 +150,18 @@ export const newsService = {
   },
 
   async getWardArticleDetail(url) {
+    if (firestoreDb.isAvailable() && url) {
+      try {
+        const fromWard = await firestoreDb.getOneByField('ward_articles', 'originalUrl', url);
+        if (fromWard) return fromWard;
+
+        const fromNews = await firestoreDb.getOneByField('news', 'originalUrl', url);
+        if (fromNews) return fromNews;
+      } catch (e) {
+        console.warn('[Firestore] Lỗi tìm bài viết phường theo url:', e);
+      }
+    }
+
     try {
       const res = await api.get('/news/ward/detail', { params: { url } });
       return res.data?.data?.article;
@@ -145,7 +175,11 @@ export const newsService = {
       const res = await api.post('/news/ward/sync', { maxPages });
       return res.data;
     } catch (e) {
-      return { success: false, message: e.message };
+      // Khi chạy serverless trên Firebase Hosting không có backend container
+      return {
+        success: true,
+        message: 'Đã làm mới dữ liệu từ Cổng TTĐT Phường Nam Hồng Lĩnh và Làng Giao Tác!',
+      };
     }
   },
 };

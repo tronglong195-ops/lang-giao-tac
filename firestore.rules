@@ -70,7 +70,7 @@ service cloud.firestore {
 
     // 5. Bài viết cộng đồng (posts) & Bình luận (comments)
     match /posts/{postId} {
-      allow read: if resource.data.status == 'published' || isModerator() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow read: if true;
       allow create: if isSignedIn();
       allow update, delete: if isModerator() || (isSignedIn() && resource.data.authorId == request.auth.uid);
     }
@@ -89,7 +89,7 @@ service cloud.firestore {
     }
 
     match /photos/{photoId} {
-      allow read: if resource.data.status == 'approved' || isModerator() || (isSignedIn() && resource.data.uploaderId == request.auth.uid);
+      allow read: if true;
       allow create: if isSignedIn();
       allow update, delete: if isModerator() || (isSignedIn() && resource.data.uploaderId == request.auth.uid);
     }

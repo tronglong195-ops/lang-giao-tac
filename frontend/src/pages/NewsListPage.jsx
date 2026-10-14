@@ -381,12 +381,18 @@ export const NewsListPage = () => {
                     </div>
 
                     <h2 className="text-base sm:text-lg font-bold text-ink group-hover:text-primary transition-colors leading-snug line-clamp-2">
-                      <button
-                        onClick={() => handleOpenWardArticle(item)}
-                        className="text-left font-bold hover:underline"
-                      >
-                        {item.title}
-                      </button>
+                      {item.slug && !item.originalUrl ? (
+                        <Link to={`/tin-tuc/${item.slug}`} className="text-left font-bold hover:underline">
+                          {item.title}
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => handleOpenWardArticle(item)}
+                          className="text-left font-bold hover:underline"
+                        >
+                          {item.title}
+                        </button>
+                      )}
                     </h2>
 
                     <div
@@ -401,7 +407,7 @@ export const NewsListPage = () => {
                   <div className="pt-4 border-t border-warmBorder flex items-center justify-between gap-2">
                     <div className="flex items-center space-x-1.5 text-[11px] text-ink-muted truncate">
                       <User className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span className="truncate">{item.author?.fullName || 'UBND Phường Nam Hồng Lĩnh'}</span>
+                      <span className="truncate">{item.author?.fullName || (isWardSource ? 'UBND Phường Nam Hồng Lĩnh' : 'Ban Cán sự TDP 9')}</span>
                     </div>
 
                     <div className="flex items-center space-x-2 shrink-0">
@@ -418,13 +424,23 @@ export const NewsListPage = () => {
                         </a>
                       )}
 
-                      <button
-                        onClick={() => handleOpenWardArticle(item)}
-                        className="inline-flex items-center space-x-1 text-xs font-bold text-primary group-hover:underline"
-                      >
-                        <span>Đọc toàn văn</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
+                      {item.slug && !item.originalUrl ? (
+                        <Link
+                          to={`/tin-tuc/${item.slug}`}
+                          className="inline-flex items-center space-x-1 text-xs font-bold text-primary group-hover:underline"
+                        >
+                          <span>Xem chi tiết</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => handleOpenWardArticle(item)}
+                          className="inline-flex items-center space-x-1 text-xs font-bold text-primary group-hover:underline"
+                        >
+                          <span>Đọc toàn văn</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -502,10 +518,10 @@ export const NewsListPage = () => {
                   <RefreshCw className="w-6 h-6 animate-spin mx-auto text-primary" />
                   <p className="text-xs">Đang tải toàn văn bài viết và hình ảnh từ Cổng TTĐT Phường...</p>
                 </div>
-              ) : readingDetail?.contentHtml ? (
+              ) : (readingDetail?.contentHtml || readingArticle.contentHtml) ? (
                 <div
                   className="tiptap-content text-sm sm:text-base leading-relaxed space-y-4 text-stone-800"
-                  dangerouslySetInnerHTML={{ __html: readingDetail.contentHtml }}
+                  dangerouslySetInnerHTML={{ __html: readingDetail?.contentHtml || readingArticle.contentHtml }}
                 />
               ) : (
                 <div className="space-y-4 text-sm sm:text-base text-stone-800">
@@ -519,7 +535,7 @@ export const NewsListPage = () => {
                     </div>
                   )}
                   <p className="lead font-medium text-stone-900 italic bg-amber-50 p-4 rounded-xl border-l-4 border-red-800">
-                    {readingArticle.summary}
+                    {readingArticle.summary || readingArticle.title}
                   </p>
                   <p className="text-stone-700 leading-relaxed">
                     Bản tin chính thức được phát hành và thông tin rộng rãi đến toàn thể bà con nhân dân tại các Tổ dân phố trên địa bàn Phường Nam Hồng Lĩnh và Làng Giao Tác (TDP 9).
