@@ -7,203 +7,178 @@
 
 ## 🌐 HỆ THỐNG ĐANG HOẠT ĐỘNG (PRODUCTION)
 
-- 🌍 **Website Chính Thức:** [https://lang-giao-tac-1.onrender.com](https://lang-giao-tac-1.onrender.com)
-- ⚙️ **Backend RESTful API:** [https://lang-giao-tac.onrender.com/api](https://lang-giao-tac.onrender.com/api)
-- 📱 **Trình Giả Lập Mobile:** [https://lang-giao-tac-1.onrender.com/gia-lap](https://lang-giao-tac-1.onrender.com/gia-lap)
-- 📦 **Tải App Android (APK):** Tải trực tiếp file `.apk` trong mục [GitHub Actions Artifacts](../../actions)
+- 🌍 **Website Chính Thức (Tốc độ cao trên Google CDN):**  
+  👉 **[https://lang-giao-tac-tdp9.web.app](https://lang-giao-tac-tdp9.web.app)**
+- 📱 **Trình Giả Lập Mobile:**  
+  👉 **[https://lang-giao-tac-tdp9.web.app/gia-lap](https://lang-giao-tac-tdp9.web.app/gia-lap)**
+- 📁 **Kho Mã Nguồn GitHub:**  
+  👉 **[https://github.com/tronglong195-ops/lang-giao-tac](https://github.com/tronglong195-ops/lang-giao-tac)**
+- 📦 **Tải App Android (APK):** Tải file `.apk` cài đặt trực tiếp trong mục [GitHub Releases / Actions](../../actions)
 
 ---
 
-## 🏛️ CÔNG NGHỆ & KIẾN TRÚC (TECH STACK)
+## 🏛️ KIẾN TRÚC HỆ THỐNG MỚI (MODERN SERVERLESS ARCHITECTURE)
+
+Hệ thống đã được chuyển đổi hoàn toàn sang kiến trúc **Serverless trên nền tảng Google Cloud & Firebase**, khắc phục triệt để tình trạng máy chủ bị "ngủ đông" (Cold Start 30-50s) của các nền tảng cũ:
+
+```text
+[Người Dùng: Web / Mobile]
+            │
+            ▼
+┌────────────────────────────────────────────────────────┐
+│               GOOGLE GLOBAL CDN & EDGE                 │
+│         Firebase Hosting (Tốc độ phản hồi < 1s)        │
+└───────────────────────────┬────────────────────────────┘
+                            │
+       ┌────────────────────┼────────────────────┐
+       ▼                    ▼                    ▼
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│Firebase Auth │     │Cloud Fire-   │     │Google Apps   │
+│(Đăng nhập    │     │store Database│     │Script Webhook│
+│Google & Email│     │(Lưu trữ dữ   │     │(Gửi email    │
+│bảo mật cao)  │     │liệu realtime)│     │thông báo 0đ) │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │
+                            ▼
+              ┌───────────────────────────┐
+              │   GOOGLE DRIVE 2TB &      │
+              │   SHEETS 2-WAY SYNC       │
+              │  (Tận dụng kho Google Pro)│
+              └───────────────────────────┘
+```
 
 ### 1. Web Frontend (`frontend/`)
-- **Core:** React 18 + Vite 5 (Fast Refresh, Bundle Minification).
-- **Styling:** Tailwind CSS + Design System phong cách đồng quê Việt Nam cổ truyền.
-- **Bản đồ:** React-Leaflet + Leaflet + OpenStreetMap (Tọa độ chuẩn di tích TDP 9 Thuận Lộc).
-- **Trình soạn thảo:** Tiptap Rich Text Editor đầy đủ công cụ định dạng và tải ảnh.
-- **Xác thực:** Google Identity Services SDK (Google One-Tap & Sign-In chính thức).
-- **Âm nhạc:** Trình phát nhạc nền quê hương (*Hà Tĩnh Nhớ Về...*).
-- **Trình giả lập:** Mobile Simulator mô phỏng iPhone 15 Pro & Samsung Galaxy S24 tương tác cảm ứng.
+- **Nền tảng:** React 18 + Vite 5 (Tối ưu hóa dung lượng minified bundle, Fast Refresh).
+- **Lưu trữ & Phân phối:** **Firebase Hosting** với Google Global CDN (bảo mật SSL/HTTPS tự động, phản hồi tức thì, không bao giờ ngủ đông).
+- **Giao diện:** Tailwind CSS + Design System phong cách đồng quê Bắc Trung Bộ truyền thống.
+- **Bản đồ tương tác:** React-Leaflet + OpenStreetMap (Tọa độ GPS chuẩn xác Đình Làng, Nhà văn hóa, Giếng cổ, Nhà thờ các dòng tộc).
+- **Soạn thảo:** Tiptap Rich Text Editor hỗ trợ định dạng, tải ảnh và chèn video.
+- **Trình giả lập di động:** Mobile Simulator mô phỏng iPhone 15 Pro & Galaxy S24 trực tiếp trên trình duyệt.
 
-### 2. Backend Server (`backend/`)
-- **Nền tảng:** Node.js + Express.js (Kiến trúc Module hóa: `auth`, `posts`, `news`, `albums`, `photos`, `events`, `villagers`, `history`, `comments`, `heroSlides`, `admin`).
-- **Cơ sở dữ liệu:** PostgreSQL thông qua Prisma ORM (Tự động migrate & auto-seed).
-- **Xác thực & Bảo mật:**
-  - JWT Access Token (15 phút) + Refresh Token (7 ngày qua `httpOnly` cookie).
-  - Xác thực Google OAuth server-side qua `google-auth-library` (`idToken`).
-  - Auth Rate Limiter bảo vệ chống tấn công Brute-Force (`express-rate-limit`).
-  - `helmet` bảo vệ HTTP security headers.
-  - CORS Whitelist đa môi trường (Render & Localhost).
+### 2. Dữ Liệu & Xác Thực Serverless
+- **Cơ sở dữ liệu:** **Google Cloud Firestore** (Real-time NoSQL Database):
+  - Tự động đồng bộ thời gian thực, lưu trữ thông báo làng, bài viết, tin tức Phường Nam Hồng Lĩnh, thư viện 30+ ảnh tư liệu, 3 Album lớn và danh bạ đồng hương.
+  - Phân quyền an toàn qua [`firestore.rules`](./firestore.rules) (chống ghi đè, bảo vệ dữ liệu công khai và dữ liệu quản trị viên).
+- **Hệ thống xác thực:** **Firebase Authentication**:
+  - Đăng nhập một chạm bằng Google (Google One-Tap / Popup).
+  - Đăng nhập bằng Email & Mật khẩu bảo mật tiêu chuẩn quốc tế.
+  - Tự động cấp quyền Quản trị viên (Admin) cho email ban quản trị (`tronglong195@gmail.com`).
 
-### 3. Ứng Dụng Di Động (`mobile/`)
-- **Framework:** Flutter 3.24+ & Dart.
-- **Kiến trúc:** Clean MVVM Layered Architecture (`Models` ➔ `Services` ➔ `Repositories` ➔ `Providers` ➔ `Screens`).
-- **Nền tảng hỗ trợ:** Android (APK / App Bundle) & iOS (iPhone / iPad).
-- **Tính năng nổi bật:** Chụp/chọn nhiều ảnh từ thư viện tải lên Album, phóng to ảnh toàn màn hình, chia sẻ Zalo / Facebook / QR Code, gọi điện nhanh từ danh bạ đồng hương.
-- **CI/CD Tự động:** GitHub Actions Workflow (`.github/workflows/build-apk.yml`) tự động biên dịch file `.apk` cài đặt trực tiếp.
+### 3. Thông Báo & Tích Hợp Google Pro
+- **Thông báo Email tự động:** `emailAlertService.js` tự động gửi email thông báo chi tiết khi:
+  - Có người đăng nhập (kèm thời gian, thiết bị, IP).
+  - Có thành viên mới đăng ký tài khoản.
+  - Có bài viết hoặc hình ảnh mới gửi chờ duyệt.
+  - Hỗ trợ gửi trực tiếp qua Google Apps Script Webhook (miễn phí 100% từ chính Gmail của bạn).
+- **Đồng bộ Google Drive & Sheets:** Tận dụng kho lưu trữ 2.000 GB (2 TB) của tài khoản Google Pro để lưu trữ video hội làng 4K, album ảnh dung lượng lớn mà không sợ đầy bộ nhớ.
+
+### 4. Ứng Dụng Di Động (`mobile/`)
+- **Framework:** Flutter 3.24+ & Dart (Android & iOS).
+- **Kiến trúc:** Clean MVVM (`Models` ➔ `Services` ➔ `Repositories` ➔ `Providers` ➔ `Screens`).
+- **Tính năng:** Đọc tin tức, duyệt phả hệ, tải ảnh lên album, tra cứu danh bạ gọi điện nhanh, chia sẻ mạng xã hội.
 
 ---
 
-## 🎨 BẢNG MÀU & THIẾT KẾ ĐẬM BẢN SẮC DÂN TỘC
+## 🎨 BẢNG MÀU ĐẬM BẢN SẮC TRUYỀN THỐNG
 
-| Màu sắc | Mã màu | Ý nghĩa biểu trưng |
+| Màu sắc | Mã Hex | Ý nghĩa văn hóa biểu trưng |
 | :--- | :--- | :--- |
-| **Xanh lá mạ** | `#4A7C59` | Lũy tre xanh, bờ dâu non xanh mướt của làng quê |
-| **Xanh tre già** | `#2F4F3A` | Bóng đa cổ thụ, sự trường tồn của làng quê |
-| **Vàng rơm** | `#D9A441` | Mùa lúa chín vàng, sự trù phú và ấm no |
-| **Nâu đất phù sa** | `#8B5E3C` | Đất bãi bồi ven sông Lam, gốm mộc dân dã |
-| **Đỏ son đình làng** | `#C14953` | Mái ngói vảy cá, câu đối cổ Đình Làng Giao Tác |
-| **Nền giấy dó** | `#FBF6EC` | Giấy dó cổ truyền ấm áp, thanh nhã |
-| **Màu ngà bề mặt** | `#FFFDF7` | Tươi sáng, dễ đọc trên mọi thiết bị |
+| **Xanh lá mạ** | `#4A7C59` | Bờ tre xanh mát, cánh đồng lúa non Thuận Lộc |
+| **Xanh tre già** | `#2F4F3A` | Bóng đa rợp bóng mát, sự trường tồn của làng quê |
+| **Vàng rơm** | `#D9A441` | Mùa lúa chín vàng trù phú, hạt thóc no ấm |
+| **Nâu đất phù sa** | `#8B5E3C` | Đất bồi ven chân núi Hồng Lĩnh |
+| **Đỏ son đình làng** | `#C14953` | Mái ngói vảy cá, câu đối cổ linh thiêng |
+| **Nền giấy dó** | `#FBF6EC` | Trang giấy dó cổ truyền mộc mạc, trang nhã |
 
-- **Kiểu chữ:** Google Fonts *"Be Vietnam Pro"* — Tối ưu hiển thị dấu tiếng Việt sắc nét.
+- **Kiểu chữ:** Google Fonts *"Be Vietnam Pro"* — Hiển thị tiếng Việt sắc nét, chuẩn mực trên mọi màn hình.
 
 ---
 
-## 📁 CẤU TRÚC DỰ ÁN
+## 📁 CẤU TRÚC THƯ MỤC DỰ ÁN
 
 ```text
 lang-giao-tac/
-├── .github/
-│   └── workflows/
-│       └── build-apk.yml              # CI/CD tự động build file APK Android trên Cloud
-├── backend/
-│   ├── prisma/
-│   │   ├── schema.prisma              # Schema PostgreSQL đầy đủ 9 Models
-│   │   └── seed.js                    # Script nạp dữ liệu mẫu Làng Giao Tác
+├── firestore.rules                    # Quy tắc bảo mật dữ liệu Cloud Firestore
+├── firebase.json                      # Cấu hình Firebase Hosting & Deploy targets
+├── DEPLOY_GUIDE.md                    # Hướng dẫn chi tiết Deploy lên Firebase (100% Free)
+├── README.md                          # Tài liệu tổng quan dự án
+├── frontend/                          # Ứng dụng Web chính (React + Vite)
+│   ├── public/                        # Ảnh làng, favicon, robots.txt, sitemap
 │   ├── src/
-│   │   ├── config/                    # db.js, autoSeed.js (Tự nạp data khi khởi động)
-│   │   ├── middlewares/               # authGuard.js, roleGuard.js
-│   │   ├── modules/                   # auth, posts, news, albums, photos, events, villagers, history, admin
-│   │   ├── utils/                     # jwt.js, slugify.js
-│   │   ├── app.js                     # Express app, Helmet, CORS whitelist
-│   │   └── server.js                  # Entrypoint khởi chạy server
-│   ├── .env.example
-│   └── package.json
-├── frontend/
-│   ├── index.html                     # Be Vietnam Pro Font, Leaflet & Google GIS SDK
-│   ├── src/
-│   │   ├── components/                # Navbar, Footer, VillageMap, MusicPlayer, TiptapEditor, Lightbox
-│   │   ├── context/AuthContext.jsx    # Authentication & Profile Context
-│   │   ├── services/api.js            # Axios Client + Auto-refresh JWT Token
-│   │   ├── pages/                     # HomePage, HistoryPage, GalleryPage, PostPage, MobileSimulatorPage...
-│   │   ├── App.jsx                    # Central Routing Configuration
-│   │   └── index.css                  # Tailwind CSS & Cultural Design Tokens
-│   ├── tailwind.config.js
-│   ├── vite.config.js
-│   └── package.json
-├── mobile/
-│   ├── android/                       # Cấu hình Native Android & Gradle
-│   ├── ios/                           # Cấu hình Native iOS (Runner)
-│   ├── lib/
-│   │   ├── config/                    # api_constants.dart, app_theme.dart
-│   │   ├── data/                      # models, services, repositories
-│   │   ├── providers/                 # auth_provider.dart, content_provider.dart
-│   │   ├── screens/                   # home, history, gallery, posts, news, villagers, auth
-│   │   ├── widgets/                   # custom_app_bar.dart, share_modal.dart
-│   │   └── main.dart                  # Flutter App Entrypoint
-│   ├── pubspec.yaml
-│   └── README.md
-├── DEPLOY_GUIDE.md                    # Hướng dẫn chi tiết Deploy Render & Vercel
-└── README.md
+│   │   ├── components/                # Navbar, Footer, VillageMap, MusicPlayer, TiptapEditor...
+│   │   │   └── admin/                 # GoogleSyncSettings, FirebaseSyncSettings, EmailAlertSettings
+│   │   ├── config/                    # firebase.js (Khởi tạo kết nối Firebase SDK)
+│   │   ├── context/                   # AuthContext.jsx (Quản lý phiên đăng nhập)
+│   │   ├── pages/                     # HomePage, NewsListPage, GalleryPage, AdminDashboardPage...
+│   │   ├── services/                  # firestoreDb.js, authService.js, newsService.js, emailAlertService.js...
+│   │   ├── App.jsx                    # Quản lý định tuyến trang (React Router)
+│   │   └── index.css                  # Thiết lập Tailwind CSS
+│   ├── scripts/                       # Các script nạp dữ liệu mẫu lên Cloud Firestore
+│   │   ├── seedFullContent.mjs        # Nạp 45 tin tức, thông báo, bài viết cộng đồng
+│   │   └── seedAlbumsAndPhotos.mjs    # Nạp 3 album lớn & 30 ảnh tư liệu làng
+│   ├── package.json
+│   └── vite.config.js
+├── backend/                           # Máy chủ Node.js REST API phụ trợ (Optional)
+└── mobile/                            # Ứng dụng di động Flutter (Android & iOS)
 ```
 
 ---
 
-## 🚀 HƯỚNG DẪN KHỞI CHẠY DỰ ÁN CỤC BỘ (LOCAL DEV)
+## 🚀 HƯỚNG DẪN KHỞI CHẠY CỤC BỘ (LOCAL DEV)
 
-### 1. Cấu hình Môi Trường (`.env`)
+Nhờ chuyển sang kiến trúc Serverless, bạn **không cần cài đặt cơ sở dữ liệu PostgreSQL hay cấu hình backend phức tạp** trên máy tính!
 
-#### Backend (`backend/.env`):
-> ⚠️ **Cảnh báo bảo mật quan trọng**: Tuyệt đối không bao giờ commit các chuỗi bí mật (Secret Keys), Token hoặc Mật khẩu thật vào kho mã nguồn Git.
-
-```env
-PORT=5000
-NODE_ENV=development
-DATABASE_URL="postgresql://postgres:password@localhost:5432/lang_giao_tac?schema=public"
-JWT_ACCESS_SECRET="<dán-secret-ngẫu-nhiên-của-bạn-tại-đây>"
-JWT_REFRESH_SECRET="<dán-secret-ngẫu-nhiên-của-bạn-tại-đây>"
-ADMIN_INITIAL_PASSWORD="<mật-khẩu-khởi-tạo-admin-production>"
-GOOGLE_CLIENT_ID="17339925701-s0tiajuplhl8e5h0o4epke98ksm3g00r.apps.googleusercontent.com"
-FRONTEND_URL="http://localhost:5173"
-```
-
-#### Frontend (`frontend/.env`):
-```env
-VITE_API_URL="http://localhost:5000/api"
-VITE_GOOGLE_CLIENT_ID="17339925701-s0tiajuplhl8e5h0o4epke98ksm3g00r.apps.googleusercontent.com"
-```
-
----
-
-### 2. Khởi Chạy Web & Backend
-
+### 1. Cài đặt và Chạy Web Frontend:
 ```bash
-# 1. Cài đặt và khởi chạy Backend (Port 5000):
-cd backend
-npm install
-npx prisma db push
-npm run prisma:seed
-npm run dev
+# Di chuyển vào thư mục frontend
+cd frontend
 
-# 2. Cài đặt và khởi chạy Frontend (Port 5173):
-cd ../frontend
+# Cài đặt các thư viện cần thiết
 npm install
+
+# Khởi chạy máy chủ phát triển
 npm run dev
 ```
 
-Truy cập: **`http://localhost:5173`** hoặc **`http://localhost:5173/gia-lap`** (Trình giả lập Mobile).
+Mở trình duyệt truy cập: **`http://localhost:5173`**
 
----
-
-### 3. Khởi Chạy Ứng Dụng Di Động (Flutter)
-
+### 2. Nạp Dữ Liệu Lên Cloud Firestore (Nếu cần khởi tạo mới):
 ```bash
-cd mobile
-flutter pub get
+# Nạp tin tức, bài viết, sự kiện:
+node scripts/seedFullContent.mjs
 
-# Chạy trực tiếp trên máy ảo hoặc điện thoại kết nối qua USB:
-flutter run
+# Nạp album và ảnh tư liệu làng:
+node scripts/seedAlbumsAndPhotos.mjs
+```
 
-# Xuất file APK Release cài vào điện thoại:
-flutter build apk --release
-# File APK tại: mobile/build/app/outputs/flutter-apk/app-release.apk
+### 3. Đóng Gói và Xuất Bản Lên Firebase Hosting:
+```bash
+# Biên dịch mã nguồn frontend
+npm run build
+
+# Deploy Hosting và Rules lên Firebase
+npx firebase-tools deploy --only hosting,firestore:rules
 ```
 
 ---
 
-## 👥 TÀI KHOẢN MẪU ĐỂ TRẢI NGHIỆM (CHỈ ÁP DỤNG LOCAL DEV)
+## 🗺️ TỔNG HỢP CÁC CHỨC NĂNG CHÍNH
 
-> 📌 **Lưu ý**: Bảng tài khoản mẫu này chỉ được khởi tạo tự động ở môi trường phát triển nội bộ (Local Dev `NODE_ENV !== 'production'`). Trên máy chủ Production, hệ thống yêu cầu cấu hình mật khẩu riêng qua biến môi trường `ADMIN_INITIAL_PASSWORD`.
-
-| Vai trò | Email | Mật khẩu (Local Dev) | Chức năng |
-| :--- | :--- | :--- | :--- |
-| **Quản trị viên (Admin)** | `admin@langgiaotac.vn` | `123456` | Toàn quyền duyệt bài, duyệt ảnh, quản lý thành viên, CRUD tin tức & lịch sử |
-| **Điều hành viên (Mod)** | `mod@langgiaotac.vn` | `123456` | Duyệt bài viết và kiểm duyệt hình ảnh của dân làng tải lên |
-| **Dân làng (Member)** | `nguyenthimai@gmail.com` | `123456` | Đăng bài viết, tải nhiều ảnh vào album, bình luận, kết nối đồng hương |
-| **Đăng nhập nhanh Google** | *Bất kỳ Gmail nào* | *Google OAuth* | Tự động liên kết tài khoản thành viên sau 1 cú nhấp |
-
----
-
-## 🗺️ TỔNG HỢP CÁC TRANG & TÍNH NĂNG CHÍNH
-
-- `/` — **Trang Chủ:** Banner trình chiếu, video giới thiệu Đình Làng, tin tức nóng, album tiêu biểu, danh sách mốc lịch sử.
-- `/lich-su` — **Lịch Sử Làng:** Dòng thời gian 6 mốc son từ năm 1685 đến nay và phóng sự di tích lịch sử cấp Tỉnh.
-- `/thu-vien-anh` & `/thu-vien-anh/:id` — **Thư Viện Ảnh:** Kho tư liệu ảnh chất lượng cao, hỗ trợ xem phóng to Lightbox và tải ảnh trực tiếp từ điện thoại.
-- `/bai-viet` & `/bai-viet/:slug` — **Bài Viết & Ký Ức:** Đọc và chia sẻ bài viết, câu chuyện dòng họ, ẩm thực quê hương kèm bình luận.
-- `/bai-viet/viet-bai` — **Soạn Bài Viết:** Trình soạn thảo văn bản phong phú Tiptap, đính kèm ảnh bìa.
-- `/tin-tuc` & `/tin-tuc/:slug` — **Tin Tức & Thông Báo:** Bản tin chính quyền và hoạt động của TDP 9 Thuận Lộc.
-- `/dong-huong` — **Danh Bạ Đồng Hương:** Kết nối bà con xa quê tại Hà Nội, TP.HCM và các tỉnh thành, hỗ trợ gọi điện nhanh.
+- `/` — **Trang Chủ:** Hero Banner trình chiếu, video Đình Làng, tin tức làng & tin Phường Nam Hồng Lĩnh mới nhất, Thư viện ảnh thu nhỏ với Lightbox, sự kiện sắp tới.
+- `/tin-tuc` — **Tin Tức & Thông Báo:** Bản tin chính thức của TDP 9 và tin tức tự động đồng bộ từ Cổng TTĐT Phường Nam Hồng Lĩnh.
+- `/thu-vien-anh` & `/thu-vien-anh/:id` — **Thư Viện Ảnh Làng Quê:** 3 Album lớn (*Cảnh sắc*, *Lễ hội truyền thống*, *Thể thao*) cùng 30+ ảnh tư liệu sắc nét, phóng to Lightbox và tải ảnh lên.
+- `/bai-viet` & `/bai-viet/:slug` — **Ký Ức & Tâm Tình:** Không gian chia sẻ kỷ niệm, câu chuyện làng quê của bà con.
 - `/ban-do` — **Bản Đồ Di Tích:** Tọa độ GPS chuẩn xác Đình Làng Giao Tác, Nhà văn hóa TDP 9, Giếng cổ, Nhà thờ các dòng tộc.
-- `/su-kien` — **Lịch Sự Kiện:** Lịch lễ hội rước thần nông, hội làng, giải thể thao hàng năm.
-- `/gia-lap` — **Mobile Simulator:** Trình giả lập điện thoại chân thực để kiểm thử giao diện mobile ngay trên máy tính.
-- `/dang-nhap` & `/dang-ky` — **Xác Thực:** Đăng nhập an toàn bằng Email hoặc Google Sign-In chính thức.
-- `/quan-tri` — **Trang Quản Trị:** Bảng điều khiển quản lý nội dung và phê duyệt tài nguyên toàn hệ thống.
+- `/gia-pha` — **Gia Phả Dòng Họ:** Lưu giữ cội nguồn các dòng tộc trên đất Giao Tác.
+- `/quy-que-huong` — **Quỹ Quê Hương:** Minh bạch các khoản đóng góp tu bổ di tích, khuyến học.
+- `/dang-nhap` & `/dang-ky` — **Xác Thực:** Đăng nhập an toàn bằng Email hoặc Google 1 chạm.
+- `/quan-tri` — **Trang Quản Trị:** Phê duyệt bài viết, duyệt ảnh, quản lý thành viên, cấu hình đồng bộ Google Drive/Sheets và cài đặt thông báo Email.
 
 ---
 
-## 📜 BẢN QUYỀN & LIÊN HỆ
+## 📜 LIÊN HỆ & BẢN QUYỀN
 
-- **Đơn vị vận hành:** Ban Liên Lạc & Con em Làng Giao Tác — TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, Tỉnh Hà Tĩnh.
-- **Admin / Kỹ thuật:** Nguyễn Trọng Long (SĐT: `0832991002` | Email: `banquantri@langgiaotac.vn`).
-- **Giấy phép:** Mã nguồn mở phục vụ cộng đồng quê hương.
+- **Đơn vị vận hành:** Ban Cán sự & Con em Làng Giao Tác — TDP 9 Thuận Lộc, Phường Nam Hồng Lĩnh, Tỉnh Hà Tĩnh.
+- **Quản trị hệ thống:** Nguyễn Trọng Long (Email: `tronglong195@gmail.com`).
+- **Mục đích:** Dự án phi lợi nhuận phục vụ quê hương và gắn kết cộng đồng làng xã.
+
