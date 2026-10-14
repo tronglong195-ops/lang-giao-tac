@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/authService';
+import { onAuthStateChanged } from 'firebase/auth';
+import { authService, syncUserDoc } from '../services/authService';
 import { getAccessToken, setAccessToken } from '../services/api';
+import { auth, isFirebaseConfigured } from '../config/firebase';
 
 const AuthContext = createContext(null);
 
@@ -10,28 +12,56 @@ export const AuthProvider = ({ children }) => {
 
   // Khởi tạo phiên đăng nhập khi load trang
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const token = getAccessToken();
-        if (token) {
-          const me = await authService.getMe();
-          setUser(me);
-        } else {
-          // Thử refresh token từ httpOnly cookie
-          const res = await authService.refreshToken();
-          if (res?.data?.user) {
-            setUser(res.data.user);
-          }
-        }
-      } catch (err) {
-        setAccessToken(null);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    let unsubscribe = null;
 
-    initializeAuth();
+    if (isFirebaseConfigured && auth) {
+      // Dùng listener Realtime của Firebase Auth
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        try {
+          if (firebaseUser) {
+            const token = await firebaseUser.getIdToken();
+            setAccessToken(token);
+            const userProfile = await syncUserDoc(firebaseUser);
+            setUser(userProfile);
+          } else {
+            setAccessToken(null);
+            setUser(null);
+          }
+        } catch (err) {
+          console.error('Lỗi khởi tạo Firebase User:', err);
+          setUser(null);
+        } finally {
+          setLoading(false);
+        }
+      });
+    } else {
+      // Fallback: Phiên đăng nhập REST API
+      const initializeAuth = async () => {
+        try {
+          const token = getAccessToken();
+          if (token) {
+            const me = await authService.getMe();
+            setUser(me);
+          } else {
+            const res = await authService.refreshToken();
+            if (res?.data?.user) {
+              setUser(res.data.user);
+            }
+          }
+        } catch (err) {
+          setAccessToken(null);
+          setUser(null);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      initializeAuth();
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const login = async (credentials) => {

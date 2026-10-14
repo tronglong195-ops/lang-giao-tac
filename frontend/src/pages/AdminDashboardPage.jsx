@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Sparkles,
   FileSpreadsheet,
+  Flame,
 } from 'lucide-react';
 import { adminService } from '../services/adminService';
 import { newsService } from '../services/newsService';
@@ -34,11 +35,12 @@ import { useAuth } from '../context/AuthContext';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { GoogleSyncSettings } from '../components/admin/GoogleSyncSettings';
+import { FirebaseSyncSettings } from '../components/admin/FirebaseSyncSettings';
 
 export const AdminDashboardPage = () => {
   const { user, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'posts'; // 'posts' | 'photos' | 'news' | 'events' | 'history' | 'users' | 'googlesync'
+  const activeTab = searchParams.get('tab') || 'posts'; // 'posts' | 'photos' | 'news' | 'events' | 'history' | 'users' | 'googlesync' | 'firebase'
 
   const [stats, setStats] = useState(null);
 
@@ -581,6 +583,20 @@ export const AdminDashboardPage = () => {
           >
             <FileSpreadsheet className="w-4 h-4" />
             <span>Đồng bộ Google Drive & Sheets</span>
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            onClick={() => setTab('firebase')}
+            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'firebase'
+                ? 'bg-amber-600 text-surface shadow-sm'
+                : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300'
+            }`}
+          >
+            <Flame className="w-4 h-4 text-amber-600" />
+            <span>Cấu hình & Đồng bộ Firebase</span>
           </button>
         )}
       </div>
@@ -1737,6 +1753,11 @@ export const AdminDashboardPage = () => {
       {/* Tab 7: Google Drive & Sheets Sync */}
       {activeTab === 'googlesync' && (
         <GoogleSyncSettings />
+      )}
+
+      {/* Tab 8: Firebase Serverless Sync */}
+      {activeTab === 'firebase' && (
+        <FirebaseSyncSettings />
       )}
 
       {/* Global Confirm Modal */}

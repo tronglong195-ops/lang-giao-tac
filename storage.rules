@@ -1,0 +1,45 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isImageOrPdf() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType == 'application/pdf';
+    }
+
+    function isWithinSizeLimit() {
+      return request.resource.size <= 25 * 1024 * 1024; // Tối đa 25MB cho ảnh 4K và PDF gia phả
+    }
+
+    // Tất cả mọi người đều có thể xem ảnh và tải PDF
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Người dùng đăng nhập có thể tải ảnh lên
+    match /giaotac_uploads/{fileName} {
+      allow write: if isSignedIn() && isImageOrPdf() && isWithinSizeLimit();
+    }
+
+    match /giaotac_albums/{fileName} {
+      allow write: if isSignedIn() && isImageOrPdf() && isWithinSizeLimit();
+    }
+
+    match /avatars/{userId}/{fileName} {
+      allow write: if isSignedIn() && request.auth.uid == userId && isImageOrPdf() && isWithinSizeLimit();
+    }
+
+    match /genealogy/{fileName} {
+      allow write: if isSignedIn() && (
+        request.auth.token.email == 'admin@langgiaotac.vn' ||
+        request.auth.token.email == 'tronglong195@gmail.com'
+      );
+    }
+  }
+}

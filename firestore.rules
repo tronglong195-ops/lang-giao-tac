@@ -1,0 +1,139 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'admin@langgiaotac.vn' ||
+        request.auth.token.email == 'tronglong195@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin')
+      );
+    }
+
+    function isModerator() {
+      return isAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        getUserData().role == 'moderator'
+      );
+    }
+
+    // 1. Hồ sơ người dùng (users)
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 2. Dòng họ (clans) & Gia phả (genealogy_members)
+    match /clans/{clanId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /genealogy_members/{memberId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. Mốc lịch sử (history_timelines)
+    match /history_timelines/{timelineId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 4. Tin tức & thông báo chính quyền (news & ward_articles)
+    match /news/{newsId} {
+      allow read: if true;
+      allow write: if isModerator();
+    }
+
+    match /ward_articles/{articleId} {
+      allow read: if true;
+      allow write: if isModerator();
+    }
+
+    // 5. Bài viết cộng đồng (posts) & Bình luận (comments)
+    match /posts/{postId} {
+      allow read: if resource.data.status == 'published' || isModerator() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isModerator() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow delete: if isModerator() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update: if isModerator();
+    }
+
+    // 6. Thư viện ảnh (albums & photos)
+    match /albums/{albumId} {
+      allow read: if true;
+      allow write: if isModerator();
+    }
+
+    match /photos/{photoId} {
+      allow read: if resource.data.status == 'approved' || isModerator() || (isSignedIn() && resource.data.uploaderId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isModerator() || (isSignedIn() && resource.data.uploaderId == request.auth.uid);
+    }
+
+    // 7. Lịch sự kiện (events)
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isModerator();
+    }
+
+    // 8. Danh bạ đồng hương & BCH thôn (villagers)
+    match /villagers/{villagerId} {
+      allow read: if true;
+      allow write: if isModerator();
+    }
+
+    // 9. Quỹ quê hương (fund_campaigns & fund_donations)
+    match /fund_campaigns/{campaignId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /fund_donations/{donationId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // 10. Chợ quê đặc sản (market_products)
+    match /market_products/{productId} {
+      allow read: if true;
+      allow write: if isModerator();
+    }
+
+    // 11. Sổ tang & Lời chia buồn (obituaries & condolences)
+    match /obituaries/{obituaryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /condolences/{condolenceId} {
+      allow read: if true;
+      allow create: if true;
+      allow delete: if isAdmin();
+    }
+  }
+}

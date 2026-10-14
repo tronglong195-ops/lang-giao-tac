@@ -10,5 +10,6 @@ dev.db-journal
 *.exe
 *.crdownload
 *.pdf
+*.bak
 
 
