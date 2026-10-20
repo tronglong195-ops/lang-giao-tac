@@ -22,12 +22,26 @@ export const newsService = {
           conditions.push(['isOfficial', '==', params.isOfficial === true || params.isOfficial === 'true']);
         }
 
+        const limit = params.limit ? Number(params.limit) : 20;
+
+        // publishedAt trong collection "news" đang lẫn 2 kiểu: chuỗi ISO (bài nạp bằng script)
+        // và Timestamp (bài đăng từ trang Quản trị). Firestore sắp xếp theo KIỂU trước rồi mới
+        // theo giá trị, nên nếu lấy đúng `limit` bài thì bài kiểu Timestamp bị đẩy ra ngoài.
+        // → Lấy rộng một nhóm bài, chuẩn hóa ngày rồi tự sắp xếp phía client.
         let news = await firestoreDb.getAll('news', {
           conditions,
           orderField: 'publishedAt',
           orderDir: 'desc',
-          maxLimit: params.limit ? Number(params.limit) : 20,
+          maxLimit: Math.max(limit * 5, 200),
         });
+
+        const toTime = (v) => {
+          const t = Date.parse(v);
+          return Number.isNaN(t) ? 0 : t;
+        };
+        news = news
+          .sort((a, b) => toTime(b.publishedAt) - toTime(a.publishedAt))
+          .slice(0, params.search ? undefined : limit);
 
         if (params.search) {
           const q = params.search.toLowerCase();
@@ -37,6 +51,7 @@ export const newsService = {
               n.contentHtml?.toLowerCase().includes(q) ||
               n.source?.toLowerCase().includes(q)
           );
+          news = news.slice(0, limit);
         }
 
         return {
@@ -85,7 +100,8 @@ export const newsService = {
         slug,
         isOfficial: data.isOfficial !== undefined ? Boolean(data.isOfficial) : true,
         source: data.source || 'Ban Cán sự TDP 9 Thuận Lộc',
-        publishedAt: data.publishedAt ? new Date(data.publishedAt) : new Date(),
+        // Lưu dạng chuỗi ISO cho đồng nhất với dữ liệu nạp bằng script (xem getNews)
+        publishedAt: (data.publishedAt ? new Date(data.publishedAt) : new Date()).toISOString(),
       };
       const created = await firestoreDb.create('news', payload);
       return { status: 'success', data: { news: created } };
