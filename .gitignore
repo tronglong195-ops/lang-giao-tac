@@ -14,3 +14,7 @@ dev.db-journal
 .firebase/
 
 
+
+# Khoa Service Account Firebase (KHONG commit)
+serviceAccountKey*.json
+*-firebase-adminsdk-*.json
