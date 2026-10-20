@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -29,7 +29,9 @@ let googleProvider = null;
 if (isFirebaseConfigured) {
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
+  // ignoreUndefinedProperties: các form gửi trường tùy chọn để trống (vd. "Năm chụp") dưới dạng undefined;
+  // mặc định Firestore từ chối cả bản ghi → bỏ qua trường undefined thay vì báo lỗi.
+  db = initializeFirestore(app, { ignoreUndefinedProperties: true });
   storage = getStorage(app);
   googleProvider = new GoogleAuthProvider();
   googleProvider.setCustomParameters({ prompt: 'select_account' });
