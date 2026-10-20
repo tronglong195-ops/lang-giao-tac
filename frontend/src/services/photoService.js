@@ -14,12 +14,13 @@ export const photoService = {
         albums = albums.map((album) => {
           const albumPhotos = allPhotos.filter((p) => p.albumId === album.id);
           const firstImg =
-            albumPhotos[0]?.imageUrl ||
             album.coverPhotoUrl ||
+            albumPhotos[0]?.imageUrl ||
             '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
 
           return {
             ...album,
+            coverPhotoUrl: firstImg,
             photos: albumPhotos.length > 0 ? albumPhotos : [{ imageUrl: firstImg, caption: album.title }],
             _count: { photos: albumPhotos.length },
           };

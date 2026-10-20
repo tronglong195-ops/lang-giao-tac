@@ -217,8 +217,9 @@ export const GalleryPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {albums.map((album) => {
             const firstPhotoUrl =
+              album.coverPhotoUrl ||
               album.photos?.[0]?.imageUrl ||
-              'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80';
+              '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
 
             return (
               <article
@@ -231,6 +232,11 @@ export const GalleryPage = () => {
                     <img
                       src={firstPhotoUrl}
                       alt={album.title}
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold bg-surface/90 text-primary-dark backdrop-blur-md shadow-sm flex items-center space-x-1">

@@ -94,7 +94,10 @@ export const LightboxModal = ({
           <img
             src={currentPhoto.imageUrl}
             alt={currentPhoto.caption || 'Ảnh làng Giao Tác'}
-            className="max-h-[70vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
+            onError={(e) => {
+              e.currentTarget.src = '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
+            }}
+            className="max-h-[72vh] w-auto max-w-full object-contain rounded-xl shadow-2xl transition-all duration-300"
           />
 
           {/* Caption & Metadata bar */}

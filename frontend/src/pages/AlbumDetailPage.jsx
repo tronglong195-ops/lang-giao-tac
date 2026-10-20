@@ -344,6 +344,11 @@ export const AlbumDetailPage = () => {
                 <img
                   src={photo.imageUrl}
                   alt={photo.caption || 'Ảnh làng Giao Tác'}
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/village/484215892_9601885749870972_6761004858315934829_n.jpg';
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
