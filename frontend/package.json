@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "seed:tin-tuc": "node scripts/seedTinTucBaiViet.mjs"
+    "seed:tin-tuc": "node scripts/seedTinTucBaiViet.mjs",
+    "seed:all": "node scripts/seedFullCommunityAndMedia.mjs"
   },
   "dependencies": {
     "@photo-sphere-viewer/core": "^5.15.1",
